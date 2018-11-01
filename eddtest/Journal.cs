@@ -241,6 +241,85 @@ namespace EDDTest
                     lineout = "{ " + TimeStamp() + F("event", "Promotion") + FF(args.Next(), args.Int()) + " }";
                 else if (eventtype.Equals("cargodepot"))
                     lineout = CargoDepot(args);
+                else if (eventtype.Equals("fsssignaldiscovered") && args.Left >= 1)
+                {
+                    string name = args.Next();
+
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+                    qj.Object().UTC("timestamp").V("event", "FSSSignalDiscovered");
+                    qj.V("SignalName", name);
+
+                    if (args.Left >= 2)
+                    {
+                        string state = args.Next();
+                        qj.V("SpawingState", "$" + state);
+                        qj.V("SpawingState_Localised", state);
+                        string faction = args.Next();
+                        qj.V("SpawingFaction", "$" + faction);
+                        qj.V("SpawingFaction_Localised", faction);
+                        qj.V("TimeRemaining", 60);
+                    }
+
+                    qj.Close();
+
+                    lineout = qj.Get();
+                }
+                else if (eventtype.Equals("codexentry") && args.Left >= 4)
+                {
+                    string name = args.Next();
+                    string subcat = args.Next();
+                    string cat = args.Next();
+                    string system = args.Next();
+
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+                    qj.Object().UTC("timestamp").V("event", "CodexEntry");
+                    qj.V("Name", "$" + name);
+                    qj.V("Name_Localised", name);
+                    qj.V("SubCategory", "$" + subcat);
+                    qj.V("SubCategory_Localised", subcat);
+                    qj.V("Category", "$" + cat);
+                    qj.V("Category_Localised", cat);
+                    qj.V("System", system);
+                    qj.V("Region", "Region 18");
+                    qj.V("IsNewEntry", true);
+                    qj.V("NewTraitsDiscovered", true);
+                    qj.V("Traits", new string[] { "T1", "T2", "T3" });
+                    qj.Close();
+
+                    lineout = qj.Get();
+                }
+                else if (eventtype.Equals("saascancomplete") && args.Left >= 1)
+                {
+                    string name = args.Next();
+
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+                    qj.Object().UTC("timestamp").V("event", "SAAScanComplete");
+                    qj.V("BodyName", name);
+                    qj.V("BodyID", 10);
+                    qj.V("Discoverers", new string[] { "Fred", "Jim", "Sheila" });
+                    qj.V("Mappers", new string[] { "george", "Henry" });
+                    qj.V("ProbesUsed", 10);
+                    qj.V("EfficiencyTarget", 12);
+                    qj.Close();
+
+                    lineout = qj.Get();
+                }
+                else if (eventtype.Equals("asteroidcracked") && args.Left >= 1)
+                {
+                    string name = args.Next();
+
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+                    qj.Object().UTC("timestamp").V("event", "AsteroidCracked");
+                    qj.V("Body", name);
+                    qj.Close();
+
+                    lineout = qj.Get();
+                }
+
                 else
                 {
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry");

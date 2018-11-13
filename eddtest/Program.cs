@@ -1,4 +1,5 @@
 ﻿using BaseUtils;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
@@ -132,17 +133,43 @@ namespace EDDTest
                 bool combine = false;
                 bool showrepeat = false;
 
-                while( args.More )
+                while (args.More)
                 {
                     string a = args.Next().ToLowerInvariant();
                     if (a == "combine")
                         combine = true;
-                    if (a == "showrepeats" )
+                    if (a == "showrepeats")
                         showrepeat = true;
                 }
 
-                string ret = ScanTranslate.Process(allFiles,combine, showrepeat);
+                string ret = ScanTranslate.Process(allFiles, combine, showrepeat);
                 Console.WriteLine(ret);
+            }
+            else if (arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase))
+            {
+                string path = args.Next();
+
+                using (Stream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        string s;
+                        while ((s = sr.ReadLine()) != null)
+                        {
+                            JObject jo = new JObject();
+                            try
+                            {
+                                jo = JObject.Parse(s);
+                                Console.WriteLine(jo.ToString(Newtonsoft.Json.Formatting.Indented));
+                            }
+                            catch
+                            {
+                                Console.WriteLine("Unable to parse " + s);
+                            }
+                        }
+                    }
+                }
+
             }
             else
             {
@@ -166,7 +193,8 @@ namespace EDDTest
                               "CorolisShip name - process corolis-data\\ships\n" +
                               "Coroliseng rootfolder - process corolis-data\\modifications\n" +
                               "FrontierData rootfolder - process cvs file exports of frontier data\n" +
-                              "scantranslate filespecwildcard [Combine] [ShowRepeats]- process source files and look for .Tx definitions\n"
+                              "scantranslate filespecwildcard [Combine] [ShowRepeats]- process source files and look for .Tx definitions\n" +
+                              "jsonindented file\n"
                               );
 
         }

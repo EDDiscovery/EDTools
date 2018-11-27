@@ -27,6 +27,7 @@ namespace EDDTest
             FsdCooldown = 18,
             OverHeating = 20,
             BeingInterdicted = 23,
+            HUDInAnalysisMode = 27,     // 3.3
         }
 
         private enum StatusFlagsSRV
@@ -44,6 +45,7 @@ namespace EDDTest
             LowFuel = 19,
             HasLatLong = 21,
             IsInDanger = 22,
+            NightVision = 28,             // 3.3
         }
 
         private enum StatusFlagsShipType
@@ -104,27 +106,14 @@ namespace EDDTest
         public static void StatusSet(CommandArgs args)
         {
             long flags = 0;
+            int cargo = 0;
+            double fuel = 0;
+            int gui = 0;
 
             string v;
             while ((v = args.Next()) != null)
             {
-                if (Enum.TryParse<StatusFlagsShip>(v, true, out StatusFlagsShip s))
-                {
-                    flags |= 1L << (int)s;
-                }
-                else if (Enum.TryParse<StatusFlagsSRV>(v, true, out StatusFlagsSRV sv))
-                {
-                    flags |= 1L << (int)sv;
-                }
-                else if (Enum.TryParse<StatusFlagsAll>(v, true, out StatusFlagsAll a))
-                {
-                    flags |= 1L << (int)a;
-                }
-                else if (Enum.TryParse<StatusFlagsShipType>(v, true, out StatusFlagsShipType st))
-                {
-                    flags |= 1L << (int)st;
-                }
-                else if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))
+                if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
                                 (1L << (int)StatusFlagsShip.Supercruise) |
@@ -144,10 +133,50 @@ namespace EDDTest
                                 (1L << (int)StatusFlagsAll.ShieldsUp) |
                                 (1L << (int)StatusFlagsShip.HardpointsDeployed);
                 }
+                else if (v.StartsWith("C:"))
+                {
+                    cargo = v.Mid(2).InvariantParseInt(0);
+                }
+                else if (v.StartsWith("F:"))
+                {
+                    fuel = v.Mid(2).InvariantParseDouble(0);
+
+                }
+                else if (v.StartsWith("G:"))
+                {
+                    gui = v.Mid(2).InvariantParseInt(0);
+
+                }
+                else if (Enum.TryParse<StatusFlagsShip>(v, true, out StatusFlagsShip s))
+                {
+                    flags |= 1L << (int)s;
+                }
+                else if (Enum.TryParse<StatusFlagsSRV>(v, true, out StatusFlagsSRV sv))
+                {
+                    flags |= 1L << (int)sv;
+                }
+                else if (Enum.TryParse<StatusFlagsAll>(v, true, out StatusFlagsAll a))
+                {
+                    flags |= 1L << (int)a;
+                }
+                else if (Enum.TryParse<StatusFlagsShipType>(v, true, out StatusFlagsShipType st))
+                {
+                    flags |= 1L << (int)st;
+                }
             }
 
-            string j = "{ " + Journal.TimeStamp() + Journal.F("event", "Status") + Journal.F("Flags", flags) + Journal.F("Pips", new int[] { 4, 8, 0 }) +
-                            Journal.F("FireGroup", 1) + Journal.FF("GuiFocus", 0) + " }";
+            BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+            qj.Object().UTC("timestamp").V("event", "Status");
+            qj.V("Flags", flags);
+            qj.V("Pips", new int[] { 2, 8, 2 });
+            qj.V("FireGroup", 1);
+            qj.V("GuiFocus", gui);
+            qj.V("Fuel", fuel);
+            qj.V("Cargo", cargo);
+            qj.Close();
+
+            string j = qj.Get();
             File.WriteAllText("Status.json", j);
             Console.Write(j);
         }

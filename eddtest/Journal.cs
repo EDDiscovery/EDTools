@@ -320,6 +320,95 @@ namespace EDDTest
                     lineout = qj.Get();
                 }
 
+                else if (eventtype.Equals("multisellexplorationdata") )
+                {
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+                    qj.Object().UTC("timestamp").V("event", "MultiSellExplorationData");
+                    qj.Array("Discovered");
+                    for (int i = 0; i < 5; i++)
+                    {
+                        qj.Object();
+                        qj.V("SystemName", "Sys" + i);
+                        qj.V("NumBodies", i * 2 + 1);
+                        qj.Close();
+                    }
+
+                    qj.Close();
+                    qj.V("BaseValue", 100);
+                    qj.V("Bonus", 200);
+                    qj.V("TotalEarnings", 300);
+                    qj.Close();
+
+                    lineout = qj.Get();
+                }
+                else if (eventtype.Equals("startjump") && args.Left >= 1)
+                {
+                    string name = args.Next();
+
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+                    qj.Object().UTC("timestamp").V("event", "StartJump");
+                    qj.V("JumpType", "Hyperspace");
+                    qj.V("StarSystem", name);
+                    qj.V("StarClass", "A");
+                    qj.V("SystemAddress", 10);
+                    qj.Close();
+
+                    lineout = qj.Get();
+                }
+                else if (eventtype.Equals("appliedtosquadron") && args.Left >= 1)
+                    lineout = Squadron("AppliedToSquadron", args.Next());
+
+                else if (eventtype.Equals("disbandedsquadron") && args.Left >= 1)
+                    lineout = Squadron("DisbandedSquadron", args.Next());
+
+                else if (eventtype.Equals("invitedtosquadron") && args.Left >= 1)
+                    lineout = Squadron("InvitedToSquadron", args.Next());
+
+                else if (eventtype.Equals("joinedsquadron") && args.Left >= 1)
+                    lineout = Squadron("JoinedSquadron", args.Next());
+
+                else if (eventtype.Equals("leftsquadron") && args.Left >= 1)
+                    lineout = Squadron("LeftSquadron", args.Next());
+
+                else if (eventtype.Equals("kickedfromsquadron") && args.Left >= 1)
+                    lineout = Squadron("KickedFromSquadron", args.Next());
+
+                else if (eventtype.Equals("sharedbookmarktosquadron") && args.Left >= 1)
+                    lineout = Squadron("SharedBookmarkToSquadron", args.Next());
+
+                else if (eventtype.Equals("squadroncreated") && args.Left >= 1)
+                    lineout = Squadron("SquadronCreated", args.Next());
+
+                else if (eventtype.Equals("wonatrophyforsquadron") && args.Left >= 1)
+                    lineout = Squadron("WonATrophyForSquadron", args.Next());
+
+                else if (eventtype.Equals("squadrondemotion") && args.Left >= 3)
+                    lineout = Squadron("SquadronDemotion", args.Next(), args.Next(), args.Next());
+
+                else if (eventtype.Equals("squadronpromotion") && args.Left >= 3)
+                    lineout = Squadron("SquadronPromotion", args.Next(), args.Next(), args.Next());
+
+                else if (eventtype.Equals("fsdtarget") && args.Left >= 1)
+                {
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+                    qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("SystemAddress", 20);
+                    lineout = qj.Get();
+                }
+                else if (eventtype.Equals("fssallbodiesfound") && args.Left >= 1)
+                {
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+                    qj.Object().UTC("timestamp").V("event", "FSSAllBodiesFound").V("Name", args.Next()).V("SystemAddress", 20);
+                    lineout = qj.Get();
+                }
+                else if (eventtype.Equals("fssdiscoveryscan") )
+                {
+                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+                    qj.Object().UTC("timestamp").V("event", "FSSDiscoveryScan").V("Progress", 0.23).V("BodyCount", 20).V("NonBodyCount",30);
+                    lineout = qj.Get();
+                }
+
                 else
                 {
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry");
@@ -554,6 +643,22 @@ namespace EDDTest
             q.V("MissionID", id).V("Name",name).V("PassengerMission",pas).V("Expires",time);
         }
 
+        public static string Squadron(string ev, string name, params string[] list)
+        {
+            BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+
+            qj.Object().UTC("timestamp").V("event", ev);
+            qj.V("SquadronName", name);
+            if ( list.Length>=2)
+            {
+                qj.V("OldRank", list[0]);
+                qj.V("NewRank", list[1]);
+            }
+
+            return qj.Get();
+
+        }
+
 
         #region DEPRECIATED Helpers for journal writing - USE QuickJSONFormatter!
 
@@ -651,7 +756,7 @@ namespace EDDTest
             "         Interdiction name success isplayer combatrank faction power\n" +
             "         FactionKillBond faction victimfaction reward\n" +
             "         CapShipBond faction victimfaction reward\n" +
-            "Commds   marketbuy fdname count price\n"+
+            "Commds   marketbuy fdname count price\n" +
             "Scans    ScanPlanet name\n" +
             "         ScanStar, ScanEarth\n" +
             "         NavBeaconScan\n" +
@@ -667,8 +772,15 @@ namespace EDDTest
             "         CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total\n" +
             "         FighterDestroyed, FigherRebuilt, NpcCrewRank, NpcCrewPaidWage, LaunchDrone\n" +
             "         Market, ModuleInfo, Outfitting, Shipyard (use NOFILE after to say don't write the file)\n" +
-            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n"
-            ;
+            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n" +
+            "         CodexEntry name subcat cat system\n" +
+            "         fsssignaldiscovered name\n" +
+            "         saascancomplete name\n" +
+            "         asteroidcracked name\n" +
+            "         multisellexplorationdata\n" +
+            "         *Squadrons* name\n" +
+
+            "";
         }
 
         #endregion

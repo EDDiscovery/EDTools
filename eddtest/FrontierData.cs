@@ -6,29 +6,32 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static EliteDangerousCore.Recipes;
 
 // take the frontier data excel they send us
 // run this VB script (replace the folder etc and see if it needs 3.0 changed in the replace statement)
-//Sub SaveAsCSV()
-//Dim WS As Excel.Worksheet
-//Dim SaveToDirectory As String
-//Dim name As String
-//Dim CurrentWorkbook As String
-//Dim CurrentFormat As Long
+/*
+Sub SaveAsCSV()
+Dim WS As Excel.Worksheet
+Dim SaveToDirectory As String
+Dim name As String
+Dim CurrentWorkbook As String
+Dim CurrentFormat As Long
 
-//CurrentWorkbook = ThisWorkbook.FullName
-//CurrentFormat = ThisWorkbook.FileFormat
-//' Store current details for the workbook
-//SaveToDirectory = "C:\code\docs\"
+CurrentWorkbook = ThisWorkbook.FullName
+CurrentFormat = ThisWorkbook.FileFormat
+' Store current details for the workbook
+SaveToDirectory = "C:\code\docs\"
 
-//For Each WS In ThisWorkbook.Worksheets
-//    Sheets(WS.name).Copy
-//    name = Replace(WS.name, "3.0", "")
-//    ActiveWorkbook.SaveAs Filename:=SaveToDirectory & name & ".csv", FileFormat:=xlCSV
-//    ActiveWorkbook.Close savechanges:=False
-//    ThisWorkbook.Activate
-//Next
-//End Sub
+For Each WS In ThisWorkbook.Worksheets
+    Sheets(WS.name).Copy
+    name = Replace(WS.name, "3.0", "")
+    ActiveWorkbook.SaveAs Filename:=SaveToDirectory & name & ".csv", FileFormat:=xlCSVUTF8
+    ActiveWorkbook.Close savechanges:=False
+    ThisWorkbook.Activate
+Next
+End Sub
+*/
 
 // run it.
 // will verify materials in MaterialCommododities vs the sheet
@@ -72,15 +75,6 @@ namespace EDDTest
 
         static public void Process(string rootpath)            // overall index of items
         {
-            EliteDangerousCore.MaterialCommodityData.SetUpInitialTable();
-
-
-            //            CVSFile fileshipdata = new CVSFile();
-            //          if (!fileshipdata.Read(Path.Combine(rootpath, "ships.csv")))
-            //        {
-            //          return "ERROR no ships csv";
-            //    }
-
             string de = "", fr = "", es = "", ru = "", pr = "";
 
             // check out replacement lists
@@ -96,6 +90,56 @@ namespace EDDTest
                     }
                 }
 
+            }
+
+
+            // check ships
+
+            {
+                CVSFile filecommods = new CVSFile();
+                if (filecommods.Read(Path.Combine(rootpath, "ShipData.csv")))
+                {
+                    foreach (CVSFile.Row rw in filecommods.RowsExcludingHeaderRow)
+                    {
+                        string fdname = rw[0].Trim();
+                        string ukname = rw[1].Trim();
+                        int? mass = rw.GetInt("V");
+                        int? basespeed = rw.GetInt("X");
+                        int? boostspeed = rw.GetInt("Y");
+
+                        var si = ShipModuleData.Instance.GetShipProperties(fdname);
+
+                        if (si == null)
+                            Console.WriteLine("Error " + fdname + " not found in frontier ship data");
+                        else
+                        {
+                            if ( ukname != ((ShipModuleData.ShipInfoString)si[ShipModuleData.ShipPropID.Name]).Value)
+                            {
+                                Console.WriteLine("Error " + fdname + " disagrees with uk name");
+                            }
+
+                            if (mass != null && mass.Value != ((ShipModuleData.ShipInfoDouble)si[ShipModuleData.ShipPropID.HullMass]).Value)
+                            {
+                                Console.WriteLine("Error " + fdname + " disagrees with mass");
+                            }
+
+                            // corolis has very different value for these.. not sure who is right
+
+                            if (basespeed != null && basespeed.Value != ((ShipModuleData.ShipInfoInt)si[ShipModuleData.ShipPropID.Speed]).Value)
+                            {
+                                //Console.WriteLine("Error " + fdname + " disagrees with speed");
+                            }
+
+                            if (boostspeed != null && boostspeed.Value != ((ShipModuleData.ShipInfoInt)si[ShipModuleData.ShipPropID.Boost]).Value)
+                            {
+                                //Console.WriteLine("Error " + fdname + " disagrees with boost");
+
+                            }
+                        }
+                    }
+                }
+                else
+                    Console.WriteLine("No Ships CSV");
             }
 
             // check commodities
@@ -138,22 +182,32 @@ namespace EDDTest
                         string fdname = rw[2].Trim();
                         string ukname = rw[3].Trim();
 
-                        bool isinararare = InaraRares.Contains(ukname);
-
-                        MaterialCommodityData cached = MaterialCommodityData.GetByFDName(fdname);
-
-                        if (cached == null)
+                        if (type.Length > 0)
                         {
-                            Console.WriteLine("+ AddCommodity" + (isinararare ? "Rare" : "") + "(\"" + ukname + "\", \"" + type + "\", \"" + fdname + "\");");
-                        }
-                        else if( cached.Type != type)
-                        {
-                            // excel has tobacco as are narcotic, but its a legal drug!!
-                            // this will produce errors until fixed
+                            string[] legaldrugcorrections = {
+                            "Tobacco","Beer","Wine","Liquor","EraninPearlWhisky","LavianBrandy","KonggaAle","WuthieloKuFroth","BastSnakeGin",
+                            "ThrutisCream","KamitraCigars","RusaniOldSmokey","YasoKondiLeaf","ChateauDeAegaeon","SaxonWine","CentauriMegaGin","GerasianGueuzeBeer",
+                            "BurnhamBileDistillate","IndiBourbon","LeestianEvilJuice","BlueMilk","BootlegLiquor" };
 
-                            Console.WriteLine("Error " + fdname + " type " + type + " disagrees with " + cached.Type);
-                        }
+                            if (Array.IndexOf(legaldrugcorrections, fdname) != -1)       // correct frontier calling them narcotics
+                                type = "Legal Drugs";
 
+                            bool isinararare = InaraRares.Contains(ukname);
+
+                            MaterialCommodityData cached = MaterialCommodityData.GetByFDName(fdname);
+
+                            if (cached == null)
+                            {
+                                Console.WriteLine("+ AddCommodity" + (isinararare ? "Rare" : "") + "(\"" + ukname + "\", \"" + type + "\", \"" + fdname + "\");");
+                            }
+                            else if (cached.Type != type)
+                            {
+                                // excel has tobacco as are narcotic, but its a legal drug!!
+                                // this will produce errors until fixed
+
+                                Console.WriteLine("Error " + fdname + " type " + type + " disagrees with " + cached.Type);
+                            }
+                        }
                     }
 
                     foreach (CVSFile.Row rw in filecommods.RowsExcludingHeaderRow)
@@ -206,7 +260,8 @@ namespace EDDTest
                         }
                         else
                         {
-                            Console.WriteLine("Missing Weapon " + fdname);
+                            string name = fdname.Replace("Hpt_", "");
+                            Console.WriteLine("+ { \"" + fdname.ToLower() + "\", new ShipModule(-1, 1, " + powerdraw.ToString("#.#") + ", \"" + name.SplitCapsWordFull() + "\", \"Weapon\")},");
                         }
                     }
                 }
@@ -418,14 +473,20 @@ namespace EDDTest
 
                                 string engnames = "Not Known";
 
-                                EngineerList en = Array.Find(ourenglist, x => x.cat == cat && x.ukname == ukname && x.level == level);
-                                if (en != null)
-                                    engnames = en.engnames;
+                                EngineeringRecipe er = Recipes.EngineeringRecipes.Find((x) => x.name == ukname && x.level == level.Value.ToString());
+
+                                if (er != null)
+                                {
+                                    if ( er.ingredientsstring != ing )
+                                        Console.WriteLine("Engineering disagree on " + ukname + " F: " + ing + " Data: " + er.ingredientsstring);
+                                }
                                 else
-                                    Console.WriteLine("No matching internal data for " + fdname + ":" + fdfront);
+                                    Console.WriteLine("Engineering missing " + ukname + " F: " + ing );
 
                                 string classline = "        new EngineeringRecipe(\"" + ukname + "\", \"" + ing + "\", \"" + cat + "\", \"" + level.Value.ToString() + "\", \"" + engnames + "\" ),";
                                 ret += classline + Environment.NewLine;
+
+
                             }
 
                         }
@@ -450,881 +511,6 @@ namespace EDDTest
                 File.WriteAllText(Path.Combine(rootpath, "mat-pr.part.txt"), pr, Encoding.UTF8);
             }
         }
-
-        class EngineerList
-        {
-            public string cat;
-            public string ukname;
-            public int level;
-            public string engnames;
-            public EngineerList(string c, string u, int l, string e) { cat = c; ukname = u; level = l; engnames = e; }
-        }
-
-        //FROM coriolis, corrected manually for 3.1 on 2/july/18 from inara
-
-        static EngineerList[] ourenglist = new EngineerList[]  {
-                    new EngineerList( "AFM", "Shielded", 1, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "AFM", "Shielded", 2, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "AFM", "Shielded", 3, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "AFM", "Shielded", 4, "Lori Jameson"),
-                    new EngineerList( "AFM", "Shielded", 5, "Unknown"),        //OK
-
-                    new EngineerList( "Armour", "Lightweight Armour", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Armour", "Lightweight Armour", 2, "Selene Jean"),
-                    new EngineerList( "Armour", "Lightweight Armour", 3, "Selene Jean"),
-                    new EngineerList( "Armour", "Lightweight Armour", 4, "Selene Jean"),
-                    new EngineerList( "Armour", "Lightweight Armour", 5, "Selene Jean"),    //OK
-
-                    new EngineerList( "Armour", "Blast Resistant Armour", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Armour", "Blast Resistant Armour", 2, "Selene Jean"),
-                    new EngineerList( "Armour", "Blast Resistant Armour", 3, "Selene Jean"),
-                    new EngineerList( "Armour", "Blast Resistant Armour", 4, "Selene Jean"),
-                    new EngineerList( "Armour", "Blast Resistant Armour", 5, "Selene Jean"),    //OK
-
-                                new EngineerList( "Armour", "Heavy Duty Armour", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Armour", "Heavy Duty Armour", 2, "Selene Jean"),
-                    new EngineerList( "Armour", "Heavy Duty Armour", 3, "Selene Jean"),
-                    new EngineerList( "Armour", "Heavy Duty Armour", 4, "Selene Jean"),
-                    new EngineerList( "Armour", "Heavy Duty Armour", 5, "Selene Jean"),     //OK
-
-                    new EngineerList( "Armour", "Kinetic Resistant Armour", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Armour", "Kinetic Resistant Armour", 2, "Selene Jean"),
-                    new EngineerList( "Armour", "Kinetic Resistant Armour", 3, "Selene Jean"),
-                    new EngineerList( "Armour", "Kinetic Resistant Armour", 4, "Selene Jean"),
-                    new EngineerList( "Armour", "Kinetic Resistant Armour", 5, "Selene Jean"),  //OK
-
-                    new EngineerList( "Armour", "Thermal Resistant Armour", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Armour", "Thermal Resistant Armour", 2, "Selene Jean"),
-                    new EngineerList( "Armour", "Thermal Resistant Armour", 3, "Selene Jean"),
-                    new EngineerList( "Armour", "Thermal Resistant Armour", 4, "Selene Jean"),
-                    new EngineerList( "Armour", "Thermal Resistant Armour", 5, "Selene Jean"),      //OK
-
-
-                    new EngineerList( "Beam Laser", "Efficient Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Efficient Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Efficient Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Efficient Weapon", 4, "Broo Tarquin"),
-                    new EngineerList( "Beam Laser", "Efficient Weapon", 5, "Broo Tarquin"), //ok
-
-                    new EngineerList( "Beam Laser", "Light Weight Mount", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Light Weight Mount", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Light Weight Mount", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Light Weight Mount", 4, "Broo Tarquin"),
-                    new EngineerList( "Beam Laser", "Light Weight Mount", 5, "Broo Tarquin"),   //OK
-
-                    new EngineerList( "Beam Laser", "Long-Range Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Long-Range Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Long-Range Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Long-Range Weapon", 4, "Broo Tarquin"),
-                    new EngineerList( "Beam Laser", "Long-Range Weapon", 5, "Broo Tarquin"),    //OK
-                    new EngineerList( "Beam Laser", "Overcharged Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Overcharged Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Overcharged Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Overcharged Weapon", 4, "Broo Tarquin"),
-                    new EngineerList( "Beam Laser", "Overcharged Weapon", 5, "Broo Tarquin"),   //OK
-                    new EngineerList( "Beam Laser", "Short-Range Blaster", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Short-Range Blaster", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Short-Range Blaster", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Short-Range Blaster", 4, "Broo Tarquin"),      //OK
-                    new EngineerList( "Beam Laser", "Short-Range Blaster", 5, "Broo Tarquin"),
-                    new EngineerList( "Beam Laser", "Sturdy Mount", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Sturdy Mount", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Sturdy Mount", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Beam Laser", "Sturdy Mount", 4, "Broo Tarquin"),
-                    new EngineerList( "Beam Laser", "Sturdy Mount", 5, "Broo Tarquin"),     //OK
-
-
-                    new EngineerList( "Burst Laser", "Efficient Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Efficient Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Efficient Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Efficient Weapon", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Efficient Weapon", 5, "Broo Tarquin"),        //OK
-                    new EngineerList( "Burst Laser", "Focused Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Focused Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Focused Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Focused Weapon", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Focused Weapon", 5, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Light Weight Mount", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Light Weight Mount", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Light Weight Mount", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Light Weight Mount", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Light Weight Mount", 5, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Long-Range Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Long-Range Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Long-Range Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Long-Range Weapon", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Long-Range Weapon", 5, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Overcharged Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Overcharged Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Overcharged Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Overcharged Weapon", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Overcharged Weapon", 5, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Rapid Fire Modification", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Rapid Fire Modification", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Rapid Fire Modification", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Rapid Fire Modification", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Rapid Fire Modification", 5, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Short-Range Blaster", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Short-Range Blaster", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Short-Range Blaster", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Short-Range Blaster", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Short-Range Blaster", 5, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Sturdy Mount", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Sturdy Mount", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Sturdy Mount", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Burst Laser", "Sturdy Mount", 4, "Broo Tarquin"),
-                    new EngineerList( "Burst Laser", "Sturdy Mount", 5, "Broo Tarquin"),        //OK
-
-
-                    new EngineerList( "Cannon", "Efficient Weapon", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Efficient Weapon", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Efficient Weapon", 3, "The Sarge"),
-                    new EngineerList( "Cannon", "Efficient Weapon", 4, "The Sarge"),
-                    new EngineerList( "Cannon", "Efficient Weapon", 5, "The Sarge"),
-                    new EngineerList( "Cannon", "High Capacity Magazine", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "High Capacity Magazine", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "High Capacity Magazine", 3, "The Sarge"),
-                    new EngineerList( "Cannon", "High Capacity Magazine", 4, "The Sarge"),
-                    new EngineerList( "Cannon", "High Capacity Magazine", 5, "The Sarge"),
-                    new EngineerList( "Cannon", "Light Weight Mount", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Light Weight Mount", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Light Weight Mount", 3, "The Sarge"),
-                    new EngineerList( "Cannon", "Light Weight Mount", 4, "The Sarge"),
-                    new EngineerList( "Cannon", "Light Weight Mount", 5, "The Sarge"),
-                    new EngineerList( "Cannon", "Long-Range Weapon", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Long-Range Weapon", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Long-Range Weapon", 3, "The Sarge"),
-                    new EngineerList( "Cannon", "Long-Range Weapon", 4, "The Sarge"),
-                    new EngineerList( "Cannon", "Long-Range Weapon", 5, "The Sarge"),
-                    new EngineerList( "Cannon", "Overcharged Weapon", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Overcharged Weapon", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Overcharged Weapon", 3, "The Sarge"),
-                    new EngineerList( "Cannon", "Overcharged Weapon", 4, "The Sarge"),
-                    new EngineerList( "Cannon", "Overcharged Weapon", 5, "The Sarge"),
-                    new EngineerList( "Cannon", "Rapid Fire Modification", 1, "Unknown"),
-                    new EngineerList( "Cannon", "Rapid Fire Modification", 2, "Unknown"),
-                    new EngineerList( "Cannon", "Rapid Fire Modification", 3, "Unknown"),
-                    new EngineerList( "Cannon", "Rapid Fire Modification", 4, "Unknown"),
-                    new EngineerList( "Cannon", "Rapid Fire Modification", 5, "Unknown"),
-                    new EngineerList( "Cannon", "Short-Range Blaster", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Short-Range Blaster", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Short-Range Blaster", 3, "The Sarge"),
-                    new EngineerList( "Cannon", "Short-Range Blaster", 4, "The Sarge"),
-                    new EngineerList( "Cannon", "Short-Range Blaster", 5, "The Sarge"),
-                    new EngineerList( "Cannon", "Sturdy Mount", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Sturdy Mount", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Cannon", "Sturdy Mount", 3, "The Sarge"),
-                    new EngineerList( "Cannon", "Sturdy Mount", 4, "The Sarge"),
-                    new EngineerList( "Cannon", "Sturdy Mount", 5, "The Sarge"),    //ok
-
-                    new EngineerList( "Cargo Scanner", "Fast Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Fast Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Fast Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Fast Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Fast Scanner", 5, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Lightweight", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Lightweight", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Lightweight", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Lightweight", 4, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Lightweight", 5, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Long-Range Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Long-Range Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Long-Range Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Long-Range Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Long-Range Scanner", 5, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Reinforced", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Reinforced", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Reinforced", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Reinforced", 4, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Reinforced", 5, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Shielded", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Shielded", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Shielded", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Shielded", 4, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Shielded", 5, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Wide Angle Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Wide Angle Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Wide Angle Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Wide Angle Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Cargo Scanner", "Wide Angle Scanner", 5, "Tiana Fortune"),       //OK
-
-                    new EngineerList( "Chaff Launcher", "Chaff Ammo Capacity", 1, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Lightweight", 1, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Lightweight", 2, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Lightweight", 3, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Lightweight", 4, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Lightweight", 5, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Reinforced", 1, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Reinforced", 2, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Reinforced", 3, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Reinforced", 4, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Reinforced", 5, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Shielded", 1, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Shielded", 2, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Shielded", 3, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Shielded", 4, "Ram Tah"),
-                    new EngineerList( "Chaff Launcher", "Shielded", 5, "Ram Tah"), //OK
-
-                    new EngineerList( "Collection Limpet", "Lightweight", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Lightweight", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Lightweight", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Lightweight", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Lightweight", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Reinforced", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Reinforced", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Reinforced", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Reinforced", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Reinforced", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Shielded", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Shielded", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Shielded", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Shielded", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Collection Limpet", "Shielded", 5, "The Sarge,Tiana Fortune"),  //OK
-
-                    new EngineerList( "ECM", "Lightweight", 1, "Ram Tah"),
-                    new EngineerList( "ECM", "Lightweight", 2, "Ram Tah"),
-                    new EngineerList( "ECM", "Lightweight", 3, "Ram Tah"),
-                    new EngineerList( "ECM", "Lightweight", 4, "Ram Tah"),
-                    new EngineerList( "ECM", "Lightweight", 5, "Ram Tah"),
-                    new EngineerList( "ECM", "Reinforced", 1, "Ram Tah"),
-                    new EngineerList( "ECM", "Reinforced", 2, "Ram Tah"),
-                    new EngineerList( "ECM", "Reinforced", 3, "Ram Tah"),
-                    new EngineerList( "ECM", "Reinforced", 4, "Ram Tah"),
-                    new EngineerList( "ECM", "Reinforced", 5, "Ram Tah"),
-                    new EngineerList( "ECM", "Shielded", 1, "Ram Tah"),
-                    new EngineerList( "ECM", "Shielded", 2, "Ram Tah"),
-                    new EngineerList( "ECM", "Shielded", 3, "Ram Tah"),
-                    new EngineerList( "ECM", "Shielded", 4, "Ram Tah"),
-                    new EngineerList( "ECM", "Shielded", 5, "Ram Tah"),    //OK
-
-                    new EngineerList( "Engine", "Dirty Drive Tuning", 1, "Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Dirty Drive Tuning", 2, "Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Dirty Drive Tuning", 3, "Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Dirty Drive Tuning", 4, "Professor Palin"),
-                    new EngineerList( "Engine", "Dirty Drive Tuning", 5, "Professor Palin"),
-                    new EngineerList( "Engine", "Drive Strengthening", 1, "Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Drive Strengthening", 2, "Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Drive Strengthening", 3, "Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Drive Strengthening", 4, "Professor Palin"),
-                    new EngineerList( "Engine", "Drive Strengthening", 5, "Professor Palin"),
-                    new EngineerList( "Engine", "Clean Drive Tuning", 1, "Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Clean Drive Tuning", 2, "Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Clean Drive Tuning", 3, "Felicity Farseer,Professor Palin"),
-                    new EngineerList( "Engine", "Clean Drive Tuning", 4, "Professor Palin"),
-                    new EngineerList( "Engine", "Clean Drive Tuning", 5, "Professor Palin"),        //OK
-
-                    new EngineerList( "Frag Cannon", "Double Shot", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Double Shot", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Double Shot", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Double Shot", 4, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Double Shot", 5, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Efficient Weapon", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Efficient Weapon", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Efficient Weapon", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Efficient Weapon", 4, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Efficient Weapon", 5, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "High Capacity Magazine", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "High Capacity Magazine", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "High Capacity Magazine", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "High Capacity Magazine", 4, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "High Capacity Magazine", 5, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Light Weight Mount", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Light Weight Mount", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Light Weight Mount", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Light Weight Mount", 4, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Light Weight Mount", 5, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Overcharged Weapon", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Overcharged Weapon", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Overcharged Weapon", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Overcharged Weapon", 4, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Overcharged Weapon", 5, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Rapid Fire Modification", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Rapid Fire Modification", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Rapid Fire Modification", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Rapid Fire Modification", 4, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Rapid Fire Modification", 5, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Sturdy Mount", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Sturdy Mount", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Sturdy Mount", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Sturdy Mount", 4, "Zacariah Nemo"),
-                    new EngineerList( "Frag Cannon", "Sturdy Mount", 5, "Zacariah Nemo"),  //OK
-
-
-                    new EngineerList( "FSD", "Faster FSD Boot Sequence", 1, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Faster FSD Boot Sequence", 2, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Faster FSD Boot Sequence", 3, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Faster FSD Boot Sequence", 4, "Elvira Martuuk,Felicity Farseer"),
-                    new EngineerList( "FSD", "Faster FSD Boot Sequence", 5, "Elvira Martuuk,Felicity Farseer"),
-                    new EngineerList( "FSD", "Increased FSD Range", 1, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Increased FSD Range", 2, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Increased FSD Range", 3, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Increased FSD Range", 4, "Elvira Martuuk,Felicity Farseer"),
-                    new EngineerList( "FSD", "Increased FSD Range", 5, "Elvira Martuuk,Felicity Farseer"),
-                    new EngineerList( "FSD", "Shielded FSD", 1, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Shielded FSD", 2, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Shielded FSD", 3, "Colonel Bris Dekker,Elvira Martuuk,Felicity Farseer,Professor Palin"),
-                    new EngineerList( "FSD", "Shielded FSD", 4, "Elvira Martuuk,Felicity Farseer"),
-                    new EngineerList( "FSD", "Shielded FSD", 5, "Elvira Martuuk,Felicity Farseer"),     //OK
-
-
-                    new EngineerList( "FSD Interdictor", "Expanded FSD Interdictor Capture Arc", 1, "Colonel Bris Dekker,Felicity Farseer,Tiana Fortune"),
-                    new EngineerList( "FSD Interdictor", "Expanded FSD Interdictor Capture Arc", 2, "Colonel Bris Dekker,Tiana Fortune"),
-                    new EngineerList( "FSD Interdictor", "Expanded FSD Interdictor Capture Arc", 3, "Colonel Bris Dekker,Tiana Fortune"),
-                    new EngineerList( "FSD Interdictor", "Expanded FSD Interdictor Capture Arc", 4, "Colonel Bris Dekker"),
-                    new EngineerList( "FSD Interdictor", "Expanded FSD Interdictor Capture Arc", 5, "Unknown"),
-                    new EngineerList( "FSD Interdictor", "Longer Range FSD Interdictor", 1, "Colonel Bris Dekker,Felicity Farseer,Tiana Fortune"),
-                    new EngineerList( "FSD Interdictor", "Longer Range FSD Interdictor", 2, "Colonel Bris Dekker,Tiana Fortune"),
-                    new EngineerList( "FSD Interdictor", "Longer Range FSD Interdictor", 3, "Colonel Bris Dekker,Tiana Fortune"),
-                    new EngineerList( "FSD Interdictor", "Longer Range FSD Interdictor", 4, "Colonel Bris Dekker"),
-                    new EngineerList( "FSD Interdictor", "Longer Range FSD Interdictor", 5, "Unknown"), //OK
-
-                    new EngineerList( "Fuel Scoop", "Shielded", 1, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Fuel Scoop", "Shielded", 2, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Fuel Scoop", "Shielded", 3, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Fuel Scoop", "Shielded", 4, "Lori Jameson"),
-                    new EngineerList( "Fuel Scoop", "Shielded", 5, "Unknown"), //OK
-
-                    new EngineerList( "Fuel Transfer Limpet", "Lightweight", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Lightweight", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Lightweight", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Lightweight", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Lightweight", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Reinforced", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Reinforced", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Reinforced", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Reinforced", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Reinforced", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Shielded", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Shielded", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Shielded", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Shielded", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Fuel Transfer Limpet", "Shielded", 5, "The Sarge,Tiana Fortune"), //OK
-
-                    new EngineerList( "Hatch Breaker Limpet", "Lightweight", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Lightweight", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Lightweight", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Lightweight", 4, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Lightweight", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Reinforced", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Reinforced", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Reinforced", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Reinforced", 4, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Reinforced", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Shielded", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Shielded", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Shielded", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Shielded", 4, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Hatch Breaker Limpet", "Shielded", 5, "The Sarge,Tiana Fortune"),
-
-                    new EngineerList( "Heat Sink Launcher", "Heatsink Ammo Capacity", 1, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Lightweight", 1, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Lightweight", 2, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Lightweight", 3, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Lightweight", 4, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Lightweight", 5, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Reinforced", 1, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Reinforced", 2, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Reinforced", 3, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Reinforced", 4, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Reinforced", 5, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Shielded", 1, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Shielded", 2, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Shielded", 3, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Shielded", 4, "Ram Tah"),
-                    new EngineerList( "Heat Sink Launcher", "Shielded", 5, "Ram Tah"), //OK
-
-                    new EngineerList( "Hull Reinforcement", "Lightweight Hull Reinforcement", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Lightweight Hull Reinforcement", 2, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Lightweight Hull Reinforcement", 3, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Lightweight Hull Reinforcement", 4, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Lightweight Hull Reinforcement", 5, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Blast Resistant Hull Reinforcement", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Blast Resistant Hull Reinforcement", 2, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Blast Resistant Hull Reinforcement", 3, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Blast Resistant Hull Reinforcement", 4, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Blast Resistant Hull Reinforcement", 5, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Heavy Duty Hull Reinforcement", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Heavy Duty Hull Reinforcement", 2, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Heavy Duty Hull Reinforcement", 3, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Heavy Duty Hull Reinforcement", 4, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Heavy Duty Hull Reinforcement", 5, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Kinetic Resistant Hull Reinforcement", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Kinetic Resistant Hull Reinforcement", 2, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Kinetic Resistant Hull Reinforcement", 3, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Kinetic Resistant Hull Reinforcement", 4, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Kinetic Resistant Hull Reinforcement", 5, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Thermal Resistant Hull Reinforcement", 1, "Liz Ryder,Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Thermal Resistant Hull Reinforcement", 2, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Thermal Resistant Hull Reinforcement", 3, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Thermal Resistant Hull Reinforcement", 4, "Selene Jean"),
-                    new EngineerList( "Hull Reinforcement", "Thermal Resistant Hull Reinforcement", 5, "Selene Jean"),  //OK
-
-
-                    new EngineerList( "Kill Warrant Scanner", "Fast Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Fast Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Fast Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Fast Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Fast Scanner", 5, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Lightweight", 1, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Lightweight", 2, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Lightweight", 3, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Lightweight", 4, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Lightweight", 5, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Long-Range Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Long-Range Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Long-Range Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Long-Range Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Long-Range Scanner", 5, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Reinforced", 1, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Reinforced", 2, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Reinforced", 3, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Reinforced", 4, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Reinforced", 5, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Shielded", 1, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Shielded", 2, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Shielded", 3, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Shielded", 4, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Shielded", 5, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Wide Angle Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Wide Angle Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Wide Angle Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Wide Angle Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Kill Warrant Scanner", "Wide Angle Scanner", 5, "Tiana Fortune"),        //OK
-
-                    new EngineerList( "Life Support", "Lightweight", 1, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Lightweight", 2, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Lightweight", 3, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Lightweight", 4, "Lori Jameson"),
-                    new EngineerList( "Life Support", "Lightweight", 5, "Unknown"),
-                    new EngineerList( "Life Support", "Reinforced", 1, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Reinforced", 2, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Reinforced", 3, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Reinforced", 4, "Lori Jameson"),
-                    new EngineerList( "Life Support", "Reinforced", 5, "Unknown"),
-                    new EngineerList( "Life Support", "Shielded", 1, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Shielded", 2, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Shielded", 3, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Life Support", "Shielded", 4, "Lori Jameson"),
-                    new EngineerList( "Life Support", "Shielded", 5, "Unknown"),   //OK
-
-                    new EngineerList( "Mine", "High Capacity Magazine", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "High Capacity Magazine", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "High Capacity Magazine", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "High Capacity Magazine", 4, "Juri Ishmaak"),
-                    new EngineerList( "Mine", "High Capacity Magazine", 5, "Juri Ishmaak"),
-                    new EngineerList( "Mine", "Light Weight Mount", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Light Weight Mount", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Light Weight Mount", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Light Weight Mount", 4, "Juri Ishmaak"),
-                    new EngineerList( "Mine", "Light Weight Mount", 5, "Juri Ishmaak"),
-                    new EngineerList( "Mine", "Rapid Fire Modification", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Rapid Fire Modification", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Rapid Fire Modification", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Rapid Fire Modification", 4, "Juri Ishmaak"),
-                    new EngineerList( "Mine", "Rapid Fire Modification", 5, "Juri Ishmaak"),
-                    new EngineerList( "Mine", "Sturdy Mount", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Sturdy Mount", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Sturdy Mount", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Mine", "Sturdy Mount", 4, "Juri Ishmaak"),
-                    new EngineerList( "Mine", "Sturdy Mount", 5, "Juri Ishmaak"),       //OK
-
-                    new EngineerList( "Missile", "High Capacity Magazine", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "High Capacity Magazine", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "High Capacity Magazine", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "High Capacity Magazine", 4, "Liz Ryder"),
-                    new EngineerList( "Missile", "High Capacity Magazine", 5, "Liz Ryder"),
-                    new EngineerList( "Missile", "Light Weight Mount", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Light Weight Mount", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Light Weight Mount", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Light Weight Mount", 4, "Liz Ryder"),
-                    new EngineerList( "Missile", "Light Weight Mount", 5, "Liz Ryder"),
-                    new EngineerList( "Missile", "Rapid Fire Modification", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Rapid Fire Modification", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Rapid Fire Modification", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Rapid Fire Modification", 4, "Liz Ryder"),
-                    new EngineerList( "Missile", "Rapid Fire Modification", 5, "Liz Ryder"),
-                    new EngineerList( "Missile", "Sturdy Mount", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Sturdy Mount", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Sturdy Mount", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Missile", "Sturdy Mount", 4, "Liz Ryder"),
-                    new EngineerList( "Missile", "Sturdy Mount", 5, "Liz Ryder"),   //OK
-
-                    new EngineerList( "Multicannon", "Efficient Weapon", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Efficient Weapon", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Efficient Weapon", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Efficient Weapon", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Efficient Weapon", 5, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "High Capacity Magazine", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "High Capacity Magazine", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "High Capacity Magazine", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "High Capacity Magazine", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "High Capacity Magazine", 5, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Light Weight Mount", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Light Weight Mount", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Light Weight Mount", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Light Weight Mount", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Light Weight Mount", 5, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Long-Range Weapon", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Long-Range Weapon", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Long-Range Weapon", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Long-Range Weapon", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Long-Range Weapon", 5, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Overcharged Weapon", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Overcharged Weapon", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Overcharged Weapon", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Overcharged Weapon", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Overcharged Weapon", 5, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Rapid Fire Modification", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Rapid Fire Modification", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Rapid Fire Modification", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Rapid Fire Modification", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Rapid Fire Modification", 5, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Short-Range Blaster", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Short-Range Blaster", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Short-Range Blaster", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Short-Range Blaster", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Short-Range Blaster", 5, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Sturdy Mount", 1, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Sturdy Mount", 2, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Sturdy Mount", 3, "Tod McQuinn,Zacariah Nemo"),
-                    new EngineerList( "Multicannon", "Sturdy Mount", 4, "Tod McQuinn"),
-                    new EngineerList( "Multicannon", "Sturdy Mount", 5, "Tod McQuinn"),     //OK
-
-                    new EngineerList( "Plasma Accelerator", "Efficient Weapon", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Efficient Weapon", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Efficient Weapon", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Efficient Weapon", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Efficient Weapon", 5, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Focused Weapon", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Focused Weapon", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Focused Weapon", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Focused Weapon", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Focused Weapon", 5, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Light Weight Mount", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Light Weight Mount", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Light Weight Mount", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Light Weight Mount", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Light Weight Mount", 5, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Long-Range Weapon", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Long-Range Weapon", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Long-Range Weapon", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Long-Range Weapon", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Long-Range Weapon", 5, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Overcharged Weapon", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Overcharged Weapon", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Overcharged Weapon", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Overcharged Weapon", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Overcharged Weapon", 5, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Rapid Fire Modification", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Rapid Fire Modification", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Rapid Fire Modification", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Rapid Fire Modification", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Rapid Fire Modification", 5, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Short-Range Blaster", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Short-Range Blaster", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Short-Range Blaster", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Short-Range Blaster", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Short-Range Blaster", 5, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Sturdy Mount", 1, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Sturdy Mount", 2, "Bill Turner,Zacariah Nemo"),
-                    new EngineerList( "Plasma Accelerator", "Sturdy Mount", 3, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Sturdy Mount", 4, "Bill Turner"),
-                    new EngineerList( "Plasma Accelerator", "Sturdy Mount", 5, "Bill Turner"),      //OK
-
-
-                    new EngineerList( "Point Defence", "Lightweight", 1, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Lightweight", 2, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Lightweight", 3, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Lightweight", 4, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Lightweight", 5, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Point Defence Ammo Capacity", 1, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Reinforced", 1, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Reinforced", 2, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Reinforced", 3, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Reinforced", 4, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Reinforced", 5, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Shielded", 1, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Shielded", 2, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Shielded", 3, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Shielded", 4, "Ram Tah"),
-                    new EngineerList( "Point Defence", "Shielded", 5, "Ram Tah"),
-
-                    new EngineerList( "Power Distributor", "High Charge Capacity Power Distributor", 1, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "High Charge Capacity Power Distributor", 2, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "High Charge Capacity Power Distributor", 3, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "High Charge Capacity Power Distributor", 4, "The Dweller"),
-                    new EngineerList( "Power Distributor", "High Charge Capacity Power Distributor", 5, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Charge Enhanced Power Distributor", 1, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Charge Enhanced Power Distributor", 2, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Charge Enhanced Power Distributor", 3, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Charge Enhanced Power Distributor", 4, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Charge Enhanced Power Distributor", 5, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Engine Focused Power Distributor", 1, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Engine Focused Power Distributor", 2, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Engine Focused Power Distributor", 3, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Engine Focused Power Distributor", 4, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Engine Focused Power Distributor", 5, "The Dweller"),
-                    new EngineerList( "Power Distributor", "System Focused Power Distributor", 1, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "System Focused Power Distributor", 2, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "System Focused Power Distributor", 3, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "System Focused Power Distributor", 4, "The Dweller"),
-                    new EngineerList( "Power Distributor", "System Focused Power Distributor", 5, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Weapon Focused Power Distributor", 1, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Weapon Focused Power Distributor", 2, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Weapon Focused Power Distributor", 3, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Weapon Focused Power Distributor", 4, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Weapon Focused Power Distributor", 5, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Shielded Power Distributor", 1, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Shielded Power Distributor", 2, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Shielded Power Distributor", 3, "Hera Tani,Marco Qwent,The Dweller"),
-                    new EngineerList( "Power Distributor", "Shielded Power Distributor", 4, "The Dweller"),
-                    new EngineerList( "Power Distributor", "Shielded Power Distributor", 5, "The Dweller"), //OK
-
-                    new EngineerList( "Power Plant", "Armoured Power Plant", 1, "Felicity Farseer,Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Armoured Power Plant", 2, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Armoured Power Plant", 3, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Armoured Power Plant", 4, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Armoured Power Plant", 5, "Hera Tani"),
-                    new EngineerList( "Power Plant", "Overcharged Power Plant", 1, "Felicity Farseer,Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Overcharged Power Plant", 2, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Overcharged Power Plant", 3, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Overcharged Power Plant", 4, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Overcharged Power Plant", 5, "Hera Tani"),
-                    new EngineerList( "Power Plant", "Low Emissions Power Plant", 1, "Felicity Farseer,Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Low Emissions Power Plant", 2, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Low Emissions Power Plant", 3, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Low Emissions Power Plant", 4, "Hera Tani,Marco Qwent"),
-                    new EngineerList( "Power Plant", "Low Emissions Power Plant", 5, "Hera Tani"),  //OK
-
-                    new EngineerList( "Prospecting Limpet", "Lightweight", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Lightweight", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Lightweight", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Lightweight", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Lightweight", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Reinforced", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Reinforced", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Reinforced", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Reinforced", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Reinforced", 5, "The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Shielded", 1, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Shielded", 2, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Shielded", 3, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Shielded", 4, "Ram Tah,The Sarge,Tiana Fortune"),
-                    new EngineerList( "Prospecting Limpet", "Shielded", 5, "The Sarge,Tiana Fortune"), //OK
-
-                    new EngineerList( "Pulse Laser", "Efficient Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Efficient Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Efficient Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Efficient Weapon", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Efficient Weapon", 5, "Broo Tarquin"),
-                    new EngineerList( "Pulse Laser", "Focused Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Focused Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Focused Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Focused Weapon", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Focused Weapon", 5, "Broo Tarquin"),
-                    new EngineerList( "Pulse Laser", "Light Weight Mount", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Light Weight Mount", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Light Weight Mount", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Light Weight Mount", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Light Weight Mount", 5, "Broo Tarquin"),
-                    new EngineerList( "Pulse Laser", "Long-Range Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Long-Range Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Long-Range Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Long-Range Weapon", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Long-Range Weapon", 5, "Broo Tarquin"),
-                    new EngineerList( "Pulse Laser", "Overcharged Weapon", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Overcharged Weapon", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Overcharged Weapon", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Overcharged Weapon", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Overcharged Weapon", 5, "Broo Tarquin"),
-                    new EngineerList( "Pulse Laser", "Rapid Fire Modification", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Rapid Fire Modification", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Rapid Fire Modification", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Rapid Fire Modification", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Rapid Fire Modification", 5, "Broo Tarquin"),
-                    new EngineerList( "Pulse Laser", "Short-Range Blaster", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Short-Range Blaster", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Short-Range Blaster", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Short-Range Blaster", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Short-Range Blaster", 5, "Broo Tarquin"),
-                    new EngineerList( "Pulse Laser", "Sturdy Mount", 1, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Sturdy Mount", 2, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Sturdy Mount", 3, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Sturdy Mount", 4, "Broo Tarquin,The Dweller"),
-                    new EngineerList( "Pulse Laser", "Sturdy Mount", 5, "Broo Tarquin"),    //OK
-
-                    new EngineerList( "Rail Gun", "High Capacity Magazine", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "High Capacity Magazine", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "High Capacity Magazine", 3, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "High Capacity Magazine", 4, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "High Capacity Magazine", 5, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Light Weight Mount", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Light Weight Mount", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Light Weight Mount", 3, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Light Weight Mount", 4, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Light Weight Mount", 5, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Long-Range Weapon", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Long-Range Weapon", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Long-Range Weapon", 3, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Long-Range Weapon", 4, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Long-Range Weapon", 5, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Short-Range Blaster", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Short-Range Blaster", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Short-Range Blaster", 3, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Short-Range Blaster", 4, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Short-Range Blaster", 5, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Sturdy Mount", 1, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Sturdy Mount", 2, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Sturdy Mount", 3, "The Sarge,Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Sturdy Mount", 4, "Tod McQuinn"),
-                    new EngineerList( "Rail Gun", "Sturdy Mount", 5, "Tod McQuinn"),  //OK
-
-
-                    new EngineerList( "Refineries", "Shielded", 1, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Refineries", "Shielded", 2, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Refineries", "Shielded", 3, "Bill Turner,Lori Jameson"),
-                    new EngineerList( "Refineries", "Shielded", 4, "Lori Jameson"),
-                    new EngineerList( "Refineries", "Shielded", 5, "Unknown"), //ok
-
-
-
-
-
-                    new EngineerList( "Sensor", "Light Weight Scanner", 1, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Light Weight Scanner", 2, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Light Weight Scanner", 3, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Light Weight Scanner", 4, "Lei Cheung,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Light Weight Scanner", 5, "Lei Cheung,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),   //ok
-
-                    new EngineerList( "Sensor", "Long-Range Scanner", 1, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Long-Range Scanner", 2, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Long-Range Scanner", 3, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Long-Range Scanner", 4, "Lei Cheung,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),   //ok
-                    new EngineerList( "Sensor", "Long-Range Scanner", 5, "Lei Cheung,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),   //ok
-                    new EngineerList( "Sensor", "Wide Angle Scanner", 1, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Wide Angle Scanner", 2, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Wide Angle Scanner", 3, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Sensor", "Wide Angle Scanner", 4, "Lei Cheung,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),   //ok
-                    new EngineerList( "Sensor", "Wide Angle Scanner", 5, "Lei Cheung,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),   //ok
-
-
-                    new EngineerList( "Shield Booster", "Blast Resistant Shield Booster", 1, "Didi Vatermann,Felicity Farseer,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Blast Resistant Shield Booster", 2, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Blast Resistant Shield Booster", 3, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Blast Resistant Shield Booster", 4, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Blast Resistant Shield Booster", 5, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Heavy Duty Shield Booster", 1, "Didi Vatermann,Felicity Farseer,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Heavy Duty Shield Booster", 2, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Heavy Duty Shield Booster", 3, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Heavy Duty Shield Booster", 4, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Heavy Duty Shield Booster", 5, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Kinetic Resistant Shield Booster", 1, "Didi Vatermann,Felicity Farseer,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Kinetic Resistant Shield Booster", 2, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Kinetic Resistant Shield Booster", 3, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Kinetic Resistant Shield Booster", 4, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Kinetic Resistant Shield Booster", 5, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Resistance Augmented Shield Booster", 1, "Didi Vatermann,Felicity Farseer,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Resistance Augmented Shield Booster", 2, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Resistance Augmented Shield Booster", 3, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Resistance Augmented Shield Booster", 4, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Resistance Augmented Shield Booster", 5, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Thermal Resistant Shield Booster", 1, "Didi Vatermann,Felicity Farseer,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Thermal Resistant Shield Booster", 2, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Thermal Resistant Shield Booster", 3, "Didi Vatermann,Lei Cheung"),
-                    new EngineerList( "Shield Booster", "Thermal Resistant Shield Booster", 4, "Didi Vatermann"),
-                    new EngineerList( "Shield Booster", "Thermal Resistant Shield Booster", 5, "Didi Vatermann"),       //ok
-
-                    new EngineerList( "Shield Cell Bank", "Rapid Charge Shield Cell Bank", 1, "Elvira Martuuk,Lori Jameson"),
-                    new EngineerList( "Shield Cell Bank", "Rapid Charge Shield Cell Bank", 2, "Lori Jameson"),
-                    new EngineerList( "Shield Cell Bank", "Rapid Charge Shield Cell Bank", 3, "Lori Jameson"),
-                    new EngineerList( "Shield Cell Bank", "Rapid Charge Shield Cell Bank", 4, "Unknown"),
-                    new EngineerList( "Shield Cell Bank", "Specialised Shield Cell Bank", 1, "Elvira Martuuk,Lori Jameson"),
-                    new EngineerList( "Shield Cell Bank", "Specialised Shield Cell Bank", 2, "Lori Jameson"),
-                    new EngineerList( "Shield Cell Bank", "Specialised Shield Cell Bank", 3, "Lori Jameson"),
-                    new EngineerList( "Shield Cell Bank", "Specialised Shield Cell Bank", 4, "Unknown"),    //ok
-
-
-                    new EngineerList( "Shield Generator", "Kinetic Resistant Shields", 1, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Kinetic Resistant Shields", 2, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Kinetic Resistant Shields", 3, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Kinetic Resistant Shields", 4, "Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Kinetic Resistant Shields", 5, "Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Enhanced, Low Power Shields", 1, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Enhanced, Low Power Shields", 2, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Enhanced, Low Power Shields", 3, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Enhanced, Low Power Shields", 4, "Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Enhanced, Low Power Shields", 5, "Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Reinforced Shields", 1, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Reinforced Shields", 2, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Reinforced Shields", 3, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Reinforced Shields", 4, "Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Reinforced Shields", 5, "Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Thermal Resistant Shields", 1, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Thermal Resistant Shields", 2, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Thermal Resistant Shields", 3, "Didi Vatermann,Elvira Martuuk,Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Thermal Resistant Shields", 4, "Lei Cheung"),
-                    new EngineerList( "Shield Generator", "Thermal Resistant Shields", 5, "Lei Cheung"),    //ok
-
-                    new EngineerList( "Surface Scanner", "Fast Scanner", 1, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Fast Scanner", 2, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Fast Scanner", 3, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Fast Scanner", 4, "Lei Cheung,Hera Tani,Juri Ishmaak,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Fast Scanner", 5,"Lei Cheung,Hera Tani,Juri Ishmaak,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Long-Range Scanner", 1, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Long-Range Scanner", 2, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Long-Range Scanner", 3, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Long-Range Scanner", 4, "Lei Cheung,Hera Tani,Juri Ishmaak,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Long-Range Scanner", 5, "Lei Cheung,Hera Tani,Juri Ishmaak,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Wide Angle Scanner", 1, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Wide Angle Scanner", 2, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Wide Angle Scanner", 3, "Felicity Farseer,Lei Cheung,Hera Tani,Juri Ishmaak,Tiana Fortune,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Wide Angle Scanner", 4, "Lei Cheung,Hera Tani,Juri Ishmaak,Bill Turner,Lori Jameson"),
-                    new EngineerList( "Surface Scanner", "Wide Angle Scanner", 5, "Lei Cheung,Hera Tani,Juri Ishmaak,Bill Turner,Lori Jameson"),        //OK
-
-                    new EngineerList( "Torpedo", "Light Weight Mount", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Torpedo", "Light Weight Mount", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Torpedo", "Light Weight Mount", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Torpedo", "Light Weight Mount", 4, "Liz Ryder"),
-                    new EngineerList( "Torpedo", "Light Weight Mount", 5, "Liz Ryder"),
-                    new EngineerList( "Torpedo", "Sturdy Mount", 1, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Torpedo", "Sturdy Mount", 2, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Torpedo", "Sturdy Mount", 3, "Juri Ishmaak,Liz Ryder"),
-                    new EngineerList( "Torpedo", "Sturdy Mount", 4, "Liz Ryder"),
-                    new EngineerList( "Torpedo", "Sturdy Mount", 5, "Liz Ryder"),   //OK
-
-                    new EngineerList( "Wake Scanner", "Fast Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Fast Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Fast Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Fast Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Fast Scanner", 5, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Lightweight", 1, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Lightweight", 2, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Lightweight", 3, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Lightweight", 4, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Lightweight", 5, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Long-Range Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Long-Range Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Long-Range Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Long-Range Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Long-Range Scanner", 5, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Reinforced", 1, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Reinforced", 2, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Reinforced", 3, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Reinforced", 4, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Reinforced", 5, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Shielded", 1, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Shielded", 2, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Shielded", 3, "Bill Turner,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Shielded", 4, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Shielded", 5, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Wide Angle Scanner", 1, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Wide Angle Scanner", 2, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Wide Angle Scanner", 3, "Bill Turner,Juri Ishmaak,Lori Jameson,Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Wide Angle Scanner", 4, "Tiana Fortune"),
-                    new EngineerList( "Wake Scanner", "Wide Angle Scanner", 5, "Tiana Fortune"),    //OK
-
-        };
-
         static string[] InaraRares = new string[]
         {
             // inara 2/7/2018

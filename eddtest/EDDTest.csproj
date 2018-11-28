@@ -72,7 +72,8 @@
     <Compile Include="CorolisShips.cs" />
     <Compile Include="CorolisModules.cs" />
     <Compile Include="EDDB.cs" />
-    <Compile Include="From EDD Project Manually copied\MaterialCommodities.cs" />
+    <Compile Include="From EDD Project Manually copied\MaterialCommodityData.cs" />
+    <Compile Include="From EDD Project Manually copied\MaterialRecipesData.cs" />
     <Compile Include="From EDD Project Manually copied\ShipModuleData.cs" />
     <Compile Include="FrontierData.cs" />
     <Compile Include="Journal.cs" />

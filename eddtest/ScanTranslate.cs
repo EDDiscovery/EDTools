@@ -23,7 +23,7 @@ namespace EDDTest
         {
             bool ok = false;
             bool local = true;
-            string txphrase = "";
+            string engphrase = "";
             string keyword = "";
 
             StringParser s0 = new StringParser(combinedline, txpos);
@@ -39,27 +39,27 @@ namespace EDDTest
                         string ns = t.Item1.Replace(" ", "");
 
                         if (t.Item2)
-                            txphrase += t.Item1;
+                            engphrase += t.Item1;
                         else if (ns == "+Environment.NewLine+Environment.NewLine+")
-                            txphrase += "\\r\\n\\r\\n";
+                            engphrase += "\\r\\n\\r\\n";
                         else if (ns == "+Environment.NewLine+Environment.NewLine")
-                            txphrase += "\\r\\n\\r\\n";
+                            engphrase += "\\r\\n\\r\\n";
                         else if (ns == "+Environment.NewLine+")
-                            txphrase += "\\r\\n";
+                            engphrase += "\\r\\n";
                         else if (ns == "Environment.NewLine+")
-                            txphrase += "\\r\\n";
+                            engphrase += "\\r\\n";
                         else if (ns == "+Environment.NewLine")
-                            txphrase += "\\r\\n";
+                            engphrase += "\\r\\n";
                         else if (ns == "+")
-                            txphrase += "";
+                            engphrase += "";
                         else
                         {
-                            txphrase = null;
+                            engphrase = null;
                             break;
                         }
                     }
 
-                    if (txphrase != null)
+                    if (engphrase != null)
                     {
                         StringParser s1 = new StringParser(combinedline, parapos);
 
@@ -83,9 +83,9 @@ namespace EDDTest
                                 }
                                 else if (s1.IsCharMoveOn(')'))
                                 {
-                                    if (warnoldidchange && txphrase.FirstAlphaNumericText() != txphrase.ReplaceNonAlphaNumeric())
-                                        Console.WriteLine("Warning : Changed ID " + txphrase + "  " + txphrase.FirstAlphaNumericText() + " old " + txphrase.ReplaceNonAlphaNumeric());
-                                    keyword = nextword + "."+ txphrase.FirstAlphaNumericText();
+                                    if (warnoldidchange && engphrase.FirstAlphaNumericText() != engphrase.ReplaceNonAlphaNumeric())
+                                        Console.WriteLine("Warning : Changed ID " + engphrase + "  " + engphrase.FirstAlphaNumericText() + " old " + engphrase.ReplaceNonAlphaNumeric());
+                                    keyword = nextword + "."+ engphrase.FirstAlphaNumericText();
                                     ok = true;
                                 }
                             }
@@ -103,19 +103,19 @@ namespace EDDTest
                             }
                             else if (s1.IsCharMoveOn(')'))
                             {
-                                keyword = txphrase.FirstAlphaNumericText();
+                                keyword = engphrase.FirstAlphaNumericText();
 
-                                if (warnoldidchange && keyword != txphrase.ReplaceNonAlphaNumeric())
-                                    Console.WriteLine("Warning : Changed ID " + txphrase + "  " + txphrase.FirstAlphaNumericText() + " old " + txphrase.ReplaceNonAlphaNumeric());
+                                if (warnoldidchange && keyword != engphrase.ReplaceNonAlphaNumeric())
+                                    Console.WriteLine("Warning : Changed ID " + engphrase + "  " + engphrase.FirstAlphaNumericText() + " old " + engphrase.ReplaceNonAlphaNumeric());
 
                                 ok = true;
                             }
                         }
                         else if (s1.IsCharMoveOn(')'))
                         {
-                            keyword = txphrase.FirstAlphaNumericText();
-                            if (warnoldidchange && keyword != txphrase.ReplaceNonAlphaNumeric())
-                                Console.WriteLine("Warning : Changed ID " + txphrase + "  " + txphrase.FirstAlphaNumericText() + " old " + txphrase.ReplaceNonAlphaNumeric());
+                            keyword = engphrase.FirstAlphaNumericText();
+                            if (warnoldidchange && keyword != engphrase.ReplaceNonAlphaNumeric())
+                                Console.WriteLine("Warning : Changed ID " + engphrase + "  " + engphrase.FirstAlphaNumericText() + " old " + engphrase.ReplaceNonAlphaNumeric());
                             local = false;
                             ok = true;
                         }
@@ -123,16 +123,35 @@ namespace EDDTest
                 }
             }
 
-            return (ok) ? new Tuple<string, string, bool>(keyword, txphrase, local) : null;
+            return (ok) ? new Tuple<string, string, bool>(keyword, engphrase, local) : null;
         }
 
-        static public string Process(FileInfo[] files, bool combinedone, bool showrepeats)            // overall index of items
+        class DefInfo
+        {
+            public string newtype;
+            public string parent;
+        }
+
+        static public string Process(FileInfo[] files, string language, string txpath, int searchdepth, bool combinedone, bool showrepeats, bool showerrorsonly)            // overall index of items
         {
             string locals = "";
             string globals = "";
             bool doneglobalstitle = false;
             List<Definition> globalsdone = new List<Definition>();
             List<Definition> localsdone = new List<Definition>();
+
+            BaseUtils.Translator trans = BaseUtils.Translator.Instance;
+
+            if (language.HasChars() && txpath.HasChars())
+            {
+                trans.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), loadorgenglish:true);
+            }
+
+            if (!trans.Translating)
+            {
+                locals += "********************* TRANSLATION NOT LOADED" + Environment.NewLine;
+
+            }
 
             foreach (var fi in files)
             {
@@ -143,6 +162,8 @@ namespace EDDTest
                     List<string> classes = new List<string>();
                     List<string> baseclasses = new List<string>();
                     List<int> classeslevel = new List<int>();
+                    Dictionary<string, DefInfo> winformdefs = new Dictionary<string, DefInfo>();
+
                     int bracketlevel = 0;
 
                     if ( !combinedone )
@@ -152,6 +173,8 @@ namespace EDDTest
 
                     string line,previoustext="";
                     int lineno = 0;
+
+                    string dropdown = null;
 
                     while ((line = sr.ReadLine()) != null)
                     {
@@ -176,12 +199,12 @@ namespace EDDTest
                                 usebasename = true;
                             }
 
+                            string localtext = "";
+                            string globaltext = "";
+
                             if (txpos != -1)
                             {
                                 Tuple<string, string, bool> ret = ProcessLine(combined, line, txpos, parapos, false);
-
-                                string localtext = "";
-                                string globaltext = "";
 
                                 if (ret == null)
                                     localtext = fi.FullName + ":" + lineno + ":Miss formed line around " + combined.Mid(txpos, 30) + Environment.NewLine;
@@ -204,26 +227,58 @@ namespace EDDTest
 
                                         Definition def = (local ? localsdone : globalsdone).Find(x => x.token.Equals(id, StringComparison.InvariantCultureIgnoreCase));
 
-                                        string res = "";
+                                        string engquoted = ret.Item2.AlwaysQuoteString();
+
+                                        string res = null;
                                         if (def != null)
                                         {
                                             if (def.text != ret.Item2)
-                                                res = fi.FullName + ":" + lineno + ":ERROR: ID has different text " + id + " " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
-                                            else if (showrepeats)
-                                                res = "//Repeat " + id + " " + ret.Item2.AlwaysQuoteString();
-                                            else
-                                                res = null;     // indicate no output
+                                                res = fi.FullName + ":" + lineno + ":ERROR: ID has different text " + id + " " + Environment.NewLine + "   >> " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
+                                            else if (showrepeats)       // if showrepeats is off, then no output, since we already done it
+                                                res = "//Repeat " + id + " " + engquoted;
                                         }
                                         else
                                         {
                                             (local ? localsdone : globalsdone).Add(new Definition(id, ret.Item2, fi.FullName + ":" + lineno));
+
+                                            res = id + ": " + engquoted + " @";     // list it
+
+                                            if (trans.IsDefined(id))
+                                            {
+                                                string foreign = trans.GetTranslation(id);
+                                                string english = trans.GetOriginalEnglish(id);
+                                                english = english.EscapeControlChars();
+
+                                                if ( foreign != null )
+                                                {
+                                                    if (english != ret.Item2)
+                                                    {
+                                                        res += " // Translation present, english differs from " + ret.Item2 + " vs " + english;
+                                                    }
+                                                    else
+                                                    {   
+                                                        if (!showerrorsonly)            // everything is okay - do we list it..
+                                                            res += " // OK";
+                                                        else
+                                                            res = null;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (!showerrorsonly)                // if we are showing all, we say there is no translation
+                                                        res += " // Translation present, no definition present";
+                                                    else
+                                                        res = null;
+                                                }
+                                            }       
+                                            else if ( trans.Translating )       // if we are checking translation, do it..
+                                            {
+                                                res += " // NOT DEFINED";
+                                            }
                                         }
 
                                         if (res != null)
                                         {
-                                            if (!res.HasChars())
-                                                res = id + ": " + ret.Item2.AlwaysQuoteString() + " @";
-
                                             res += Environment.NewLine;
 
                                             if (local)
@@ -238,7 +293,8 @@ namespace EDDTest
                                 {
                                     if (!donelocaltitle)
                                     {
-                                        locals += "///////////////////////////////////////////////////// " + (classes.Count>0 ? classes[0] : "?")+ Environment.NewLine;
+                                        string text = "///////////////////////////////////////////////////// " + (classes.Count > 0 ? classes[0] : "?") + " in " + fi.Name + Environment.NewLine;
+                                        locals += text;
                                         donelocaltitle = true;
                                     }
                                     locals += localtext;
@@ -272,6 +328,8 @@ namespace EDDTest
                             clspos = line.IndexOf("public class ");
                         if (clspos == -1)
                             clspos = line.IndexOf("abstract class ");
+                        if (clspos == -1)
+                            clspos = line.IndexOf("static class ");
 
                         if (clspos >= 0)
                         {
@@ -314,6 +372,139 @@ namespace EDDTest
 
                         }
 
+                        if ( line.StartsWith("this.") && fi.Name.Contains("Designer",StringComparison.InvariantCultureIgnoreCase) )
+                        {
+                            StringParser sp = new StringParser(line, 5);
+                            string controlname = sp.NextWord(".=,()} ");
+                            string propname = sp.IsCharMoveOn('.') ? sp.NextWord(".=,()} ") : null;
+                            string value = null;        // value used to indicate we have a id
+
+                            System.Diagnostics.Debug.WriteLine(lineno + " This. " + controlname + " . " + propname);
+
+                            if (dropdown != null)
+                            {
+                                System.Diagnostics.Debug.WriteLine(">> Drop down " + dropdown + " " + sp.LineLeft);
+
+                                DefInfo di = winformdefs.ContainsKey(controlname) ? winformdefs[controlname] : null;
+
+                                if (di != null)
+                                    di.parent = dropdown;
+
+                                if (sp.Find("});"))
+                                    dropdown = null;
+                            }
+                            else if (propname == "DropDownItems")
+                            {
+                                System.Diagnostics.Debug.WriteLine("Found drop down " + sp.LineLeft);
+                                dropdown = controlname;
+                            }
+                            else if (propname == "SetToolTip" && sp.IsCharMoveOn('('))
+                            {
+                                if (sp.NextWord(".") == "this" && sp.IsCharMoveOn('.'))
+                                {
+                                    controlname = sp.NextWord(".=,()} ") + ".ToolTip";
+                                    if (sp.IsCharMoveOn(','))
+                                    {
+                                        value = sp.NextQuotedWord();
+                                    }
+                                }
+                            }
+                            else if (controlname != "Text" && propname == null && sp.IsCharMoveOn('='))      // this.control = 
+                            {
+                                if (sp.NextWord() == "new")     // this.name = new..
+                                {
+                                    winformdefs[controlname] = new DefInfo() { newtype = sp.NextWord(";") };
+                                    System.Diagnostics.Debug.WriteLine("Def " + controlname + " " + winformdefs[controlname]);
+                                }
+                            }
+                            else if ((controlname == "Text" && propname == null && sp.IsCharMoveOn('=')) || (propname != null && propname == "Text" && sp.IsCharMoveOn('=')))
+                            {
+                                value = sp.NextQuotedWord();
+
+                                bool ok = true;
+
+                                if (controlname != "Text")
+                                {
+                                    DefInfo di = winformdefs.ContainsKey(controlname) ? winformdefs[controlname] : null;
+
+                                    if (di != null)
+                                    {
+                                        string[] excluded = new string[]
+                                        {
+                                                "ComboBoxCustom", "NumberBoxDouble", "NumberBoxLong", "VScrollBarCustom",     // Controls not for translation..
+                                                "StatusStripCustom" , "RichTextBoxScroll","TextBoxBorder", "AutoCompleteTextBox", "DateTimePicker" , "NumericUpDownCustom",
+                                                "Panel", "DataGridView", "GroupBox", "SplitContainer", "LinkLabel"
+                                        };
+
+                                        ok = Array.FindIndex(excluded, (xx) => di.newtype.Contains(xx)) == -1;
+
+                                        if (di.parent != null)
+                                        {
+                                            DefInfo dip = winformdefs.ContainsKey(di.parent) ? winformdefs[di.parent] : null;       // double deep ..
+                                            controlname = (dip != null && dip.parent != null ? (dip.parent + ".") : "") + di.parent + "." + controlname;
+                                        }
+                                    }
+                                }
+                                else
+                                    controlname = "";
+
+                                if (!ok || value == "<code>")
+                                    value = null;
+                            }
+
+                            if ( value != null )
+                            {
+                                string classname = (classes.Count > 0) ? classes.Last() : "ERROR NO CLASS!";
+                                string id = classname + (controlname.HasChars() ? "." + controlname : "");
+                                string res = id + ": " + value.AlwaysQuoteString() + " @";
+
+                                if (trans.IsDefined(id))
+                                {
+                                    string foreign = trans.GetTranslation(id);
+                                    string english = trans.GetOriginalEnglish(id);
+                                    english = english.EscapeControlChars();
+
+                                    if (foreign != null)
+                                    {
+                                        if (english != value )
+                                        {
+                                            res += " // Translation present, english differs from " + value + " vs " + english;
+                                        }
+                                        else
+                                        {
+                                            if (!showerrorsonly)            // everything is okay - do we list it..
+                                                res += " // OK";
+                                            else
+                                                res = null;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (!showerrorsonly)                // if we are showing all, we say there is no translation
+                                            res += " // Translation present, no definition present";
+                                        else
+                                            res = null;
+                                    }
+                                }
+                                else if (trans.Translating)       // if we are checking translation, do it..
+                                {
+                                    res += " // NOT DEFINED";
+                                }
+
+                                if (res != null)
+                                {
+                                    if (!donelocaltitle)
+                                    {
+                                        string text = "///////////////////////////////////////////////////// " + (classes.Count > 0 ? classes[0] : "?") + " in " + fi.Name + Environment.NewLine;
+                                        locals += text;
+                                        donelocaltitle = true;
+                                    }
+
+                                    locals += res + Environment.NewLine;
+                                }
+                            }
+                        }
+
                     }
                 }
             }
@@ -322,43 +513,4 @@ namespace EDDTest
         }
     }
 }
-
-
-//// look for designer items.. experimental..
-
-//int textpos = line.IndexOf(".Text = ");
-//int thispos = line.IndexOf("this.");
-
-//if ( textpos > 0 && thispos > 0)
-//{
-//    StringParser p = new StringParser(line.Substring(textpos + 7));
-//    string text = p.NextQuotedWord();
-//    //Console.WriteLine(line);
-
-//    int namelength = textpos - thispos - 5;
-
-//    if (namelength > 0)
-//    {
-//        string name = line.Substring(thispos + 5, namelength);
-
-//        if (text != "<code>" &&
-//            !name.Contains("comboBox", StringComparison.InvariantCultureIgnoreCase) &&
-//            !name.Contains("Vscroll", StringComparison.InvariantCultureIgnoreCase) &&
-//            !name.Contains("TextBox", StringComparison.InvariantCultureIgnoreCase) &&
-//            !name.Contains("RichText", StringComparison.InvariantCultureIgnoreCase)
-//            )
-//        {
-//            if (!donedesignerstitle)
-//            {
-//                designers += "///////////////////////////////////////////////////// " + Path.GetFileNameWithoutExtension(fi.FullName) + Environment.NewLine;
-//                donedesignerstitle = true;
-//            }
-
-//            designers += classes.Last() + "." + name + ": " + text.AlwaysQuoteString() + " @" + Environment.NewLine;
-
-//        }
-//    }
-//}
-
-//// TBD tooltips            this.toolTip.SetToolTip(this.checkBoxMoveToTop, "Select if cursor moves to top entry when a new entry is received");
 

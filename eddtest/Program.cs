@@ -128,22 +128,35 @@ namespace EDDTest
             }
             else if (arg1.Equals("scantranslate", StringComparison.InvariantCultureIgnoreCase))
             {
+                // sample scantranslate c:\code\eddiscovery\elitedangerous\journalevents *.cs c:\code\eddiscovery\eddiscovery\translations\ 2 italiano-it combine > c:\code\output.txt
+
                 string path = args.Next();
-                FileInfo[] allFiles = Directory.EnumerateFiles(".", path, SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-                bool combine = false;
-                bool showrepeat = false;
+                string wildcard = args.Next();
+                string txpath = args.Next();
+                int txsearchdepth = args.Int();
+                string lang = args.Next();
 
-                while (args.More)
+                if (path != null && wildcard != null)
                 {
-                    string a = args.Next().ToLowerInvariant();
-                    if (a == "combine")
-                        combine = true;
-                    if (a == "showrepeats")
-                        showrepeat = true;
-                }
+                    FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+                    bool combine = false;
+                    bool showrepeat = false;
+                    bool showerrorsonly = false;
 
-                string ret = ScanTranslate.Process(allFiles, combine, showrepeat);
-                Console.WriteLine(ret);
+                    while (args.More)
+                    {
+                        string a = args.Next().ToLowerInvariant();
+                        if (a == "combine")
+                            combine = true;
+                        if (a == "showrepeats")
+                            showrepeat = true;
+                        if (a == "showerrorsonly")
+                            showerrorsonly = true;
+                    }
+
+                    string ret = ScanTranslate.Process(allFiles, lang, txpath, txsearchdepth, combine, showrepeat , showerrorsonly);
+                    Console.WriteLine(ret);
+                }
             }
             else if (arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -193,7 +206,14 @@ namespace EDDTest
                               "CorolisShip name - process corolis-data\\ships\n" +
                               "Coroliseng rootfolder - process corolis-data\\modifications\n" +
                               "FrontierData rootfolder - process cvs file exports of frontier data\n" +
-                              "scantranslate filespecwildcard [Combine] [ShowRepeats]- process source files and look for .Tx definitions\n" +
+                              "scantranslate path filewildcard languagefilepath searchdepth language [opt]..- process source files and look for .Tx definitions\n" +
+                              "                 path filewildcard is where the source files to search for .Tx is in \n" +
+                              "                 languagefilepath is where the .tlf files are located - must include trailing \\ \n" +
+                              "                 searchupdepth is the depth of search upwards (to root) to look thru folders for include files - 2 is normal\n" +
+                              "                 language is the language to choose - in ISO format, such as fr\n" +
+                              "                 Opt: Combine means don't repeat IDs if found in previous files\n" +
+                              "                 Opt: ShowRepeats means show repeated entries in output\n" +
+                              "                 Opt: ShowNotdefined means show dictionary entries which does not have foreign text but are found\n" +
                               "jsonindented file\n"
                               );
 

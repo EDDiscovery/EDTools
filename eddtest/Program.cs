@@ -173,11 +173,62 @@ namespace EDDTest
                             try
                             {
                                 jo = JObject.Parse(s);
+
                                 Console.WriteLine(jo.ToString(Newtonsoft.Json.Formatting.Indented));
                             }
                             catch
                             {
                                 Console.WriteLine("Unable to parse " + s);
+                            }
+                        }
+                    }
+                }
+
+            }
+            else if (arg1.Equals("readjournals", StringComparison.InvariantCultureIgnoreCase))
+            {
+                string path = args.Next();
+                string search = args.Next();
+
+                FileInfo[] allFiles = Directory.EnumerateFiles(path, search, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                foreach (FileInfo f in allFiles)
+                {
+                    bool pname = false;
+
+                    using (Stream fs = new FileStream(f.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        using (StreamReader sr = new StreamReader(fs))
+                        {
+                            string s;
+                            while ((s = sr.ReadLine()) != null)
+                            {
+                                JObject jo = new JObject();
+                                try
+                                {
+                                    jo = JObject.Parse(s);
+
+                                    string ename = jo["event"].Str();
+
+                                    if ( ename == "Scan")
+                                    {
+                                        string bname = jo["BodyName"].Str();
+
+                                        if ( bname.Contains("Ring"))
+                                        {
+                                            if ( pname == false)
+                                            {
+                                                pname = true;
+                                                Console.WriteLine("--------------- FILE " + f.FullName);
+                                            }
+                                            Console.WriteLine(jo.ToString(Newtonsoft.Json.Formatting.Indented));
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("Unable to parse " + s);
+                                }
                             }
                         }
                     }
@@ -213,7 +264,7 @@ namespace EDDTest
                               "                 language is the language to choose - in ISO format, such as fr\n" +
                               "                 Opt: Combine means don't repeat IDs if found in previous files\n" +
                               "                 Opt: ShowRepeats means show repeated entries in output\n" +
-                              "                 Opt: ShowNotdefined means show dictionary entries which does not have foreign text but are found\n" +
+                              "                 Opt: ShowErrorsOnly means show only errors\n" +
                               "jsonindented file\n"
                               );
 

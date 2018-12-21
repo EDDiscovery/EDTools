@@ -273,7 +273,8 @@ namespace EDDTest
                                             }       
                                             else if ( trans.Translating )       // if we are checking translation, do it..
                                             {
-                                                res += " // NOT DEFINED";
+                                                if (!showerrorsonly)
+                                                    res += " // NOT DEFINED";
                                             }
                                         }
 
@@ -488,7 +489,8 @@ namespace EDDTest
                                 }
                                 else if (trans.Translating)       // if we are checking translation, do it..
                                 {
-                                    res += " // NOT DEFINED";
+                                    if (!showerrorsonly)
+                                        res += " // NOT DEFINED";
                                 }
 
                                 if (res != null)

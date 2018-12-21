@@ -178,6 +178,10 @@ namespace EDDTest
                     int rn = rnd.Next(10);
                     lineout = "{ " + TimeStamp() + F("event", "Scan") + "\"BodyName\":\"Merope " + rn + "\", \"DistanceFromArrivalLS\":901.789856, \"TidalLock\":false, \"TerraformState\":\"Terraformed\", \"PlanetClass\":\"Earthlike body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"EarthLike\", \"AtmosphereComposition\":[ { \"Name\":\"Nitrogen\", \"Percent\":92.386833 }, { \"Name\":\"Oxygen\", \"Percent\":7.265749 }, { \"Name\":\"Water\", \"Percent\":0.312345 } ], \"Volcanism\":\"\", \"MassEM\":0.840000, \"Radius\":5821451.000000, \"SurfaceGravity\":9.879300, \"SurfaceTemperature\":316.457062, \"SurfacePressure\":209183.453125, \"Landable\":false, \"SemiMajorAxis\":264788426752.000000, \"Eccentricity\":0.021031, \"OrbitalInclination\":13.604733, \"Periapsis\":73.138206, \"OrbitalPeriod\":62498732.000000, \"RotationPeriod\":58967.023438, \"AxialTilt\":-0.175809 }";
                 }
+                else if(eventtype.Equals("ring"))
+                {
+                    lineout = "{ " + TimeStamp() + "\"event\": \"Scan\",  \"ScanType\": \"AutoScan\",  \"BodyName\": \"Merope 9 Ring\",  \"DistanceFromArrivalLS\": 1883.233643,  \"SemiMajorAxis\": 70415976.0,  \"Eccentricity\": 0.0,  \"OrbitalInclination\": 0.0,  \"Periapsis\": 0.0,  \"OrbitalPeriod\": 100994.445313}";
+                }
                 else if (eventtype.Equals("afmurepairs"))
                     lineout = "{ " + TimeStamp() + F("event", "AfmuRepairs") + "\"Module\":\"$modularcargobaydoor_name;\", \"Module_Localised\":\"Cargo Hatch\", \"FullyRepaired\":true, \"Health\":1.000000 }";
 
@@ -259,6 +263,10 @@ namespace EDDTest
                         qj.V("SpawingFaction", "$" + faction);
                         qj.V("SpawingFaction_Localised", faction);
                         qj.V("TimeRemaining", 60);
+                        qj.V("USSThreat", 5);
+                        qj.V("USSType", "Jim");
+                        qj.V("USSType_Localised", "JimLoc");
+                        qj.V("IsStation", false);
                     }
 
                     qj.Close();
@@ -399,7 +407,7 @@ namespace EDDTest
                 else if (eventtype.Equals("fssallbodiesfound") && args.Left >= 1)
                 {
                     BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
-                    qj.Object().UTC("timestamp").V("event", "FSSAllBodiesFound").V("Name", args.Next()).V("SystemAddress", 20);
+                    qj.Object().UTC("timestamp").V("event", "FSSAllBodiesFound").V("SystemName", args.Next()).V("SystemAddress", 20);
                     lineout = qj.Get();
                 }
                 else if (eventtype.Equals("fssdiscoveryscan") )
@@ -760,6 +768,7 @@ namespace EDDTest
             "Scans    ScanPlanet name\n" +
             "         ScanStar, ScanEarth\n" +
             "         NavBeaconScan\n" +
+            "         Ring\n" +
             "Ships    SellShipOnRebuy\n" +
             "Others   SearchAndRescue fdname count\n" +
             "         MiningRefined\n" +

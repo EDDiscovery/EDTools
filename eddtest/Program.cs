@@ -158,6 +158,29 @@ namespace EDDTest
                     Console.WriteLine(ret);
                 }
             }
+            else if (arg1.Equals("translatereader", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // sample scantranslate c:\code\eddiscovery\elitedangerous\journalevents *.cs c:\code\eddiscovery\eddiscovery\translations\ 2 italiano-it combine > c:\code\output.txt
+
+                string txpath = args.Next();
+                int txsearchdepth = args.Int();
+                string language = args.Next();
+                string fileoutpath = args.Next();
+                string fileoutprefix = args.Next();
+
+                string txpath2 = args.Next();
+                int txsearchdepth2 = args.Int();
+                string language2 = args.Next();
+
+                string options = args.Next();
+
+                if (language != null && txpath != null && fileoutpath != null && fileoutprefix != null )
+                {
+                    string ret = TranslateReader.Process(language, txpath, txsearchdepth , fileoutpath , fileoutprefix , language2, txpath2, txsearchdepth2 , options);
+                    Console.WriteLine(ret);
+                }
+            }
+
             else if (arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase))
             {
                 string path = args.Next();

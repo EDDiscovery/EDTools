@@ -29,6 +29,7 @@ namespace EDDTest
                 Random rnd = new Random();
 
                 string lineout = null;      //quick writer
+                BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
                 if (eventtype.Equals("fsd"))
                     lineout = FSDJump(args, repeatcount);
@@ -51,12 +52,6 @@ namespace EDDTest
                 else if (eventtype.Equals("touchdown"))
                 {
                     lineout = "{ " + TimeStamp() + F("event", "Touchdown") + F("Latitude", 7.141173) + F("Longitude", 95.256424) + FF("PlayerControlled", true) + " }";
-                }
-                else if (eventtype.Equals("commitcrime"))
-                {
-                    string f = args.Next();
-                    int id = args.Int();
-                    lineout = "{ " + TimeStamp() + F("event", "CommitCrime") + F("CrimeType", "collidedAtSpeedInNoFireZone") + F("Faction", f) + FF("Fine", id) + " }";
                 }
                 else if (eventtype.Equals("missionaccepted") && args.Left == 3)
                 {
@@ -91,7 +86,6 @@ namespace EDDTest
                 else if (eventtype.Equals("missions") && args.Left == 1)
                 {
                     int id = args.Int();
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
                     qj.Object().UTC("timestamp").V("event", "Missions");
 
@@ -106,8 +100,6 @@ namespace EDDTest
                     qj.Array("Completed").Object();
                     FMission(qj, id + 2000, "Mission_Assassinate_Legal_Corporate", false, 20000);
                     qj.Close(2);
-
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("marketbuy") && args.Left == 3)
                 {
@@ -115,10 +107,8 @@ namespace EDDTest
                     int count = args.Int();
                     int price = args.Int();
 
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
-
-                    lineout = qj.Object().UTC("timestamp").V("event", "MarketBuy").V("MarketID", 29029292)
-                                .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("BuyPrice", price).V("TotalCost", price * count).Get();
+                    qj.Object().UTC("timestamp").V("event", "MarketBuy").V("MarketID", 29029292)
+                                .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("BuyPrice", price).V("TotalCost", price * count);
                 }
                 else if (eventtype.Equals("bounty"))
                 {
@@ -192,9 +182,8 @@ namespace EDDTest
                 {
                     string name = args.Next();
                     int count = args.Int();
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
-                    lineout = qj.Object().UTC("timestamp").V("event", "SearchAndRescue").V("MarketID", 29029292)
-                                .V("Name", name).V("Name_Localised", name + "loc").V("Count", count).V("Reward", 10234).Get();
+                    qj.Object().UTC("timestamp").V("event", "SearchAndRescue").V("MarketID", 29029292)
+                                .V("Name", name).V("Name_Localised", name + "loc").V("Count", count).V("Reward", 10234);
 
                 }
                 else if (eventtype.Equals("repairdrone"))
@@ -249,8 +238,6 @@ namespace EDDTest
                 {
                     string name = args.Next();
 
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
-
                     qj.Object().UTC("timestamp").V("event", "FSSSignalDiscovered");
                     qj.V("SignalName", name);
 
@@ -270,8 +257,6 @@ namespace EDDTest
                     }
 
                     qj.Close();
-
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("codexentry") && args.Left >= 4)
                 {
@@ -279,8 +264,6 @@ namespace EDDTest
                     string subcat = args.Next();
                     string cat = args.Next();
                     string system = args.Next();
-
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
                     qj.Object().UTC("timestamp").V("event", "CodexEntry");
                     qj.V("Name", "$" + name);
@@ -295,14 +278,10 @@ namespace EDDTest
                     qj.V("NewTraitsDiscovered", true);
                     qj.V("Traits", new string[] { "T1", "T2", "T3" });
                     qj.Close();
-
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("saascancomplete") && args.Left >= 1)
                 {
                     string name = args.Next();
-
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
                     qj.Object().UTC("timestamp").V("event", "SAAScanComplete");
                     qj.V("BodyName", name);
@@ -312,26 +291,18 @@ namespace EDDTest
                     qj.V("ProbesUsed", 10);
                     qj.V("EfficiencyTarget", 12);
                     qj.Close();
-
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("asteroidcracked") && args.Left >= 1)
                 {
                     string name = args.Next();
 
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
-
                     qj.Object().UTC("timestamp").V("event", "AsteroidCracked");
                     qj.V("Body", name);
                     qj.Close();
-
-                    lineout = qj.Get();
                 }
 
                 else if (eventtype.Equals("multisellexplorationdata") )
                 {
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
-
                     qj.Object().UTC("timestamp").V("event", "MultiSellExplorationData");
                     qj.Array("Discovered");
                     for (int i = 0; i < 5; i++)
@@ -347,14 +318,10 @@ namespace EDDTest
                     qj.V("Bonus", 200);
                     qj.V("TotalEarnings", 300);
                     qj.Close();
-
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("startjump") && args.Left >= 1)
                 {
                     string name = args.Next();
-
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
                     qj.Object().UTC("timestamp").V("event", "StartJump");
                     qj.V("JumpType", "Hyperspace");
@@ -362,8 +329,6 @@ namespace EDDTest
                     qj.V("StarClass", "A");
                     qj.V("SystemAddress", 10);
                     qj.Close();
-
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("appliedtosquadron") && args.Left >= 1)
                     lineout = Squadron("AppliedToSquadron", args.Next());
@@ -400,21 +365,28 @@ namespace EDDTest
 
                 else if (eventtype.Equals("fsdtarget") && args.Left >= 1)
                 {
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
                     qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("SystemAddress", 20);
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("fssallbodiesfound") && args.Left >= 1)
                 {
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
                     qj.Object().UTC("timestamp").V("event", "FSSAllBodiesFound").V("SystemName", args.Next()).V("SystemAddress", 20);
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("fssdiscoveryscan") )
                 {
-                    BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
                     qj.Object().UTC("timestamp").V("event", "FSSDiscoveryScan").V("Progress", 0.23).V("BodyCount", 20).V("NonBodyCount",30);
+                }
+                else if (eventtype.Equals("commitcrime"))
+                {
+                    string f = args.Next();
+                    int id = args.Int();
+                    qj.Object().UTC("timestamp").V("event", "CommitCrime").V("CrimeType", "collidedAtSpeedInNoFireZone").V("Faction", f).V("Fine", id);
                     lineout = qj.Get();
+                }
+                else if (eventtype.Equals("crimevictim"))
+                {
+                    string f = args.Next();
+                    int bounty = args.Int();
+                    lineout = "{ " + TimeStamp() + F("event", "CrimeVictim") + F("CrimeType", "assault") + F("Offender", f) + FF("Bounty", bounty) + " }";
                 }
 
                 else
@@ -422,6 +394,9 @@ namespace EDDTest
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry");
                     break;
                 }
+
+                if (lineout == null && qj.Get().HasChars())
+                    lineout = qj.Get();
 
                 if (lineout != null)
                 {
@@ -761,6 +736,7 @@ namespace EDDTest
             "         Missions activeid\n" +
             "         Bounty faction reward\n" +
             "         CommitCrime faction amount\n" +
+            "         CrimeVictim offender amount\n" +
             "         Interdiction name success isplayer combatrank faction power\n" +
             "         FactionKillBond faction victimfaction reward\n" +
             "         CapShipBond faction victimfaction reward\n" +

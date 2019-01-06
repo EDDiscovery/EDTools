@@ -53,7 +53,7 @@ namespace EDDTest
 {
     static public class FrontierData
     {
-        static string MatName(long? matid, long? matcount, CVSFile mat)
+        static string MatName(long? matid, long? matcount, CSVFile mat)
         {
             if (matid != null && matcount != null)
             {
@@ -96,10 +96,10 @@ namespace EDDTest
             // check ships
 
             {
-                CVSFile filecommods = new CVSFile();
+                CSVFile filecommods = new CSVFile();
                 if (filecommods.Read(Path.Combine(rootpath, "ShipData.csv")))
                 {
-                    foreach (CVSFile.Row rw in filecommods.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in filecommods.RowsExcludingHeaderRow)
                     {
                         string fdname = rw[0].Trim();
                         string ukname = rw[1].Trim();
@@ -145,7 +145,7 @@ namespace EDDTest
             // check commodities
 
             {
-                CVSFile filecommods = new CVSFile();
+                CSVFile filecommods = new CSVFile();
                 if (filecommods.Read(Path.Combine(rootpath, "Commodities.csv")))
                 {
                     List<MaterialCommodityData> ourcommods = MaterialCommodityData.GetCommodities().ToList();
@@ -176,7 +176,7 @@ namespace EDDTest
                             Console.WriteLine("Rarity flag incorrect for " + m.FDName);
                     }
 
-                    foreach (CVSFile.Row rw in filecommods.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in filecommods.RowsExcludingHeaderRow)
                     {
                         string type = rw[1].Trim();
                         string fdname = rw[2].Trim();
@@ -210,7 +210,7 @@ namespace EDDTest
                         }
                     }
 
-                    foreach (CVSFile.Row rw in filecommods.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in filecommods.RowsExcludingHeaderRow)
                     {
                         string fdname = rw["C"].Trim();
                         string ukname = rw["D"].Trim();
@@ -234,10 +234,10 @@ namespace EDDTest
             // Check weapons as much as we can..
 
             {
-                CVSFile fileweapons = new CVSFile();
+                CSVFile fileweapons = new CSVFile();
                 if (fileweapons.Read(Path.Combine(rootpath, "Weapon Values.csv")))
                 {
-                    foreach (CVSFile.Row rw in fileweapons.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in fileweapons.RowsExcludingHeaderRow)
                     {
                         string fdname = rw[0].Trim();
                         string ukname = rw[1].Trim();
@@ -272,10 +272,10 @@ namespace EDDTest
 
             // Check modules
             {
-                CVSFile filemodules = new CVSFile();
+                CSVFile filemodules = new CSVFile();
                 if (filemodules.Read(Path.Combine(rootpath, "ModuleData.csv")))
                 {
-                    foreach (CVSFile.Row rw in filemodules.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in filemodules.RowsExcludingHeaderRow)
                     {
                         string fdname = rw[0].Trim();
                         string ukname = rw[1].Trim();
@@ -317,13 +317,13 @@ namespace EDDTest
 
             // tech broker
             {
-                CVSFile filetechbroker = new CVSFile();
+                CSVFile filetechbroker = new CSVFile();
 
                 if (filetechbroker.Read(Path.Combine(rootpath, "Tech Broker .csv")))
                 {
                     string ret = "";
 
-                    foreach (CVSFile.Row rw in filetechbroker.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in filetechbroker.RowsExcludingHeaderRow)
                     {
                         string fdname = rw[0].Trim();
                         string type = rw["C"].Trim();
@@ -381,7 +381,7 @@ namespace EDDTest
 
             {
                 string materials = Path.Combine(rootpath, "Materials.csv");
-                CVSFile filemats = new CVSFile();
+                CSVFile filemats = new CSVFile();
 
                 if (filemats.Read(materials, FileShare.ReadWrite))
                 { 
@@ -395,7 +395,7 @@ namespace EDDTest
                             Console.WriteLine("Error " + m.FDName + " not found in frontier data");
                     }
 
-                    foreach (CVSFile.Row rw in filemats.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in filemats.RowsExcludingHeaderRow)
                     {
                         string fdname = rw[1];
                         string rarity = rw[2];
@@ -414,7 +414,7 @@ namespace EDDTest
                         }
                     }
 
-                    foreach (CVSFile.Row rw in filemats.RowsExcludingHeaderRow)
+                    foreach (CSVFile.Row rw in filemats.RowsExcludingHeaderRow)
                     {
                         string fdname = rw["B"].Trim();
                         string ukname = rw["F"].Trim();
@@ -431,7 +431,7 @@ namespace EDDTest
                         pr += "MaterialCommodityData." + fdname.ToLowerInvariant() + ": " + ukname.AlwaysQuoteString() + " => " + prname.AlwaysQuoteString() + Environment.NewLine;
                     }
 
-                    CVSFile filerecipes = new CVSFile();
+                    CSVFile filerecipes = new CSVFile();
                     string recipies = Path.Combine(rootpath, "RecipeData.csv");
 
                     if (filerecipes.Read(recipies, FileShare.ReadWrite))
@@ -441,7 +441,7 @@ namespace EDDTest
                         ret += "// DO NOT UPDATE MANUALLY - use the EDDTest frontierdata scanner to do this" + Environment.NewLine;
                         ret += "" + Environment.NewLine;
 
-                        foreach (CVSFile.Row line in filerecipes.Rows)
+                        foreach (CSVFile.Row line in filerecipes.Rows)
                         {
                             string fdname = line["A"];
                             string ukname = line["C"];

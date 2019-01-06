@@ -380,7 +380,6 @@ namespace EDDTest
                     string f = args.Next();
                     int id = args.Int();
                     qj.Object().UTC("timestamp").V("event", "CommitCrime").V("CrimeType", "collidedAtSpeedInNoFireZone").V("Faction", f).V("Fine", id);
-                    lineout = qj.Get();
                 }
                 else if (eventtype.Equals("crimevictim"))
                 {
@@ -388,7 +387,18 @@ namespace EDDTest
                     int bounty = args.Int();
                     lineout = "{ " + TimeStamp() + F("event", "CrimeVictim") + F("CrimeType", "assault") + F("Offender", f) + FF("Bounty", bounty) + " }";
                 }
-
+                else if (eventtype.Equals("launchsrv"))
+                {
+                    qj.Object().UTC("timestamp").V("event", "LaunchSRV").V("Loadout", "Normal");
+                }
+                else if (eventtype.Equals("docksrv"))
+                {
+                    qj.Object().UTC("timestamp").V("event", "DockSRV");
+                }
+                else if (eventtype.Equals("srvdestroyed"))
+                {
+                    qj.Object().UTC("timestamp").V("event", "SRVDestroyed");
+                }
                 else
                 {
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry");
@@ -746,6 +756,7 @@ namespace EDDTest
             "         NavBeaconScan\n" +
             "         Ring\n" +
             "Ships    SellShipOnRebuy\n" +
+            "SRV      LaunchSRV DockSRV SRVDestroyed\n"+
             "Others   SearchAndRescue fdname count\n" +
             "         MiningRefined\n" +
             "         RepairDrone, CommunityGoal\n" +

@@ -21,7 +21,7 @@ Dim CurrentFormat As Long
 CurrentWorkbook = ThisWorkbook.FullName
 CurrentFormat = ThisWorkbook.FileFormat
 ' Store current details for the workbook
-SaveToDirectory = "C:\code\docs\"
+SaveToDirectory = "C:\code\frontier\"
 
 For Each WS In ThisWorkbook.Worksheets
     Sheets(WS.name).Copy
@@ -39,10 +39,10 @@ End Sub
 // will verify commodities in MaterialCommododities vs the sheet
 // will check weapon data vs the shipmoduledata file
 // will check modules vs the shipmoduledata file
-// will read tech broker info and write out a new tech broker lines - import this manually into MaterialRecipes.cs
-// will read the recipes cvs and print out the recipe lines for MaterialRecipes.cs. This is cross checked vs the englist at the bottom of the file
-//      You need to keep this englist up to date manually with Inara and other sources for engineer names...  If one is found missing, you need to
-//      update the list at the bottom.
+// will read tech broker info and write out a new tech broker lines - import this manually into MaterialRecipesData.cs
+// will read the recipes cvs and print out the recipe lines for MaterialRecipesData.cs. 
+//      Engineer list in not in the cvs - previous is used as a reference, or marked as unknown if its new. Use Inara to find list
+// will read special effects data and write out a new special effects lines - import this manually into MaterialRecipesData.cs
 
 // Keep rare list at the bottom up to date manually with Inara and other sources
 
@@ -501,6 +501,94 @@ namespace EDDTest
                     Console.WriteLine("No Materials CSV");
 
             }
+
+
+            // check special data
+
+            {
+                CSVFile filesd = new CSVFile();
+                CSVFile filemats = new CSVFile();
+
+                if (filesd.Read(Path.Combine(rootpath, "SpecialData.csv")) && filemats.Read(Path.Combine(rootpath, "Materials.csv")))
+                {
+                    string ret = "";
+
+                    foreach (CSVFile.Row rw in filesd.RowsExcludingHeaderRow)
+                    {
+                        string fdname = rw[0]?.Trim();
+                        string ukname = rw.Next()?.Trim();
+                        string ukdesc = rw.Next()?.Trim();
+
+                        rw.SetPosition("X");
+                        string modules = "";
+                        string mn;
+                        while( (mn = rw.Next()).HasChars() )
+                        {
+                            modules = modules.AppendPrePad(mn.SplitCapsWord(), ",");
+                        }
+
+                        string[] name = new string[5];
+                        string[] ingr = new string[5];
+                        int?[] count = new int?[5];
+
+                        string ilist = "";
+
+                        rw.SetPosition("N");
+
+                        for( int i = 0; i < 5; i++ )
+                        {
+                            name[i] = rw.Next();
+                            count[i] = rw.NextInt();
+
+                            if (name[i].Contains("N/A") || count[i] == null)
+                                name[i] = "";
+
+                            if (name[i].HasChars())
+                            {
+                                name[i] = name[i].Replace(" ", "").Trim();          // for some reason, its been spaced by caps.. unspace it and trim it 
+
+                                int row = filemats.FindInColumn("B", name[i], StringComparison.InvariantCultureIgnoreCase, true);
+
+                                if (row == -1)
+                                {
+                                    Console.WriteLine("Special recipe " + fdname + " cannot find material " + name[i]);
+                                    name[i] = "";
+                                }
+                                else
+                                {
+                                    name[i] = filemats[row]["B"];
+
+                                    MaterialCommodityData mcd = MaterialCommodityData.GetByFDName(name[i]);
+                                    if (mcd != null)
+                                    {
+                                        ingr[i] = mcd.Shortname;
+                                        ilist = ilist.AppendPrePad(count[i].ToStringInvariant() + ingr[i], ",");
+                                    }
+                                    else
+                                        Console.WriteLine("Special recipe " + fdname + " mat " + name[i] + " Not in our DB");
+                                }
+                            }
+                        }
+
+#if false
+                        Console.Write("Receipe " + ukname + " for " + modules + " Requires ");
+                        for (int i = 0; i < 5; i++)
+                        {
+                            if (name[i].HasChars())
+                                Console.Write(name[i] + " (" + ingr[i] + ")[" + count[i] + "] ");
+                        }
+                        Console.WriteLine("");
+#endif
+                        ret  += "new SpecialEffectRecipe(\"" + ukname + " (" + modules + ")" + "\",\"" + ilist + "\")," + Environment.NewLine;
+                    }
+
+                    File.WriteAllText(Path.Combine(rootpath, "SpecialEffectRecipe.cs"), ret, Encoding.UTF8);
+
+                }
+                else
+                    Console.WriteLine("No Special data CSV and/or Materials.csv");
+            }
+
 
             if (de.Length > 0)
             {

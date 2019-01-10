@@ -171,7 +171,9 @@ namespace EDDTest
               new Tuple<string,string>("TypeX","alliance_chieftain"),
               new Tuple<string,string>("Viper", "viper"),
               new Tuple<string,string>("Viper_MkIV", "viper_mk_iv"),
-              new Tuple<string,string>("Vulture", "vulture")
+              new Tuple<string,string>("Vulture", "vulture"),
+              new Tuple<string,string>("Krait_Light", "krait_phantom"),
+              new Tuple<string,string>("Mamba", "mamba"),
         };
 
     }

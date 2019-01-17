@@ -272,8 +272,8 @@ namespace EDDTest
                               "Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
                               "Voicerecon <filename>\n" +
                               "DeviceMappings <filename>\n" +
-                              "StatusMove <various paras see entry>\n" +
-                              "Status <Status flags>...  multiple ones are: supercruise, landed, fight (see code)\n" +
+                              "StatusMove lat long latstep longstep heading headstep steptime\n" +
+                              "Status <Status flags>... UI Flags,normal,supercruise, landed, SRV, fight C:cargo F:fuel G:Gui \n" +
                               "CorolisModules rootfolder - process corolis-data\\modules\\<folder>\n" +
                               "CorolisModule name - process corolis-data\\modules\\<folder>\n" +
                               "CorolisShips rootfolder - process corolis-data\\ships\n" +

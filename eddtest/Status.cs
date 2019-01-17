@@ -119,11 +119,23 @@ namespace EDDTest
                                 (1L << (int)StatusFlagsShip.Supercruise) |
                                 (1L << (int)StatusFlagsAll.ShieldsUp);
                 }
+                else if (v.Equals("Normal", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    flags = (1L << (int)StatusFlagsShipType.InMainShip) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp);
+                }
                 else if (v.Equals("Landed", StringComparison.InvariantCultureIgnoreCase))
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
                                 (1L << (int)StatusFlagsShip.Landed) |
                                 (1L << (int)StatusFlagsShip.LandingGear) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp) |
+                                (1L << (int)StatusFlagsAll.Lights);
+                }
+                else if (v.Equals("SRV", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    flags = (1L << (int)StatusFlagsShipType.InSRV) |
+                                (1L << (int)StatusFlagsShip.Landed) |
                                 (1L << (int)StatusFlagsAll.ShieldsUp) |
                                 (1L << (int)StatusFlagsAll.Lights);
                 }
@@ -162,6 +174,15 @@ namespace EDDTest
                 else if (Enum.TryParse<StatusFlagsShipType>(v, true, out StatusFlagsShipType st))
                 {
                     flags |= 1L << (int)st;
+                }
+                else
+                {
+                    Console.WriteLine("Bad flag " + v);
+                    Console.WriteLine("Flags " + String.Join(",", Enum.GetNames(typeof(StatusFlagsShip))));
+                    Console.WriteLine("Flags " + String.Join(",", Enum.GetNames(typeof(StatusFlagsSRV))));
+                    Console.WriteLine("Flags " + String.Join(",", Enum.GetNames(typeof(StatusFlagsAll))));
+                    Console.WriteLine("Flags " + String.Join(",", Enum.GetNames(typeof(StatusFlagsShipType))));
+                    return;
                 }
             }
 

@@ -168,7 +168,7 @@ namespace EDDTest
                     int rn = rnd.Next(10);
                     lineout = "{ " + TimeStamp() + F("event", "Scan") + "\"BodyName\":\"Merope " + rn + "\", \"DistanceFromArrivalLS\":901.789856, \"TidalLock\":false, \"TerraformState\":\"Terraformed\", \"PlanetClass\":\"Earthlike body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"EarthLike\", \"AtmosphereComposition\":[ { \"Name\":\"Nitrogen\", \"Percent\":92.386833 }, { \"Name\":\"Oxygen\", \"Percent\":7.265749 }, { \"Name\":\"Water\", \"Percent\":0.312345 } ], \"Volcanism\":\"\", \"MassEM\":0.840000, \"Radius\":5821451.000000, \"SurfaceGravity\":9.879300, \"SurfaceTemperature\":316.457062, \"SurfacePressure\":209183.453125, \"Landable\":false, \"SemiMajorAxis\":264788426752.000000, \"Eccentricity\":0.021031, \"OrbitalInclination\":13.604733, \"Periapsis\":73.138206, \"OrbitalPeriod\":62498732.000000, \"RotationPeriod\":58967.023438, \"AxialTilt\":-0.175809 }";
                 }
-                else if(eventtype.Equals("ring"))
+                else if (eventtype.Equals("ring"))
                 {
                     lineout = "{ " + TimeStamp() + "\"event\": \"Scan\",  \"ScanType\": \"AutoScan\",  \"BodyName\": \"Merope 9 Ring\",  \"DistanceFromArrivalLS\": 1883.233643,  \"SemiMajorAxis\": 70415976.0,  \"Eccentricity\": 0.0,  \"OrbitalInclination\": 0.0,  \"Periapsis\": 0.0,  \"OrbitalPeriod\": 100994.445313}";
                 }
@@ -230,7 +230,7 @@ namespace EDDTest
                     lineout = "{ " + TimeStamp() + F("event", "PowerPlay") + F("Power", "Fred") + F("Rank", 10) + F("Merits", 10) + F("Votes", 2) + FF("TimePledged", 433024) + " }";
                 else if (eventtype.Equals("underattack"))
                     lineout = "{ " + TimeStamp() + F("event", "UnderAttack") + FF("Target", "Fighter") + " }";
-                else if (eventtype.Equals("promotion") && args.Left==2)
+                else if (eventtype.Equals("promotion") && args.Left == 2)
                     lineout = "{ " + TimeStamp() + F("event", "Promotion") + FF(args.Next(), args.Int()) + " }";
                 else if (eventtype.Equals("cargodepot"))
                     lineout = CargoDepot(args);
@@ -301,7 +301,7 @@ namespace EDDTest
                     qj.Close();
                 }
 
-                else if (eventtype.Equals("multisellexplorationdata") )
+                else if (eventtype.Equals("multisellexplorationdata"))
                 {
                     qj.Object().UTC("timestamp").V("event", "MultiSellExplorationData");
                     qj.Array("Discovered");
@@ -363,6 +363,9 @@ namespace EDDTest
                 else if (eventtype.Equals("squadronpromotion") && args.Left >= 3)
                     lineout = Squadron("SquadronPromotion", args.Next(), args.Next(), args.Next());
 
+                else if (eventtype.Equals("squadronstartup") && args.Left == 2)
+                    lineout = Squadron("SquadronStartup", args.Next(), args.Next());
+
                 else if (eventtype.Equals("fsdtarget") && args.Left >= 1)
                 {
                     qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("SystemAddress", 20);
@@ -371,9 +374,9 @@ namespace EDDTest
                 {
                     qj.Object().UTC("timestamp").V("event", "FSSAllBodiesFound").V("SystemName", args.Next()).V("SystemAddress", 20);
                 }
-                else if (eventtype.Equals("fssdiscoveryscan") )
+                else if (eventtype.Equals("fssdiscoveryscan"))
                 {
-                    qj.Object().UTC("timestamp").V("event", "FSSDiscoveryScan").V("Progress", 0.23).V("BodyCount", 20).V("NonBodyCount",30);
+                    qj.Object().UTC("timestamp").V("event", "FSSDiscoveryScan").V("Progress", 0.23).V("BodyCount", 20).V("NonBodyCount", 30);
                 }
                 else if (eventtype.Equals("commitcrime"))
                 {
@@ -398,6 +401,60 @@ namespace EDDTest
                 else if (eventtype.Equals("srvdestroyed"))
                 {
                     qj.Object().UTC("timestamp").V("event", "SRVDestroyed");
+                }
+                else if (eventtype.Equals("receivetext") && args.Left >= 3)
+                {
+                    string from = args.Next();
+                    string channel = args.Next();
+                    string msg = args.Next();
+                    qj.Object().UTC("timestamp").V("event", "ReceiveText").V("From", from).V("Message", msg).V("Channel", channel);
+                }
+                else if (eventtype.Equals("sendtext") && args.Left >= 2)
+                {
+                    string to = args.Next();
+                    string msg = args.Next();
+                    qj.Object().UTC("timestamp").V("event", "ReceiveText").V("To", to).V("Message", msg);
+                }
+                else if (eventtype.Equals("prospectedasteroid"))
+                {
+                    qj.Object().UTC("timestamp").V("event", "ProspectedAsteroid")
+                            .V("MotherlodeMaterial", "Serendibite")
+                            .V("Content", "$AsteroidMaterialContent_High;")
+                            .V("Content_Localised", "Material Content:High")
+                            .V("Remaining", 100.000000);
+                    string[] mats = new string[] { "Coltan", "Lepidolite", "Uraninite" };
+
+                    qj.Array("Materials");
+                    double p = 2;
+                    foreach (var m in mats)
+                    {
+                        qj.Object().V("Name", m).V("Proportion", p).Close();
+                        p *= 2.2;
+                    }
+
+                    qj.Close(99);
+                }
+                else if (eventtype.Equals("reservoirreplenished") && args.Left>=2)
+                {
+                    double main = args.Double();
+                    double res = args.Double();
+
+                    qj.Object().UTC("timestamp").V("event", "ReservoirReplenished")
+                            .V("FuelMain", main)
+                            .V("FuelReservoir", res);
+                }
+                else if (eventtype.Equals("event") && args.Left >= 1)   // give it raw json from "event":"wwkwk" onwards, without } at end
+                {
+                    string cmdline = System.Environment.CommandLine;        // commandargs hate quotes...
+                    int i = cmdline.IndexOf("event");
+                    if ( i >= 0 )
+                    {
+                        string restofline = cmdline.Substring(i + 5).Trim();
+                        qj.Object().UTC("timestamp");
+                        lineout = qj.Get().Replace("}", "") + ",";
+                        lineout += restofline;
+                        lineout += "}";
+                    }
                 }
                 else
                 {
@@ -454,6 +511,64 @@ namespace EDDTest
                 repeatcount++;
             }
         }
+
+        #region Help!
+
+        public static string Help()
+        {
+            return
+            "JournalPath CMDRname Options..\n" +
+            "Generic  event eventjson_without_end_brace" +
+            "Travel   FSD name x y z (x y z is position as double)\n" +
+            "         FSDTravel name x y z destx desty destz percentint \n" +
+            "         Loc name x y z\n" +
+            "         Docked, Undocked, Touchdown, Liftoff\n" +
+            "         FuelScoop amount total\n" +
+            "         JetConeBoost\n" +
+            "Missions MissionAccepted/MissionCompleted faction victimfaction id\n" +
+            "         MissionRedirected newsystem newstation id\n" +
+            "         Missions activeid\n" +
+            "C/B      Bounty faction reward\n" +
+            "         CommitCrime faction amount\n" +
+            "         CrimeVictim offender amount\n" +
+            "         FactionKillBond faction victimfaction reward\n" +
+            "         CapShipBond faction victimfaction reward\n" +
+            "         Interdiction name success isplayer combatrank faction power\n" +
+            "Commds   marketbuy fdname count price\n" +
+            "Scans    ScanPlanet name\n" +
+            "         ScanStar, ScanEarth\n" +
+            "         NavBeaconScan\n" +
+            "         Ring\n" +
+            "Ships    SellShipOnRebuy\n" +
+            "SRV      LaunchSRV DockSRV SRVDestroyed\n" +
+            "Others   SearchAndRescue fdname count\n" +
+            "         MiningRefined\n" +
+            "         Receivetext from channel msg\n" +
+            "         SentText to/channel msg\n" +
+            "         RepairDrone, CommunityGoal\n" +
+            "         MusicNormal, MusicGalMap, MusicSysMap\n" +
+            "         Friends name\n" +
+            "         Died\n" +
+            "         Resurrect cost\n" +
+            "         PowerPlay, UnderAttack\n" +
+            "         CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total\n" +
+            "         FighterDestroyed, FigherRebuilt, NpcCrewRank, NpcCrewPaidWage, LaunchDrone\n" +
+            "         Market, ModuleInfo, Outfitting, Shipyard (use NOFILE after to say don't write the file)\n" +
+            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n" +
+            "         CodexEntry name subcat cat system\n" +
+            "         fsssignaldiscovered name\n" +
+            "         saascancomplete name\n" +
+            "         asteroidcracked name\n" +
+            "         multisellexplorationdata\n" +
+            "         propectedasteroid\n" +
+            "         replenishedreservoir main reserve\n" +
+            "         *Squadrons* name\n" +
+
+            "";
+        }
+
+        #endregion
+
 
         static string Loc(CommandArgs args)
         {
@@ -631,9 +746,9 @@ namespace EDDTest
             return mline + " }";
         }
 
-        public static void FMission(QuickJSONFormatter q , int id, string name, bool pas, int time)
+        public static void FMission(QuickJSONFormatter q, int id, string name, bool pas, int time)
         {
-            q.V("MissionID", id).V("Name",name).V("PassengerMission",pas).V("Expires",time);
+            q.V("MissionID", id).V("Name", name).V("PassengerMission", pas).V("Expires", time);
         }
 
         public static string Squadron(string ev, string name, params string[] list)
@@ -642,10 +757,14 @@ namespace EDDTest
 
             qj.Object().UTC("timestamp").V("event", ev);
             qj.V("SquadronName", name);
-            if ( list.Length>=2)
+            if (list.Length >= 2)
             {
                 qj.V("OldRank", list[0]);
                 qj.V("NewRank", list[1]);
+            }
+            else if (list.Length == 1)
+            {
+                qj.V("CurrentRank", list[0]);
             }
 
             return qj.Get();
@@ -729,58 +848,5 @@ namespace EDDTest
 
         #endregion
 
-        #region Help!
-
-        public static string Help()
-        {
-            return
-            "JournalPath CMDRname Options..\n" +
-            "Travel   FSD name x y z (x y z is position as double)\n" +
-            "         FSDTravel name x y z destx desty destz percentint \n" +
-            "         Loc name x y z\n" +
-            "         Docked, Undocked, Touchdown, Liftoff\n" +
-            "         FuelScoop amount total\n" +
-            "         JetConeBoost\n" +
-            "Missions MissionAccepted/MissionCompleted faction victimfaction id\n" +
-            "         MissionRedirected newsystem newstation id\n" +
-            "         Missions activeid\n" +
-            "         Bounty faction reward\n" +
-            "         CommitCrime faction amount\n" +
-            "         CrimeVictim offender amount\n" +
-            "         Interdiction name success isplayer combatrank faction power\n" +
-            "         FactionKillBond faction victimfaction reward\n" +
-            "         CapShipBond faction victimfaction reward\n" +
-            "Commds   marketbuy fdname count price\n" +
-            "Scans    ScanPlanet name\n" +
-            "         ScanStar, ScanEarth\n" +
-            "         NavBeaconScan\n" +
-            "         Ring\n" +
-            "Ships    SellShipOnRebuy\n" +
-            "SRV      LaunchSRV DockSRV SRVDestroyed\n"+
-            "Others   SearchAndRescue fdname count\n" +
-            "         MiningRefined\n" +
-            "         RepairDrone, CommunityGoal\n" +
-            "         MusicNormal, MusicGalMap, MusicSysMap\n" +
-            "         Friends name\n" +
-            "         Died\n" +
-            "         Resurrect cost\n" +
-            "         PowerPlay, UnderAttack\n" +
-            "         CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total\n" +
-            "         FighterDestroyed, FigherRebuilt, NpcCrewRank, NpcCrewPaidWage, LaunchDrone\n" +
-            "         Market, ModuleInfo, Outfitting, Shipyard (use NOFILE after to say don't write the file)\n" +
-            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n" +
-            "         CodexEntry name subcat cat system\n" +
-            "         fsssignaldiscovered name\n" +
-            "         saascancomplete name\n" +
-            "         asteroidcracked name\n" +
-            "         multisellexplorationdata\n" +
-            "         *Squadrons* name\n" +
-
-            "";
-        }
-
-        #endregion
-
     }
-
 }

@@ -73,6 +73,13 @@ namespace EDDTest
             return "";
         }
 
+        struct Unlocks
+        {
+            public string name;
+            public string auxdata;
+            public string ingr;
+        }
+
         static public void Process(string rootpath)            // overall index of items
         {
             string de = "", fr = "", es = "", ru = "", pr = "";
@@ -97,7 +104,7 @@ namespace EDDTest
 
             {
                 CSVFile filecommods = new CSVFile();
-                if (filecommods.Read(Path.Combine(rootpath, "ShipData.csv")))
+                if (filecommods.Read(Path.Combine(rootpath, "ShipData.csv"), FileShare.ReadWrite))
                 {
                     foreach (CSVFile.Row rw in filecommods.RowsExcludingHeaderRow)
                     {
@@ -146,7 +153,7 @@ namespace EDDTest
 
             {
                 CSVFile filecommods = new CSVFile();
-                if (filecommods.Read(Path.Combine(rootpath, "Commodities.csv")))
+                if (filecommods.Read(Path.Combine(rootpath, "Commodities.csv"), FileShare.ReadWrite))
                 {
                     List<MaterialCommodityData> ourcommods = MaterialCommodityData.GetCommodities().ToList();
 
@@ -235,7 +242,7 @@ namespace EDDTest
 
             {
                 CSVFile fileweapons = new CSVFile();
-                if (fileweapons.Read(Path.Combine(rootpath, "Weapon Values.csv")))
+                if (fileweapons.Read(Path.Combine(rootpath, "Weapon Values.csv"), FileShare.ReadWrite))
                 {
                     foreach (CSVFile.Row rw in fileweapons.RowsExcludingHeaderRow)
                     {
@@ -273,7 +280,7 @@ namespace EDDTest
             // Check modules
             {
                 CSVFile filemodules = new CSVFile();
-                if (filemodules.Read(Path.Combine(rootpath, "ModuleData.csv")))
+                if (filemodules.Read(Path.Combine(rootpath, "ModuleData.csv"), FileShare.ReadWrite))
                 {
                     foreach (CSVFile.Row rw in filemodules.RowsExcludingHeaderRow)
                     {
@@ -319,9 +326,10 @@ namespace EDDTest
             {
                 CSVFile filetechbroker = new CSVFile();
 
-                if (filetechbroker.Read(Path.Combine(rootpath, "Tech Broker .csv")))
+                if (filetechbroker.Read(Path.Combine(rootpath, "Tech Broker .csv"), FileShare.ReadWrite))
                 {
                     string ret = "";
+                    List<Unlocks> techs = new List<Unlocks>();
 
                     foreach (CSVFile.Row rw in filetechbroker.RowsExcludingHeaderRow)
                     {
@@ -330,7 +338,25 @@ namespace EDDTest
                         string size = rw["D"].Trim();
                         string mount = rw["E"].Trim();
 
-                        string nicename = fdname.Replace("hpt_", "").Replace("int_", "").SplitCapsWordFull();
+                        string nicename = fdname.Replace("hpt_", "").Replace("Hpt_", "").Replace("int_", "").Replace("Int_", "");
+                        nicename = nicename.Replace("guardian", "Guardian", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("fsdbooster", "FSD Booster ", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("powerdistributor", "Power Distributor ", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("plasmalauncher", "Plasma Launcher", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("causticmissile", "Enzyme Missile Rack", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("plasma", "Plasma ", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("shockcannon", "Shock Cannon", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("meta", "Meta ", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("alloy", "Alloy ", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("hullreinforcement", "Hull Reinforcement", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("flechettelauncher", "Flechette Launcher", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("corrosionproof", "Corrosion Resistant ", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("cargorack", "Cargo Rack", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("powerplant", "Power Plant", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("shardcannon", "Shard Cannon", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("GDN", "Guardian");
+                        nicename = nicename.SplitCapsWordFull();
+
 
                         int[] count = new int[10];
                         MaterialCommodityData[] mat = new MaterialCommodityData[10];
@@ -363,12 +389,20 @@ namespace EDDTest
                                 break;
                         }
 
+
                         string ilist = "";
                         for (int i = 0; i < ic; i++)
                             ilist = ilist.AppendPrePad(count[i].ToStringInvariant() + mat[i].Shortname, ",");
 
-                        ret += "new TechBrokerUnlockRecipe(\"" + nicename + "\",\"" + ilist + "\")," + Environment.NewLine;
+                        techs.Add(new Unlocks() { name = nicename, auxdata = type, ingr = ilist });
+
                     }
+
+                    techs.Sort(delegate (Unlocks p1, Unlocks p2) { return p1.name.CompareTo(p2.name); });
+
+                    foreach ( var x in techs )
+                        ret += "new TechBrokerUnlockRecipe(\"" + x.name + "\",\"" + x.auxdata + "\",\"" + x.ingr + "\")," + Environment.NewLine;
+
 
                     File.WriteAllText(Path.Combine(rootpath, "TechBroker.cs"), ret, Encoding.UTF8);
                 }
@@ -509,9 +543,11 @@ namespace EDDTest
                 CSVFile filesd = new CSVFile();
                 CSVFile filemats = new CSVFile();
 
-                if (filesd.Read(Path.Combine(rootpath, "SpecialData.csv")) && filemats.Read(Path.Combine(rootpath, "Materials.csv")))
+                if (filesd.Read(Path.Combine(rootpath, "SpecialData.csv"), FileShare.ReadWrite) && filemats.Read(Path.Combine(rootpath, "Materials.csv"), FileShare.ReadWrite))
                 {
                     string ret = "";
+
+                    List<Unlocks> techs = new List<Unlocks>();
 
                     foreach (CSVFile.Row rw in filesd.RowsExcludingHeaderRow)
                     {
@@ -579,8 +615,15 @@ namespace EDDTest
                         }
                         Console.WriteLine("");
 #endif
-                        ret  += "new SpecialEffectRecipe(\"" + ukname + " (" + modules + ")" + "\",\"" + ilist + "\")," + Environment.NewLine;
+
+                        techs.Add(new Unlocks() { name = ukname, auxdata = modules, ingr = ilist });
+
                     }
+
+                    techs.Sort(delegate (Unlocks p1, Unlocks p2) { return p1.name.CompareTo(p2.name); });
+
+                    foreach ( var x in techs)
+                        ret  += "new SpecialEffectRecipe(\"" + x.name + "\", \"" + x.auxdata + "\", \"" + x.ingr + "\")," + Environment.NewLine;
 
                     File.WriteAllText(Path.Combine(rootpath, "SpecialEffectRecipe.cs"), ret, Encoding.UTF8);
 

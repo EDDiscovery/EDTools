@@ -19,21 +19,32 @@ namespace EDDTest
 {
     public static class TranslateReader
     {
-        static public string Process(string language, string txpath, int searchdepth, string fileoutpath, string fileoutprefix,
-                                    string language2, string txpath2, int searchdepth2,
+        static public string Process(string language, string txpath, int searchdepth, 
+                                    string language2, 
                                     string options
             )            // overall index of items
         {
             BaseUtils.Translator primary = BaseUtils.Translator.Instance;
             primary.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), loadorgenglish: true, loadfile: true);
 
+            if ( !primary.Translating)
+            {
+                Console.WriteLine("Primary translation did not load " + language);
+                return "";
+            }
+
+
             BaseUtils.Translator secondary = new BaseUtils.Translator();
             if ( language2 != null )
             {
-                secondary.LoadTranslation(language2, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath2 }, searchdepth2, @"c:\code", loadorgenglish: true, loadfile: true);
-            }
+                secondary.LoadTranslation(language2, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, @"c:\code", loadorgenglish: true, loadfile: true);
 
-            bool secondtranslationwrite = options != null && options.Equals("SECONDTX", StringComparison.InvariantCultureIgnoreCase);
+                if ( !secondary.Translating )
+                {
+                    Console.WriteLine("Secondary translation did not load " + language2);
+                    return "";
+                }
+            }
 
             string totalret = "";
 
@@ -57,10 +68,28 @@ namespace EDDTest
 
                     filetowrite = fi.Name;
 
-                    filelist.Add(new StreamWriter(Path.Combine(fileoutpath,fileoutprefix+filetowrite),false,Encoding.UTF8));
+                    if (secondary.Translating)
+                    {
+                        string txname = filetowrite.Replace(language, language2);
 
-                    if ( filelist.Count>1)
-                        filelist[0].WriteLine(Environment.NewLine + "include " + fileoutprefix + filetowrite);
+                        if ( txname.Equals(filetowrite))
+                        {
+                            txname = filetowrite.Replace(language.Left(language.IndexOf('-')), language2.Left(language2.IndexOf('-')));
+                        }
+
+                        filelist.Add(new StreamWriter(Path.Combine(".", txname), false, Encoding.UTF8));
+
+                        if (filelist.Count > 1)
+                            filelist[0].WriteLine(Environment.NewLine + "include " + txname);
+                    }
+                    else
+                    {
+
+                        filelist.Add(new StreamWriter(Path.Combine(".", filetowrite), false, Encoding.UTF8));
+
+                        if (filelist.Count > 1)
+                            filelist[0].WriteLine(Environment.NewLine + "include " + filetowrite);
+                    }
                 }
 
                 string idtouse = id;
@@ -86,17 +115,12 @@ namespace EDDTest
                 {
                     if (secondary.IsDefined(id))
                     {
-                        if (secondtranslationwrite)
-                            txprimary = secondary.GetTranslation(id);
-
+                        txprimary = secondary.GetTranslation(id);
                         secondary.UnDefine(id);
                     }
                     else
                     {
-                        if (secondtranslationwrite)     // @ it.
-                            txprimary = null;
-                        else
-                            ret += "NOT PRESENT IN SECONDARY : ";
+                        txprimary = null;       // meaning not present
                     }
                 }
 

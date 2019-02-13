@@ -55,9 +55,48 @@ namespace EDDTest
                 return;
             }
 
+            if (arg1.Equals("StatusRead", StringComparison.InvariantCultureIgnoreCase))
+            {
+                Status.StatusRead(args);
+                return;
+            }
+
             if (arg1.Equals("Status", StringComparison.InvariantCultureIgnoreCase))
             {
                 Status.StatusSet(args);
+                return;
+            }
+
+
+            if (arg1.Equals("DWWP", StringComparison.InvariantCultureIgnoreCase))
+            {
+                string text = File.ReadAllText(args.Next());
+                StringParser sp = new StringParser(text);
+                while (true)
+                {
+                    string notes = sp.NextWord("-");
+                    if (notes == null)
+                        break;
+
+                    notes = notes.Trim();
+
+                    if (sp.IsCharMoveOn('-'))
+                    {
+                        string reftext = sp.NextWord(":").Trim();
+
+                        if (sp.IsCharMoveOn(':'))
+                        {
+                            string name = sp.NextWord("\r").Trim();
+
+                            //                            Console.WriteLine("N: '" + name + "' Ref '" + reftext + "' loc '" + loc + "'");
+
+                            QuickJSONFormatter json = new QuickJSONFormatter();
+                            json.Object().V("Name", name).V("Notes", "DW3305->WPX " + notes).Close();
+
+                            Console.WriteLine(json.Get()+ "," );
+                        }
+                    }
+                }
                 return;
             }
 
@@ -160,28 +199,26 @@ namespace EDDTest
             }
             else if (arg1.Equals("translatereader", StringComparison.InvariantCultureIgnoreCase))
             {
-                // sample scantranslate c:\code\eddiscovery\elitedangerous\journalevents *.cs c:\code\eddiscovery\eddiscovery\translations\ 2 italiano-it combine > c:\code\output.txt
+                string primarypath = args.Next();
+                int primarysearchdepth = args.Int();
+                string primarylanguage = args.Next();
+                //string fileoutpath = args.Next();
+                //string fileoutprefix = args.Next();
 
-                string txpath = args.Next();
-                int txsearchdepth = args.Int();
-                string language = args.Next();
-                string fileoutpath = args.Next();
-                string fileoutprefix = args.Next();
-
-                string txpath2 = args.Next();
-                int txsearchdepth2 = args.Int();
+                //string txpath2 = args.Next();
+                //int txsearchdepth2 = args.Int();
                 string language2 = args.Next();
 
                 string options = args.Next();
 
-                if (language != null && txpath != null && fileoutpath != null && fileoutprefix != null )
+                //if (primarylanguage != null && primarypath != null && fileoutpath != null && fileoutprefix != null )
                 {
-                    string ret = TranslateReader.Process(language, txpath, txsearchdepth , fileoutpath , fileoutprefix , language2, txpath2, txsearchdepth2 , options);
+                    string ret = TranslateReader.Process(primarylanguage, primarypath, primarysearchdepth , language2, options);
                     Console.WriteLine(ret);
                 }
             }
 
-            else if (arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase))
+            else if (arg1.Equals("journalindented", StringComparison.InvariantCultureIgnoreCase))
             {
                 string path = args.Next();
 
@@ -207,6 +244,20 @@ namespace EDDTest
                     }
                 }
 
+            }
+            else if (arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase))
+            {
+                string path = args.Next();
+                try
+                {
+                    string text = File.ReadAllText(path);
+                    JToken tk = JToken.Parse(text);
+                    Console.WriteLine("Output:" + Environment.NewLine + tk.ToString(Newtonsoft.Json.Formatting.Indented));
+                }
+                catch( Exception ex )
+                {
+                    Console.WriteLine("Failed " + ex.Message);
+                }
             }
             else if (arg1.Equals("readjournals", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -274,6 +325,7 @@ namespace EDDTest
                               "DeviceMappings <filename>\n" +
                               "StatusMove lat long latstep longstep heading headstep steptime\n" +
                               "Status <Status flags>... UI Flags,normal,supercruise, landed, SRV, fight C:cargo F:fuel G:Gui \n" +
+                              "StatusRead user\n"+
                               "CorolisModules rootfolder - process corolis-data\\modules\\<folder>\n" +
                               "CorolisModule name - process corolis-data\\modules\\<folder>\n" +
                               "CorolisShips rootfolder - process corolis-data\\ships\n" +
@@ -282,13 +334,19 @@ namespace EDDTest
                               "FrontierData rootfolder - process cvs file exports of frontier data\n" +
                               "scantranslate path filewildcard languagefilepath searchdepth language [opt]..- process source files and look for .Tx definitions\n" +
                               "                 path filewildcard is where the source files to search for .Tx is in \n" +
-                              "                 languagefilepath is where the .tlf files are located - must include trailing \\ \n" +
+                              "                 languagefilepath is where the .tlf files are located\n" +
                               "                 searchupdepth is the depth of search upwards (to root) to look thru folders for include files - 2 is normal\n" +
-                              "                 language is the language to choose - in ISO format, such as fr\n" +
+                              "                 language is the language to compare against - example-ex etc\n" +
                               "                 Opt: Combine means don't repeat IDs if found in previous files\n" +
                               "                 Opt: ShowRepeats means show repeated entries in output\n" +
                               "                 Opt: ShowErrorsOnly means show only errors\n" +
-                              "jsonindented file\n"
+                              "translatereader path-language-files searchdepth language-to-use [secondary-language-to-compare] \n"+
+                              "                Read the language-to-use and write out it into the same files cleanly\n" +
+                              "                if secondary is present, read it, and use its definitions instead of the language-to-use\n" +
+                              "                write back out the tlf and tlp files to the current directory\n" +
+                              "journalindented file\n" +
+                              "jsonindented file\n"+
+                              "dwwp file\n"
                               );
 
         }

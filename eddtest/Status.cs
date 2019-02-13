@@ -1,9 +1,11 @@
 ﻿using BaseUtils;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EDDTest
@@ -109,6 +111,7 @@ namespace EDDTest
             int cargo = 0;
             double fuel = 0;
             int gui = 0;
+            int fg = 1;
 
             string v;
             while ((v = args.Next()) != null)
@@ -151,8 +154,12 @@ namespace EDDTest
                 }
                 else if (v.StartsWith("F:"))
                 {
+// TBD FIX
                     fuel = v.Mid(2).InvariantParseDouble(0);
-
+                }
+                else if (v.StartsWith("FG:"))
+                {
+                    fg = v.Mid(3).InvariantParseInt(0);
                 }
                 else if (v.StartsWith("G:"))
                 {
@@ -191,15 +198,72 @@ namespace EDDTest
             qj.Object().UTC("timestamp").V("event", "Status");
             qj.V("Flags", flags);
             qj.V("Pips", new int[] { 2, 8, 2 });
-            qj.V("FireGroup", 1);
+            qj.V("FireGroup", fg);
             qj.V("GuiFocus", gui);
-            qj.V("Fuel", fuel);
+            qj.Object("Fuel").V("FuelMain",fuel).V("FuelReservoir",0.32).Close();
             qj.V("Cargo", cargo);
             qj.Close();
 
             string j = qj.Get();
             File.WriteAllText("Status.json", j);
             Console.Write(j);
+        }
+
+        static public void StatusRead(CommandArgs args)
+        {
+            string user = Environment.GetEnvironmentVariable("USERNAME");
+
+            string path = @"c:\users\" + user + @"\saved games\frontier developments\elite dangerous\";
+            string file = "status.json";
+            string watchfile = Path.Combine(path, file);
+
+            string laststatus = "";
+            Console.Clear();
+
+            while (true)
+            {
+                string nextstatus = null;
+
+                Stream stream = null;
+                try
+                {
+                    stream = File.Open(watchfile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+                    StreamReader reader = new StreamReader(stream);
+
+                    nextstatus = reader.ReadLine();
+
+                    stream.Close();
+                }
+                catch
+                { }
+                finally
+                {
+                    if (stream != null)
+                        stream.Dispose();
+                }
+
+                if (nextstatus != null && nextstatus != laststatus)
+                {
+                    JToken j = JToken.Parse(nextstatus);
+
+                    Console.CursorTop = 0;
+                    Console.WriteLine(j.ToString(Newtonsoft.Json.Formatting.Indented));
+                    laststatus = nextstatus;
+                }
+
+                if (Console.KeyAvailable)
+                {
+                    ConsoleKeyInfo i = Console.ReadKey();
+
+                    if (i.Key == ConsoleKey.Escape)
+                    {
+                        break;
+                    }
+                }
+
+                Thread.Sleep(25);
+            }
         }
 
     }

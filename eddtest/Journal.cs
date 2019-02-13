@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace EDDTest
 {
@@ -35,15 +36,32 @@ namespace EDDTest
                     lineout = FSDJump(args, repeatcount);
                 else if (eventtype.Equals("fsdtravel"))
                     lineout = FSDTravel(args);
-                else if (eventtype.Equals("loc"))
-                    lineout = Loc(args);
+                else if (eventtype.Equals("locdocked"))
+                {
+                    lineout = "{ " + TimeStamp() +
+                    "\"event\":\"Location\", \"Docked\":true, \"StationName\":\"Rock of Isolation\", \"StationType\":\"MegaShip\", \"MarketID\":128928173," +
+                    "\"StationFaction\":{ \"Name\":\"Independent Detention Foundation\", \"FactionState\":\"CivilWar\"}," +
+                    "\"SystemFaction\":{ \"Name\":\"Fred Foundation\", \"FactionState\":\"IceCream\"}," +
+                    "\"StationGovernment\":\"$government_Prison;\", \"StationGovernment_Localised\":\"Detention Centre\", \"StationServices\":[ \"Dock\", \"Autodock\", \"Contacts\", \"Outfitting\", \"Rearm\", " +
+                    "\"Refuel\", \"Repair\", \"Shipyard\", \"Workshop\", \"FlightController\", \"StationOperations\", \"StationMenu\" ], \"StationEconomy\":\"$economy_Prison;\", " +
+                    "\"StationEconomy_Localised\":\"Prison\", \"StationEconomies\":[ { \"Name\":\"$economy_Prison;\", \"Name_Localised\":\"Prison\", \"Proportion\":1.000000 } ], " +
+                    "\"StarSystem\":\"Omega Sector OD-S b4-0\", \"SystemAddress\":651358449137, \"StarPos\":[-1456.81250,-84.81250,5306.93750], \"SystemAllegiance\":\"\", \"SystemEconomy\":\"$economy_None;\", \"SystemEconomy_Localised\":\"None\", " +
+                    "\"SystemSecondEconomy\":\"$economy_None;\", \"SystemSecondEconomy_Localised\":\"None\", \"SystemGovernment\":\"$government_None;\", \"SystemGovernment_Localised\":\"None\", \"SystemSecurity\":\"$GAlAXY_MAP_INFO_state_anarchy;\", \"SystemSecurity_Localised\":\"Anarchy\", " +
+                    "\"Population\":0, \"Body\":\"Rock of Isolation\", \"BodyID\":33, \"BodyType\":\"Station\", \"Factions\":[ { \"Name\":\"Independent Detention Foundation\", \"FactionState\":\"None\", \"Government\":\"Prison\", \"Influence\":0.000000, \"Allegiance\":\"Independent\", \"Happiness\":\"$Faction_HappinessBand2;\", \"Happiness_Localised\":\"Happy\", \"MyReputation\":0.000000 }, { \"Name\":\"Pilots Federation Local Branch\", \"FactionState\":\"None\", \"Government\":\"Democracy\", \"Influence\":0.000000, \"Allegiance\":\"PilotsFederation\", \"Happiness\":\"\", \"MyReputation\":0.000000 } ]" +
+                    "} ";
+                }
                 else if (eventtype.Equals("interdiction"))
                     lineout = Interdiction(args);
-                else if (eventtype.Equals("docked"))
+                else if (eventtype.Equals("docked") && args.Left >= 2)
                 {
-                    lineout = "{ " + TimeStamp() + "\"event\":\"Docked\", " +
-                        "\"StationName\":\"Jameson Memorial\", " +
-                        "\"StationType\":\"Orbis\", \"StarSystem\":\"Shinrarta Dezhra\", \"Faction\":\"The Pilots Federation\", \"Allegiance\":\"Independent\", \"Economy\":\"$economy_HighTech;\", \"Economy_Localised\":\"High tech\", \"Government\":\"$government_Democracy;\", \"Government_Localised\":\"Democracy\", \"Security\":\"$SYSTEM_SECURITY_high;\", \"Security_Localised\":\"High Security\" }";
+                    lineout = "{ " + TimeStamp() +
+                        "\"event\":\"Docked\", \"StationName\":\"" + args.Next() + "\", \"StationType\":\"MegaShip\", \"StarSystem\":\"Omega Sector OD-S b4-0\", " +
+                        "\"SystemAddress\":651358449137, \"MarketID\":128928173, \"StationFaction\":{ \"Name\":\"" + args.Next() + "\", \"FactionState\":\"IceCream\"}," + 
+                        "\"StationGovernment\":\"$government_Prison;\", " +
+                        "\"StationGovernment_Localised\":\"Detention Centre\", \"StationServices\":[ \"Dock\", \"Autodock\", \"Contacts\", \"Outfitting\", \"Rearm\", \"Refuel\", \"Repair\", \"Shipyard\", " +
+                        "\"Workshop\", \"FlightController\", \"StationOperations\", \"StationMenu\" ], \"StationEconomy\":\"$economy_Prison;\", \"StationEconomy_Localised\":\"Prison\", " +
+                        "\"StationEconomies\":[ { \"Name\":\"$economy_Prison;\", \"Name_Localised\":\"Prison\", \"Proportion\":1.000000 } ], \"DistFromStarLS\":3919.440674 " +
+                        "}";
                 }
                 else if (eventtype.Equals("undocked"))
                     lineout = "{ " + TimeStamp() + "\"event\":\"Undocked\", " + "\"StationName\":\"Jameson Memorial\",\"StationType\":\"Orbis\" }";
@@ -467,6 +485,18 @@ namespace EDDTest
 
                 if (lineout != null)
                 {
+                    try
+                    {
+                        JToken jk = JToken.Parse(lineout);
+                        Console.WriteLine(jk.ToString(Newtonsoft.Json.Formatting.Indented));
+                    }
+                    catch ( Exception ex)
+                    {
+                        Console.WriteLine("Error in JSON " + ex.Message);
+                        return;
+                    }
+
+
                     if (!File.Exists(filename))
                     {
                         using (Stream fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
@@ -521,8 +551,9 @@ namespace EDDTest
             "Generic  event eventjson_without_end_brace" +
             "Travel   FSD name x y z (x y z is position as double)\n" +
             "         FSDTravel name x y z destx desty destz percentint \n" +
-            "         Loc name x y z\n" +
-            "         Docked, Undocked, Touchdown, Liftoff\n" +
+            "         Locdocked\n" +
+            "         Docked station faction\n"+
+            "         Undocked, Touchdown, Liftoff\n" +
             "         FuelScoop amount total\n" +
             "         JetConeBoost\n" +
             "Missions MissionAccepted/MissionCompleted faction victimfaction id\n" +
@@ -568,30 +599,6 @@ namespace EDDTest
         }
 
         #endregion
-
-
-        static string Loc(CommandArgs args)
-        {
-            if (args.Left < 4)
-            {
-                Console.WriteLine("** More parameters");
-                return null;
-            }
-
-            double x = double.NaN, y = 0, z = 0;
-            string starnameroot = args.Next();
-
-            if (!double.TryParse(args.Next(), out x) || !double.TryParse(args.Next(), out y) || !double.TryParse(args.Next(), out z))
-            {
-                Console.WriteLine("X,y,Z must be numbers");
-                return null;
-            }
-
-            return "{ " + TimeStamp() + "\"event\":\"Location\", " +
-                "\"StarSystem\":\"" + starnameroot +
-                "\", \"StarPos\":[" + x.ToString("0.000000") + ", " + y.ToString("0.000000") + ", " + z.ToString("0.000000") +
-                "], \"Allegiance\":\"\", \"Economy\":\"$economy_None;\", \"Economy_Localised\":\"None\", \"Government\":\"$government_None;\", \"Government_Localised\":\"None\", \"Security\":\"$SYSTEM_SECURITY_low;\", \"Security_Localised\":\"Low Security\" }";
-        }
 
         //                                  "Options: Interdiction Loc name success isplayer combatrank faction power\n" +
         static string Interdiction(CommandArgs args)

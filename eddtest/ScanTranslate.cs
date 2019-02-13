@@ -145,7 +145,19 @@ namespace EDDTest
             if (language.HasChars() && txpath.HasChars())
             {
                 trans.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), loadorgenglish:true);
+
+                if ( trans.Translating )
+                {
+                    Console.WriteLine("Loaded translation " + language + " to compare against");
+                }
+                else
+                {
+                    Console.WriteLine("Translation for " + language + " Not found");
+                    return "";
+                }
             }
+            else
+                Console.WriteLine("No translation comparision given");
 
             if (!trans.Translating)
             {

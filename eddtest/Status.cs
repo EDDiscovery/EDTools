@@ -154,7 +154,6 @@ namespace EDDTest
                 }
                 else if (v.StartsWith("F:"))
                 {
-// TBD FIX
                     fuel = v.Mid(2).InvariantParseDouble(0);
                 }
                 else if (v.StartsWith("FG:"))

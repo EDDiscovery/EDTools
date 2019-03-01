@@ -8,6 +8,15 @@ using System.Threading.Tasks;
 
 namespace EDDTest
 {
+    // method
+    // first use this to scan folders, usercontrols, forms, edgeneral, updating the example-ex to match
+    // then do journals and elitedangerous
+    // check translators-ids to see what you've missed
+    // once example-ex is okay
+    // normalise example-ex with translatereader
+    // once that is okay, then normalise other languages with translatereader.
+
+
     public static class ScanTranslate
     {
         public class Definition
@@ -90,7 +99,7 @@ namespace EDDTest
                                 }
                             }
                         }
-                        else if (nextword != null && (nextword == "this" || nextword == "t"))
+                        else if (nextword != null && (nextword == "this" || nextword == "t" || nextword == "ty"))
                         {
                             if (s1.IsCharMoveOn(','))
                             {
@@ -421,6 +430,10 @@ namespace EDDTest
                                         value = sp.NextQuotedWord();
                                     }
                                 }
+                            }
+                            else if (propname == "HeaderText" && sp.IsCharMoveOn('='))
+                            {
+                                value = sp.NextQuotedWord();
                             }
                             else if (controlname != "Text" && propname == null && sp.IsCharMoveOn('='))      // this.control = 
                             {

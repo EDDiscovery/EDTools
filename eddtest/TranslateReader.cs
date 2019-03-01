@@ -6,15 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-//translatereader >c:\code\k c:\code\eddiscovery\eddiscovery\translations\ 2 example-ex c:\code G c:\code\eddiscovery\eddiscovery\translations 2 italiano-it SECONDTX
-//batch file to copy the resulting output to the files..
-//copy Gexample-ex.tlf \code\eddiscovery\eddiscovery\translations\%1-%2.tlf
-//copy Gtranslation-example-uc.tlp \code\eddiscovery\eddiscovery\usercontrols\translation-%1-uc.tlp
-//copy Gtranslation-example-ed.tlp \code\eddiscovery\elitedangerous\elitedangerous\translation-%1-ed.tlp
-//copy Gtranslation-example-je.tlp \code\eddiscovery\elitedangerous\journalevents\translation-%1-je.tlp
-
-
-
 namespace EDDTest
 {
     public static class TranslateReader
@@ -72,7 +63,7 @@ namespace EDDTest
                     {
                         string txname = filetowrite.Replace(language, language2);
 
-                        if ( txname.Equals(filetowrite))
+                        if (txname.Equals(filetowrite))
                         {
                             txname = filetowrite.Replace(language.Left(language.IndexOf('-')), language2.Left(language2.IndexOf('-')));
                         }
@@ -81,9 +72,18 @@ namespace EDDTest
 
                         if (filelist.Count > 1)
                             filelist[0].WriteLine(Environment.NewLine + "include " + txname);
+
+                        string txorgfile = orgfile.Replace(language, language2);
+                        if (txorgfile.Equals(orgfile))
+                        {
+                            txorgfile = orgfile.Replace(language.Left(language.IndexOf('-')), language2.Left(language2.IndexOf('-')));
+                        }
+
+                        Console.WriteLine("copy " + txname + " " + txorgfile);
                     }
                     else
                     {
+                        Console.WriteLine("copy " + fi.Name + " " + orgfile);
 
                         filelist.Add(new StreamWriter(Path.Combine(".", filetowrite), false, Encoding.UTF8));
 

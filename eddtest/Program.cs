@@ -344,6 +344,7 @@ namespace EDDTest
                               "                Read the language-to-use and write out it into the same files cleanly\n" +
                               "                if secondary is present, read it, and use its definitions instead of the language-to-use\n" +
                               "                write back out the tlf and tlp files to the current directory\n" +
+                              "                write out copy instructions to move those files back to their correct places\n"
                               "journalindented file\n" +
                               "jsonindented file\n"+
                               "dwwp file\n"

@@ -118,6 +118,10 @@ namespace EDDTest
             {
                 EDDB.EDDBLog(args.Next(), "\"Star\"", "\"name\"", "Star Name");
             }
+            else if (arg1.Equals("EDSMStars", StringComparison.InvariantCultureIgnoreCase))
+            {
+                EDSMStars.Process(args);
+            }
             else if (arg1.Equals("voicerecon", StringComparison.InvariantCultureIgnoreCase))
             {
                 BindingsFile.Bindings(args.Next());
@@ -202,20 +206,11 @@ namespace EDDTest
                 string primarypath = args.Next();
                 int primarysearchdepth = args.Int();
                 string primarylanguage = args.Next();
-                //string fileoutpath = args.Next();
-                //string fileoutprefix = args.Next();
-
-                //string txpath2 = args.Next();
-                //int txsearchdepth2 = args.Int();
                 string language2 = args.Next();
-
                 string options = args.Next();
 
-                //if (primarylanguage != null && primarypath != null && fileoutpath != null && fileoutprefix != null )
-                {
-                    string ret = TranslateReader.Process(primarylanguage, primarypath, primarysearchdepth , language2, options);
-                    Console.WriteLine(ret);
-                }
+                string ret = TranslateReader.Process(primarylanguage, primarypath, primarysearchdepth , language2, options);
+                Console.WriteLine(ret);
             }
 
             else if (arg1.Equals("journalindented", StringComparison.InvariantCultureIgnoreCase))
@@ -245,21 +240,23 @@ namespace EDDTest
                 }
 
             }
-            else if (arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase))
+            else if (arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase) || arg1.Equals("jsoncompressed", StringComparison.InvariantCultureIgnoreCase))
             {
+                bool indent = arg1.Equals("jsonindented", StringComparison.InvariantCultureIgnoreCase);
+
                 string path = args.Next();
                 try
                 {
                     string text = File.ReadAllText(path);
                     JToken tk = JToken.Parse(text);
-                    Console.WriteLine("Output:" + Environment.NewLine + tk.ToString(Newtonsoft.Json.Formatting.Indented));
+                    Console.WriteLine("Output:" + Environment.NewLine + tk.ToString(indent ? Newtonsoft.Json.Formatting.Indented : Newtonsoft.Json.Formatting.None));
                 }
                 catch( Exception ex )
                 {
                     Console.WriteLine("Failed " + ex.Message);
                 }
             }
-            else if (arg1.Equals("readjournals", StringComparison.InvariantCultureIgnoreCase))
+            else if (arg1.Equals("specialreadjournals", StringComparison.InvariantCultureIgnoreCase))       // special one for coding only purposes - need to change code
             {
                 string path = args.Next();
                 string search = args.Next();
@@ -309,6 +306,26 @@ namespace EDDTest
                 }
 
             }
+            else if(arg1.Equals("cutdownfile", StringComparison.InvariantCultureIgnoreCase))
+            {
+                string filename = args.Next();
+                int numberlines = args.Int();
+
+                using (StreamReader sr = new StreamReader(filename))         // read directly from file..
+                {
+                    using (StreamWriter wr = new StreamWriter(filename + ".out"))         // read directly from file..
+                    {
+                        for (int i = 0; i < numberlines; i++)
+                        {
+                            string line = sr.ReadLine();
+                            if (line != null)
+                                wr.WriteLine(line);
+                            else
+                                break;
+                        }
+                    }
+                }
+            }
             else
             {
                 Journal.JournalEntry(arg1, args.Next(), args, repeatdelay);
@@ -320,11 +337,12 @@ namespace EDDTest
             Console.WriteLine("[-keyrepeat]|[-repeat ms]\n" +
                              Journal.Help() +
                               "EDDBSTARS <filename> or EDDBPLANETS or EDDBSTARNAMES for the eddb dump\n" +
+                              "EDSMSTARS <filename> read the main dump and analyse\n" +
                               "Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
                               "Voicerecon <filename>\n" +
                               "DeviceMappings <filename>\n" +
                               "StatusMove lat long latstep longstep heading headstep steptime\n" +
-                              "Status <Status flags>... UI Flags,normal,supercruise, landed, SRV, fight C:cargo F:fuel G:Gui \n" +
+                              "Status <Status flags>... UI <Flags>,normal,supercruise, landed, SRV, fight C:cargo F:fuel FG:Firegroup G:Gui L:Legalstate\n" +
                               "StatusRead user\n"+
                               "CorolisModules rootfolder - process corolis-data\\modules\\<folder>\n" +
                               "CorolisModule name - process corolis-data\\modules\\<folder>\n" +
@@ -344,9 +362,11 @@ namespace EDDTest
                               "                Read the language-to-use and write out it into the same files cleanly\n" +
                               "                if secondary is present, read it, and use its definitions instead of the language-to-use\n" +
                               "                write back out the tlf and tlp files to the current directory\n" +
-                              "                write out copy instructions to move those files back to their correct places\n"
-                              "journalindented file\n" +
-                              "jsonindented file\n"+
+                              "                write out copy instructions to move those files back to their correct places\n" +
+                              "journalindented file - read lines from file in journal format and output indented\n" +
+                              "jsonindented file - read a json in file and indent\n" +
+                              "jsoncompressed file - read a json in file and compress\n" +
+                              "cutdownfile file lines\n" +
                               "dwwp file\n"
                               );
 

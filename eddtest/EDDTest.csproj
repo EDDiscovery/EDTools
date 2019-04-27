@@ -85,6 +85,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Bindings.cs" />
+    <Compile Include="Edsmstars.cs" />
     <Compile Include="TranslateReader.cs" />
     <Compile Include="ScanTranslate.cs" />
     <Compile Include="Speech.cs" />
@@ -94,6 +95,7 @@
     <None Include="App.config" />
     <None Include="FodyWeavers.xml" />
     <Content Include="From EDD Project Manually copied\Readme.txt" />
+    <None Include="Resources\Market1.txt" />
     <Content Include="Resources\ModulesInfo.txt" />
     <Content Include="Resources\Outfitting.txt" />
     <Content Include="Resources\Shipyard.txt" />

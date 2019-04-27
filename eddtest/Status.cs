@@ -48,6 +48,7 @@ namespace EDDTest
             HasLatLong = 21,
             IsInDanger = 22,
             NightVision = 28,             // 3.3
+            AltitudeFromAverageRadius = 29, // 3.4
         }
 
         private enum StatusFlagsShipType
@@ -82,11 +83,11 @@ namespace EDDTest
 
             while (true)
             {
-                //{ "timestamp":"2018-03-01T21:51:36Z", "event":"Status", "Flags":18874376, 
+                //{ "timestamp":"2018-03-01T21:51:36Z", "event":"Status", "Flags":18874376,
                 //"Pips":[4,8,0], "FireGroup":1, "GuiFocus":0, "Latitude":-18.978821, "Longitude":-123.642052, "Heading":308, "Altitude":20016 }
 
                 string j = "{ " + Journal.TimeStamp() + Journal.F("event", "Status") + Journal.F("Flags", flags) + Journal.F("Pips", new int[] { 4, 8, 0 }) +
-                            Journal.F("FireGroup", 1) + Journal.F("GuiFocus", 0) + Journal.F("Latitude", latitude) + Journal.F("Longitude", longitude) + 
+                            Journal.F("FireGroup", 1) + Journal.F("GuiFocus", 0) + Journal.F("Latitude", latitude) + Journal.F("Longitude", longitude) +
                             Journal.F("Heading", heading) + Journal.F("Altitude", 20)
                             + "}";
 
@@ -112,6 +113,7 @@ namespace EDDTest
             double fuel = 0;
             int gui = 0;
             int fg = 1;
+            string legalstate = "Clean";
 
             string v;
             while ((v = args.Next()) != null)
@@ -165,6 +167,10 @@ namespace EDDTest
                     gui = v.Mid(2).InvariantParseInt(0);
 
                 }
+                else if (v.StartsWith("L:"))
+                {
+                    legalstate = v.Mid(2);
+                }
                 else if (Enum.TryParse<StatusFlagsShip>(v, true, out StatusFlagsShip s))
                 {
                     flags |= 1L << (int)s;
@@ -199,6 +205,7 @@ namespace EDDTest
             qj.V("Pips", new int[] { 2, 8, 2 });
             qj.V("FireGroup", fg);
             qj.V("GuiFocus", gui);
+            qj.V("LegalState", legalstate);
             qj.Object("Fuel").V("FuelMain",fuel).V("FuelReservoir",0.32).Close();
             qj.V("Cargo", cargo);
             qj.Close();

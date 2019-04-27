@@ -73,6 +73,18 @@ namespace EDDTest.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;Items&quot;:[
+        ///{ &quot;id&quot;:128049154, &quot;Name&quot;:&quot;gold&quot;, &quot;BuyPrice&quot;:99111, &quot;SellPrice&quot;:8925, &quot;MeanPrice&quot;:9373, &quot;StockBracket&quot;:2, &quot;DemandBracket&quot;:0, &quot;Stock&quot;:923, &quot;Demand&quot;:1, &quot;Consumer&quot;:false, &quot;Producer&quot;:true, &quot;Rare&quot;:false },
+        ///{ &quot;id&quot;:128049155, &quot;Name&quot;:&quot;silver&quot;, &quot;BuyPrice&quot;:4496, &quot;SellPrice&quot;:4402, &quot;MeanPrice&quot;:4759, &quot;StockBracket&quot;:2, &quot;DemandBracket&quot;:0, &quot;Stock&quot;:1538, &quot;Demand&quot;:1, &quot;Consumer&quot;:false, &quot;Producer&quot;:true, &quot;Rare&quot;:false },
+        ///{ &quot;id&quot;:128049156, &quot;Name&quot;:&quot;bertrandite&quot;, &quot;BuyPrice&quot;:0, &quot;SellPrice&quot;:2660, &quot;MeanPrice&quot;:2486, &quot;StockB [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Market2 {
+            get {
+                return ResourceManager.GetString("Market2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &quot;Modules&quot;:[ 
         ///{ &quot;Slot&quot;:&quot;MainEngines&quot;, &quot;Item&quot;:&quot;int_engine_size5_class1&quot;, &quot;Power&quot;:4.080000, &quot;Priority&quot;:0 }, 
         ///{ &quot;Slot&quot;:&quot;Slot01_Size5&quot;, &quot;Item&quot;:&quot;int_shieldgenerator_size5_class5&quot;, &quot;Power&quot;:3.640000, &quot;Priority&quot;:0 }, 

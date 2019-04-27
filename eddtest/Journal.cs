@@ -30,6 +30,7 @@ namespace EDDTest
                 Random rnd = new Random();
 
                 string lineout = null;      //quick writer
+                bool checkjson = true;  // check json before writing to file
                 BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
                 if (eventtype.Equals("fsd"))
@@ -56,7 +57,7 @@ namespace EDDTest
                 {
                     lineout = "{ " + TimeStamp() +
                         "\"event\":\"Docked\", \"StationName\":\"" + args.Next() + "\", \"StationType\":\"MegaShip\", \"StarSystem\":\"Omega Sector OD-S b4-0\", " +
-                        "\"SystemAddress\":651358449137, \"MarketID\":128928173, \"StationFaction\":{ \"Name\":\"" + args.Next() + "\", \"FactionState\":\"IceCream\"}," + 
+                        "\"SystemAddress\":651358449137, \"MarketID\":128928173, \"StationFaction\":{ \"Name\":\"" + args.Next() + "\", \"FactionState\":\"IceCream\"}," +
                         "\"StationGovernment\":\"$government_Prison;\", " +
                         "\"StationGovernment_Localised\":\"Detention Centre\", \"StationServices\":[ \"Dock\", \"Autodock\", \"Contacts\", \"Outfitting\", \"Rearm\", \"Refuel\", \"Repair\", \"Shipyard\", " +
                         "\"Workshop\", \"FlightController\", \"StationOperations\", \"StationMenu\" ], \"StationEconomy\":\"$economy_Prison;\", \"StationEconomy_Localised\":\"Prison\", " +
@@ -431,7 +432,7 @@ namespace EDDTest
                 {
                     string to = args.Next();
                     string msg = args.Next();
-                    qj.Object().UTC("timestamp").V("event", "ReceiveText").V("To", to).V("Message", msg);
+                    qj.Object().UTC("timestamp").V("event", "SendText").V("To", to).V("Message", msg);
                 }
                 else if (eventtype.Equals("prospectedasteroid"))
                 {
@@ -452,7 +453,7 @@ namespace EDDTest
 
                     qj.Close(99);
                 }
-                else if (eventtype.Equals("reservoirreplenished") && args.Left>=2)
+                else if (eventtype.Equals("reservoirreplenished") && args.Left >= 2)
                 {
                     double main = args.Double();
                     double res = args.Double();
@@ -463,19 +464,68 @@ namespace EDDTest
                 }
                 else if (eventtype.Equals("event") && args.Left >= 1)   // give it raw json from "event":"wwkwk" onwards, without } at end
                 {
-                    string cmdline = System.Environment.CommandLine;        // commandargs hate quotes...
-                    int i = cmdline.IndexOf("event");
-                    if ( i >= 0 )
+                    string file = args.Next();
+                    var textlines = File.ReadLines(file);
+
+                    lineout = "";
+                    checkjson = false;
+
+                    foreach (string line in textlines)
                     {
-                        string restofline = cmdline.Substring(i + 5).Trim();
-                        qj.Object().UTC("timestamp");
-                        lineout = qj.Get().Replace("}", "") + ",";
-                        lineout += restofline;
-                        lineout += "}";
+                        if (line.Length > 0)
+                        {
+                            try
+                            {
+                                JObject jo = JObject.Parse(line);
+                                jo["timestamp"] = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
+                                if ( lineout.HasChars() )
+                                    lineout += Environment.NewLine;
+                                lineout += jo.ToString(Newtonsoft.Json.Formatting.None);
+                            }
+                            catch
+                            {
+                                Console.WriteLine("Bad journal line " + line);
+                            }
+                        }
+                    }
+                }
+                else if (eventtype.Equals("shiptargeted"))
+                {
+                    qj.Object().UTC("timestamp").V("event", "ShipTargeted").V("TargetLocked", args.Left > 0);
+
+                    if (args.Left > 0)
+                    {
+                        int stage = 0;
+                        string ship = args.Next();
+                        qj.V("Ship", ship).V("Ship_Localised", "L:" + ship);
+
+                        if (args.Left >= 2)
+                        {
+                            stage = 1;
+                            string pilot = args.Next();
+                            string rank = args.Next();
+                            qj.V("PilotName", pilot).V("PilotName_Localised", "L:" + pilot).V("PilotRank", rank);
+
+                            if (args.Left >= 1)
+                            {
+                                stage = 2;
+                                double health = args.Double();
+                                qj.V("ShieldHealth", health).V("HullHealth", health / 2);
+
+                                if (args.Left >= 1)
+                                {
+                                    stage = 3;
+                                    string faction = args.Next();
+                                    qj.V("Faction", faction).V("LegalStatus", "Clean");
+                                }
+                            }
+                        }
+
+                        qj.V("ScanStage", stage);
                     }
                 }
                 else
-                {
+                { 
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry");
                     break;
                 }
@@ -485,17 +535,19 @@ namespace EDDTest
 
                 if (lineout != null)
                 {
-                    try
+                    if (checkjson)
                     {
-                        JToken jk = JToken.Parse(lineout);
-                        Console.WriteLine(jk.ToString(Newtonsoft.Json.Formatting.Indented));
+                        try
+                        {
+                            JToken jk = JToken.Parse(lineout);
+                            Console.WriteLine(jk.ToString(Newtonsoft.Json.Formatting.Indented));
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error in JSON " + ex.Message);
+                            return;
+                        }
                     }
-                    catch ( Exception ex)
-                    {
-                        Console.WriteLine("Error in JSON " + ex.Message);
-                        return;
-                    }
-
 
                     if (!File.Exists(filename))
                     {
@@ -541,64 +593,6 @@ namespace EDDTest
                 repeatcount++;
             }
         }
-
-        #region Help!
-
-        public static string Help()
-        {
-            return
-            "JournalPath CMDRname Options..\n" +
-            "Generic  event eventjson_without_end_brace" +
-            "Travel   FSD name x y z (x y z is position as double)\n" +
-            "         FSDTravel name x y z destx desty destz percentint \n" +
-            "         Locdocked\n" +
-            "         Docked station faction\n"+
-            "         Undocked, Touchdown, Liftoff\n" +
-            "         FuelScoop amount total\n" +
-            "         JetConeBoost\n" +
-            "Missions MissionAccepted/MissionCompleted faction victimfaction id\n" +
-            "         MissionRedirected newsystem newstation id\n" +
-            "         Missions activeid\n" +
-            "C/B      Bounty faction reward\n" +
-            "         CommitCrime faction amount\n" +
-            "         CrimeVictim offender amount\n" +
-            "         FactionKillBond faction victimfaction reward\n" +
-            "         CapShipBond faction victimfaction reward\n" +
-            "         Interdiction name success isplayer combatrank faction power\n" +
-            "Commds   marketbuy fdname count price\n" +
-            "Scans    ScanPlanet name\n" +
-            "         ScanStar, ScanEarth\n" +
-            "         NavBeaconScan\n" +
-            "         Ring\n" +
-            "Ships    SellShipOnRebuy\n" +
-            "SRV      LaunchSRV DockSRV SRVDestroyed\n" +
-            "Others   SearchAndRescue fdname count\n" +
-            "         MiningRefined\n" +
-            "         Receivetext from channel msg\n" +
-            "         SentText to/channel msg\n" +
-            "         RepairDrone, CommunityGoal\n" +
-            "         MusicNormal, MusicGalMap, MusicSysMap\n" +
-            "         Friends name\n" +
-            "         Died\n" +
-            "         Resurrect cost\n" +
-            "         PowerPlay, UnderAttack\n" +
-            "         CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total\n" +
-            "         FighterDestroyed, FigherRebuilt, NpcCrewRank, NpcCrewPaidWage, LaunchDrone\n" +
-            "         Market, ModuleInfo, Outfitting, Shipyard (use NOFILE after to say don't write the file)\n" +
-            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n" +
-            "         CodexEntry name subcat cat system\n" +
-            "         fsssignaldiscovered name\n" +
-            "         saascancomplete name\n" +
-            "         asteroidcracked name\n" +
-            "         multisellexplorationdata\n" +
-            "         propectedasteroid\n" +
-            "         replenishedreservoir main reserve\n" +
-            "         *Squadrons* name\n" +
-
-            "";
-        }
-
-        #endregion
 
         //                                  "Options: Interdiction Loc name success isplayer combatrank faction power\n" +
         static string Interdiction(CommandArgs args)
@@ -684,10 +678,16 @@ namespace EDDTest
         static string Market(string mpath, string opt)
         {
             string mline = "{ " + TimeStamp() + F("event", "Market") + F("MarketID", 12345678) + F("StationName", "Columbus") + FF("StarSystem", "Sol");
-            string market = mline + ", " + EDDTest.Properties.Resources.Market;
+            string market1 = mline + ", " + EDDTest.Properties.Resources.Market;
+            string market2 = mline + ", " + EDDTest.Properties.Resources.Market2;
 
-            if (opt == null || opt.Equals("NOFILE", StringComparison.InvariantCultureIgnoreCase) == false)
-                File.WriteAllText(Path.Combine(mpath, "Market.json"), market);
+            bool writem1 = opt == null || opt.Equals("NOFILE", StringComparison.InvariantCultureIgnoreCase) == false;
+            bool writem2 = opt != null && opt.Equals("2");
+
+            if (writem1)
+                File.WriteAllText(Path.Combine(mpath, "Market.json"), market1);
+            if (writem2)
+                File.WriteAllText(Path.Combine(mpath, "Market.json"), market2);
 
             return mline + " }";
         }
@@ -854,6 +854,69 @@ namespace EDDTest
         }
 
         #endregion
+
+
+        #region Help!
+
+        public static string Help()
+        {
+            return
+            "JournalPath CMDRname Options..\n" +
+            "Generic  event file - insert this {} event into the journal with current timestamp\n" +
+            "Travel   FSD name x y z (x y z is position as double)\n" +
+            "         FSDTravel name x y z destx desty destz percentint \n" +
+            "         Locdocked\n" +
+            "         Docked station faction\n" +
+            "         Undocked, Touchdown, Liftoff\n" +
+            "         FuelScoop amount total\n" +
+            "         JetConeBoost\n" +
+            "Missions MissionAccepted/MissionCompleted faction victimfaction id\n" +
+            "         MissionRedirected newsystem newstation id\n" +
+            "         Missions activeid\n" +
+            "C/B      Bounty faction reward\n" +
+            "         CommitCrime faction amount\n" +
+            "         CrimeVictim offender amount\n" +
+            "         FactionKillBond faction victimfaction reward\n" +
+            "         CapShipBond faction victimfaction reward\n" +
+            "         Interdiction name success isplayer combatrank faction power\n" +
+            "         TargetShipLost\n" +
+            "         ShipTargeted [ship [pilot rank [health [faction]]]]\n" +
+            "Commds   marketbuy fdname count price\n" +
+            "Scans    ScanPlanet name\n" +
+            "         ScanStar, ScanEarth\n" +
+            "         NavBeaconScan\n" +
+            "         Ring\n" +
+            "Ships    SellShipOnRebuy\n" +
+            "SRV      LaunchSRV DockSRV SRVDestroyed\n" +
+            "Others   SearchAndRescue fdname count\n" +
+            "         MiningRefined\n" +
+            "         Receivetext from channel msg\n" +
+            "         SentText to/channel msg\n" +
+            "         RepairDrone, CommunityGoal\n" +
+            "         MusicNormal, MusicGalMap, MusicSysMap\n" +
+            "         Friends name\n" +
+            "         Died\n" +
+            "         Resurrect cost\n" +
+            "         PowerPlay, UnderAttack\n" +
+            "         CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total\n" +
+            "         FighterDestroyed, FigherRebuilt, NpcCrewRank, NpcCrewPaidWage, LaunchDrone\n" +
+            "         Market (use NOFILE after to say don't write the canned file, or 2 to write the alternate)\n" +
+            "         ModuleInfo, Outfitting, Shipyard (use NOFILE after to say don't write the file)\n" +
+            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n" +
+            "         CodexEntry name subcat cat system\n" +
+            "         fsssignaldiscovered name\n" +
+            "         saascancomplete name\n" +
+            "         asteroidcracked name\n" +
+            "         multisellexplorationdata\n" +
+            "         propectedasteroid\n" +
+            "         replenishedreservoir main reserve\n" +
+            "         *Squadrons* name\n" +
+
+            "";
+        }
+
+        #endregion
+
 
     }
 }

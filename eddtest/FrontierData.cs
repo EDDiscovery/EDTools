@@ -99,6 +99,15 @@ namespace EDDTest
 
             }
 
+            // check for non cororolis now being in frontier data in main module section - this is due to previous undeclared modes becoming public
+
+            {
+                foreach( var x in ShipModuleData.noncorolismodules )
+                {
+                    if (ShipModuleData.modules.ContainsKey(x.Key))
+                        Console.WriteLine("Error Non cororolis list contains " + x.Key + " and so does main module list");
+                }
+            }
 
             // check ships
 
@@ -237,6 +246,8 @@ namespace EDDTest
                 else
                     Console.WriteLine("No Commodity CSV");
             }
+
+
 
             // Check weapons as much as we can..
 

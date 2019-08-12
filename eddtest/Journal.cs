@@ -11,11 +11,43 @@ namespace EDDTest
 {
     public static class Journal
     {
-        public static void JournalEntry(string filename, string cmdrname, CommandArgs argsentry, int repeatdelay)
+        public static void JournalEntry( CommandArgs argsentry)
         {
+            int repeatdelay = 0;
+
+            while (true) // read optional args
+            {
+                string opt = (argsentry.Left > 0) ? argsentry[0] : null;
+
+                if (opt != null)
+                {
+                    if (opt.Equals("-keyrepeat", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        repeatdelay = -1;
+                        argsentry.Remove();
+                    }
+                    else if (opt.Equals("-repeat", StringComparison.InvariantCultureIgnoreCase) && argsentry.Left >= 1)
+                    {
+                        argsentry.Remove();
+                        if (!int.TryParse(argsentry.Next(), out repeatdelay))
+                        {
+                            Console.WriteLine("Bad repeat delay\n");
+                            return;
+                        }
+                    }
+                    else
+                        break;
+                }
+                else
+                    break;
+            }
+
+            string filename = argsentry.Next();
+            string cmdrname = argsentry.Next();
+
             if (argsentry.Left == 0)
             {
-                Console.WriteLine("** Minimum 3 parameters of filename, cmdrname, journalentrytype");
+                Console.WriteLine(Help());
                 return;
             }
 
@@ -861,8 +893,8 @@ namespace EDDTest
         public static string Help()
         {
             return
-            "JournalPath CMDRname Options..\n" +
-            "Generic  event file - insert this {} event into the journal with current timestamp\n" +
+            "Usage:\n"+
+            "Journal [-keyrepeat]|[-repeat ms] pathtologfile CMDRname eventname..\n" +
             "Travel   FSD name x y z (x y z is position as double)\n" +
             "         FSDTravel name x y z destx desty destz percentint \n" +
             "         Locdocked\n" +

@@ -129,6 +129,13 @@ namespace EDDTest
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
                                 (1L << (int)StatusFlagsAll.ShieldsUp);
                 }
+                else if (v.Equals("Station", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    flags = (1L << (int)StatusFlagsShipType.InMainShip) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp) |
+                                (1L << (int)StatusFlagsShip.LandingGear) |
+                                (1L << (int)StatusFlagsShip.Docked);
+                }
                 else if (v.Equals("Landed", StringComparison.InvariantCultureIgnoreCase))
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
@@ -149,6 +156,11 @@ namespace EDDTest
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
                                 (1L << (int)StatusFlagsAll.ShieldsUp) |
                                 (1L << (int)StatusFlagsShip.HardpointsDeployed);
+                }
+                else if (v.Equals("Fighter", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    flags = (1L << (int)StatusFlagsShipType.InFighter) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp);
                 }
                 else if (v.StartsWith("C:"))
                 {
@@ -215,7 +227,7 @@ namespace EDDTest
             Console.Write(j);
         }
 
-        static public void StatusRead(CommandArgs args)
+        static public void StatusRead()
         {
             string user = Environment.GetEnvironmentVariable("USERNAME");
 

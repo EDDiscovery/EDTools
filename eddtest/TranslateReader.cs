@@ -126,15 +126,18 @@ namespace EDDTest
 
                 ret += idtouse + ": " + orgeng.AlwaysQuoteString().EscapeControlChars();
 
-                if (txprimary==null || txprimary.Equals(orgeng) || ( txprimary[0] == '<' && txprimary[txprimary.Length-1] == '>'))
+                if (txprimary == null || txprimary.Equals(orgeng) || txprimary.IsEmpty() || (txprimary[0] == '<' && txprimary[txprimary.Length - 1] == '>'))
+                {
+                    totalret += id + " in " + primary.GetOriginalFile(id) + " Not defined by secondary" + Environment.NewLine;
                     ret += " @";
+                }
                 else
                     ret += " => " + txprimary.AlwaysQuoteString().EscapeControlChars();
 
                 ret += Environment.NewLine;
 
 
-                totalret += ret;
+              //  totalret += ret;
                 filelist.Last().Write(ret);
             }
 
@@ -142,7 +145,7 @@ namespace EDDTest
             {
                 foreach (string id in secondary.EnumerateKeys)
                 {
-                    totalret += "Secondary defines " + id + " but primary does not" + Environment.NewLine;
+                    totalret += "**************** Secondary defines " + id + " in "  + secondary.GetOriginalFile(id) + " but primary does not" + Environment.NewLine;
                 }
             }
 

@@ -8,15 +8,6 @@ using System.Threading.Tasks;
 
 namespace EDDTest
 {
-    // method
-    // first use this to scan folders, usercontrols, forms, edgeneral, updating the example-ex to match
-    // then do journals and elitedangerous
-    // check translators-ids to see what you've missed
-    // once example-ex is okay
-    // normalise example-ex with translatereader
-    // once that is okay, then normalise other languages with translatereader.
-
-
     public static class ScanTranslate
     {
         public class Definition
@@ -27,11 +18,10 @@ namespace EDDTest
             public string firstdeflocation;
         };
 
-        static public Tuple<string, string, bool> ProcessLine(string combinedline, string curline, int txpos, int parapos , bool warnoldidchange)
+        static public Tuple<string, string> ProcessLine(string combinedline, string curline, int txpos, int parapos , bool warnoldidchange)
                                     
         {
             bool ok = false;
-            bool local = true;
             string engphrase = "";
             string keyword = "";
 
@@ -74,65 +64,21 @@ namespace EDDTest
 
                         string nextword = s1.NextWord(",)");
 
-                        if (nextword != null && nextword.StartsWith("typeof("))
+                        if (nextword.StartsWith("EDTx."))
                         {
-                            nextword = nextword.Substring(7);
+                            nextword = nextword.Substring(5).Replace("_",".");
 
-                            if ( s1.IsCharMoveOn(')'))
+                            if (s1.IsCharMoveOn(')'))
                             {
-                                if (s1.IsCharMoveOn(','))
-                                {
-                                    keyword = s1.NextQuotedWord(")");
-
-                                    if (keyword != null)
-                                    {
-                                        keyword = nextword + "." + keyword;
-                                        ok = true;
-                                    }
-                                }
-                                else if (s1.IsCharMoveOn(')'))
-                                {
-                                    if (warnoldidchange && engphrase.FirstAlphaNumericText() != engphrase.ReplaceNonAlphaNumeric())
-                                        Console.WriteLine("Warning : Changed ID " + engphrase + "  " + engphrase.FirstAlphaNumericText() + " old " + engphrase.ReplaceNonAlphaNumeric());
-                                    keyword = nextword + "."+ engphrase.FirstAlphaNumericText();
-                                    ok = true;
-                                }
-                            }
-                        }
-                        else if (nextword != null && (nextword == "this" || nextword == "t" || nextword == "ty"))
-                        {
-                            if (s1.IsCharMoveOn(','))
-                            {
-                                keyword = s1.NextQuotedWord(")");
-
-                                if (keyword != null)
-                                {
-                                    ok = true;
-                                }
-                            }
-                            else if (s1.IsCharMoveOn(')'))
-                            {
-                                keyword = engphrase.FirstAlphaNumericText();
-
-                                if (warnoldidchange && keyword != engphrase.ReplaceNonAlphaNumeric())
-                                    Console.WriteLine("Warning : Changed ID " + engphrase + "  " + engphrase.FirstAlphaNumericText() + " old " + engphrase.ReplaceNonAlphaNumeric());
-
+                                keyword = nextword;
                                 ok = true;
                             }
-                        }
-                        else if (s1.IsCharMoveOn(')'))
-                        {
-                            keyword = engphrase.FirstAlphaNumericText();
-                            if (warnoldidchange && keyword != engphrase.ReplaceNonAlphaNumeric())
-                                Console.WriteLine("Warning : Changed ID " + engphrase + "  " + engphrase.FirstAlphaNumericText() + " old " + engphrase.ReplaceNonAlphaNumeric());
-                            local = false;
-                            ok = true;
                         }
                     }
                 }
             }
 
-            return (ok) ? new Tuple<string, string, bool>(keyword, engphrase, local) : null;
+            return (ok) ? new Tuple<string, string>(keyword, engphrase) : null;
         }
 
         class DefInfo
@@ -141,21 +87,18 @@ namespace EDDTest
             public string parent;
         }
 
-        static public string Process(FileInfo[] files, string language, string txpath, int searchdepth, bool combinedone, bool showrepeats, bool showerrorsonly)            // overall index of items
+        static public string Process(FileInfo[] files, string language, string txpath, int searchdepth,  bool showrepeats, bool showerrorsonly)            // overall index of items
         {
             string locals = "";
-            string globals = "";
-            bool doneglobalstitle = false;
-            List<Definition> globalsdone = new List<Definition>();
-            List<Definition> localsdone = new List<Definition>();
+            List<Definition> idsdone = new List<Definition>();
 
             BaseUtils.Translator trans = BaseUtils.Translator.Instance;
 
             if (language.HasChars() && txpath.HasChars())
             {
-                trans.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), loadorgenglish:true);
+                trans.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), loadorgenglish: true);
 
-                if ( trans.Translating )
+                if (trans.Translating)
                 {
                     Console.WriteLine("Loaded translation " + language + " to compare against");
                 }
@@ -171,7 +114,6 @@ namespace EDDTest
             if (!trans.Translating)
             {
                 locals += "********************* TRANSLATION NOT LOADED" + Environment.NewLine;
-
             }
 
             foreach (var fi in files)
@@ -186,9 +128,6 @@ namespace EDDTest
                     Dictionary<string, DefInfo> winformdefs = new Dictionary<string, DefInfo>();
 
                     int bracketlevel = 0;
-
-                    if ( !combinedone )
-                        localsdone = new List<Definition>();
 
                     bool donelocaltitle = false;
 
@@ -207,109 +146,65 @@ namespace EDDTest
 
                         while (true)
                         {
-                            bool usebasename = false;
-
-                            int txpos = combined.IndexOf(".Tx(", startpos);
-                            int txbpos = combined.IndexOf(".Txb(", startpos);
-                            int parapos = txpos + 4;
-
-                            if ( txbpos >= 0 && (txpos ==-1 || txpos > txbpos ))
-                            {
-                                txpos = txbpos;
-                                parapos = txpos + 5;
-                                usebasename = true;
-                            }
+                            int txpos = combined.IndexOf(".T(", startpos);
+                            int parapos = txpos + 3;
 
                             string localtext = "";
-                            string globaltext = "";
 
                             if (txpos != -1)
                             {
-                                Tuple<string, string, bool> ret = ProcessLine(combined, line, txpos, parapos, false);
+                                Tuple<string, string> ret = ProcessLine(combined, line, txpos, parapos, false);
 
                                 if (ret == null)
                                     localtext = fi.FullName + ":" + lineno + ":Miss formed line around " + combined.Mid(txpos, 30) + Environment.NewLine;
                                 else
                                 {
-                                    bool local = ret.Item3;
+                                    string id = ret.Item1;
+                                    string engquoted = ret.Item2.AlwaysQuoteString();
 
-                                    string classprefix = "";
+                                    Definition def = idsdone.Find(x => x.token.Equals(ret.Item1, StringComparison.InvariantCultureIgnoreCase));
 
-                                    if ( !ret.Item1.Contains("."))     // typeof is already has class name sksksk.skksks 
-                                        classprefix = local ? (usebasename ? (baseclasses.Count > 0 ? (baseclasses.Last()+".") : null) : (classes.Count > 0 ? (classes.Last()+".") : null)) : "";
+                                    string res = null;
 
-                                    if (classprefix == null)
+                                    if (def != null)
                                     {
-                                        localtext = fi.FullName + ":" + lineno + ":ERROR: No class to assign name to - probably not reading {} properly " + ret.Item1 + Environment.NewLine;
+                                        if (def.text != ret.Item2)
+                                            res = fi.FullName + ":" + lineno + ":ERROR: ID has different text " + id + " " + Environment.NewLine + "   >> " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
+                                        else if (showrepeats)       // if showrepeats is off, then no output, since we already done it
+                                            res = "//Repeat " + id + " " + engquoted;
                                     }
                                     else
                                     {
-                                        string id = classprefix + ret.Item1;
+                                        idsdone.Add(new Definition(id, ret.Item2, fi.FullName + ":" + lineno));
 
-                                        Definition def = (local ? localsdone : globalsdone).Find(x => x.token.Equals(id, StringComparison.InvariantCultureIgnoreCase));
-
-                                        string engquoted = ret.Item2.AlwaysQuoteString();
-
-                                        string res = null;
-                                        if (def != null)
-                                        {
-                                            if (def.text != ret.Item2)
-                                                res = fi.FullName + ":" + lineno + ":ERROR: ID has different text " + id + " " + Environment.NewLine + "   >> " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
-                                            else if (showrepeats)       // if showrepeats is off, then no output, since we already done it
-                                                res = "//Repeat " + id + " " + engquoted;
-                                        }
-                                        else
-                                        {
-                                            (local ? localsdone : globalsdone).Add(new Definition(id, ret.Item2, fi.FullName + ":" + lineno));
-
+                                        if ( !showerrorsonly )
                                             res = id + ": " + engquoted + " @";     // list it
 
-                                            if (trans.IsDefined(id))
-                                            {
-                                                string foreign = trans.GetTranslation(id);
-                                                string english = trans.GetOriginalEnglish(id);
-                                                english = english.EscapeControlChars();
+                                        if (trans.IsDefined(id))
+                                        {
+                                            string foreign = trans.GetTranslation(id);
+                                            string english = trans.GetOriginalEnglish(id);
+                                            english = english.EscapeControlChars();
 
-                                                if ( foreign != null )
-                                                {
-                                                    if (english != ret.Item2)
-                                                    {
-                                                        res += " // Translation present, english differs from " + ret.Item2 + " vs " + english;
-                                                    }
-                                                    else
-                                                    {   
-                                                        if (!showerrorsonly)            // everything is okay - do we list it..
-                                                            res += " // OK";
-                                                        else
-                                                            res = null;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    if (!showerrorsonly)                // if we are showing all, we say there is no translation
-                                                        res += " // Translation present, no definition present";
-                                                    else
-                                                        res = null;
-                                                }
-                                            }       
-                                            else if ( trans.Translating )       // if we are checking translation, do it..
+                                            if (english != ret.Item2)
                                             {
-                                                if (!showerrorsonly)
-                                                    res += " // NOT DEFINED";
+                                                res = id + " // Translation present, but english differs from \"" + ret.Item2 + "\" vs \"" + english + "\"";
                                             }
                                         }
-
-                                        if (res != null)
+                                        else if (trans.Translating)       // if we are checking translation, do it..
                                         {
-                                            res += Environment.NewLine;
-
-                                            if (local)
-                                                localtext = res;
-                                            else
-                                                globaltext = res;
+                                            if (!showerrorsonly)
+                                                res += " // NOT DEFINED";
                                         }
                                     }
+
+                                    if (res != null)
+                                    {
+                                        res += Environment.NewLine;
+                                        localtext = res;
+                                    }
                                 }
+
 
                                 if (localtext.HasChars())
                                 {
@@ -320,16 +215,6 @@ namespace EDDTest
                                         donelocaltitle = true;
                                     }
                                     locals += localtext;
-                                }
-
-                                if ( globaltext.HasChars())
-                                { 
-                                    if (!doneglobalstitle)
-                                    {
-                                        globals += "///////////////////////////////////////////////////// Globals" + Environment.NewLine;
-                                        doneglobalstitle = true;
-                                    }
-                                    globals += globaltext;
                                 }
 
                                 startpos = parapos;
@@ -490,27 +375,12 @@ namespace EDDTest
                                     string english = trans.GetOriginalEnglish(id);
                                     english = english.EscapeControlChars();
 
-                                    if (foreign != null)
+                                    if (english != value)
                                     {
-                                        if (english != value )
-                                        {
-                                            res += " // Translation present, english differs from " + value + " vs " + english;
-                                        }
-                                        else
-                                        {
-                                            if (!showerrorsonly)            // everything is okay - do we list it..
-                                                res += " // OK";
-                                            else
-                                                res = null;
-                                        }
+                                        res = id + " // Translation present, but english differs from \"" + value + "\" vs \"" + english + "\"";
                                     }
-                                    else
-                                    {
-                                        if (!showerrorsonly)                // if we are showing all, we say there is no translation
-                                            res += " // Translation present, no definition present";
-                                        else
-                                            res = null;
-                                    }
+                                    else if (showerrorsonly)
+                                        res = null;
                                 }
                                 else if (trans.Translating)       // if we are checking translation, do it..
                                 {
@@ -536,7 +406,7 @@ namespace EDDTest
                 }
             }
 
-            return locals + globals;
+            return locals;
         }
     }
 }

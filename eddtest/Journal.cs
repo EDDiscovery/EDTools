@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 namespace EDDTest
 {
-    public static class Journal
+    public static partial class Journal
     {
         public static void JournalEntry( CommandArgs argsentry)
         {
@@ -67,6 +67,8 @@ namespace EDDTest
 
                 if (eventtype.Equals("fsd"))
                     lineout = FSDJump(args, repeatcount);
+                else if (eventtype.Equals("blamtest"))
+                    Blamtest(filename,cmdrname,args);
                 else if (eventtype.Equals("fsdtravel"))
                     lineout = FSDTravel(args);
                 else if (eventtype.Equals("locdocked"))
@@ -485,6 +487,18 @@ namespace EDDTest
 
                     qj.Close(99);
                 }
+                else if (eventtype.Equals("saasignalsfound") && args.Left >= 1)
+                {
+                    qj.Object().UTC("timestamp").V("event", "SAASignalsFound")
+                            .V("BodyName", args.Next())
+                            .V("SystemAddress", 101)
+                            .V("BodyID", 11)
+                            .Array("Signals")
+                            .Object().V("Type", "LowTemperatureDiamond").V("Type_Localised", "Low Temperature Diamonds").V("Count", 11).Close()
+                            .Object().V("Type", "FredThingies").V("Type_Localised", "Fred stuff").V("Count", 2).Close()
+                            .Object().V("Type", "Widgets").V("Type_Localised", "Widgities stuff").V("Count", 20).Close()
+                            .Close();
+                }
                 else if (eventtype.Equals("reservoirreplenished") && args.Left >= 2)
                 {
                     double main = args.Double();
@@ -510,7 +524,7 @@ namespace EDDTest
                             {
                                 JObject jo = JObject.Parse(line);
                                 jo["timestamp"] = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
-                                if ( lineout.HasChars() )
+                                if (lineout.HasChars())
                                     lineout += Environment.NewLine;
                                 lineout += jo.ToString(Newtonsoft.Json.Formatting.None);
                             }
@@ -557,7 +571,7 @@ namespace EDDTest
                     }
                 }
                 else
-                { 
+                {
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry");
                     break;
                 }
@@ -566,40 +580,7 @@ namespace EDDTest
                     lineout = qj.Get();
 
                 if (lineout != null)
-                {
-                    if (checkjson)
-                    {
-                        try
-                        {
-                            JToken jk = JToken.Parse(lineout);
-                            Console.WriteLine(jk.ToString(Newtonsoft.Json.Formatting.Indented));
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Error in JSON " + ex.Message);
-                            return;
-                        }
-                    }
-
-                    if (!File.Exists(filename))
-                    {
-                        using (Stream fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
-                        {
-                            using (StreamWriter sr = new StreamWriter(fs))
-                            {
-                                string line = "{ " + TimeStamp() + "\"event\":\"Fileheader\", \"part\":1, \"language\":\"English\\\\UK\", \"gameversion\":\"2.2 (Beta 2)\", \"build\":\"r121783/r0 \" }";
-                                sr.WriteLine(line);
-                                Console.WriteLine(line);
-
-                                string line2 = "{ " + TimeStamp() + "\"event\":\"LoadGame\", \"Commander\":\"" + cmdrname + "\", \"Ship\":\"Anaconda\", \"ShipID\":14, \"GameMode\":\"Open\", \"Credits\":18670609, \"Loan\":0 }";
-                                sr.WriteLine(line2);
-                                Console.WriteLine(line2);
-                            }
-                        }
-                    }
-
-                    Write(filename, lineout);
-                }
+                    WriteToLog(filename,cmdrname, lineout,checkjson);
                 else
                     break;
 
@@ -625,6 +606,71 @@ namespace EDDTest
                 repeatcount++;
             }
         }
+
+
+        #region Help!
+
+        public static string Help()
+        {
+            return
+            "Usage:\n" +
+            "Journal [-keyrepeat]|[-repeat ms] pathtologfile CMDRname eventname..\n" +
+            "Travel   FSD name x y z (x y z is position as double)\n" +
+            "         FSDTravel name x y z destx desty destz percentint \n" +
+            "         Locdocked\n" +
+            "         Docked station faction\n" +
+            "         Undocked, Touchdown, Liftoff\n" +
+            "         FuelScoop amount total\n" +
+            "         JetConeBoost\n" +
+            "Missions MissionAccepted/MissionCompleted faction victimfaction id\n" +
+            "         MissionRedirected newsystem newstation id\n" +
+            "         Missions activeid\n" +
+            "C/B      Bounty faction reward\n" +
+            "         CommitCrime faction amount\n" +
+            "         CrimeVictim offender amount\n" +
+            "         FactionKillBond faction victimfaction reward\n" +
+            "         CapShipBond faction victimfaction reward\n" +
+            "         Interdiction name success isplayer combatrank faction power\n" +
+            "         TargetShipLost\n" +
+            "         ShipTargeted [ship [pilot rank [health [faction]]]]\n" +
+            "Commds   marketbuy fdname count price\n" +
+            "Scans    ScanPlanet name\n" +
+            "         ScanStar, ScanEarth\n" +
+            "         NavBeaconScan\n" +
+            "         Ring\n" +
+            "Ships    SellShipOnRebuy\n" +
+            "SRV      LaunchSRV DockSRV SRVDestroyed\n" +
+            "Others   SearchAndRescue fdname count\n" +
+            "         MiningRefined\n" +
+            "         Receivetext from channel msg\n" +
+            "         SentText to/channel msg\n" +
+            "         RepairDrone, CommunityGoal\n" +
+            "         MusicNormal, MusicGalMap, MusicSysMap\n" +
+            "         Friends name\n" +
+            "         Died\n" +
+            "         Resurrect cost\n" +
+            "         PowerPlay, UnderAttack\n" +
+            "         CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total\n" +
+            "         FighterDestroyed, FigherRebuilt, NpcCrewRank, NpcCrewPaidWage, LaunchDrone\n" +
+            "         Market (use NOFILE after to say don't write the canned file, or 2 to write the alternate)\n" +
+            "         ModuleInfo, Outfitting, Shipyard (use NOFILE after to say don't write the file)\n" +
+            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n" +
+            "         CodexEntry name subcat cat system\n" +
+            "         fsssignaldiscovered name\n" +
+            "         saascancomplete name\n" +
+            "         saasignalsfound bodyname\n" +
+            "         asteroidcracked name\n" +
+            "         multisellexplorationdata\n" +
+            "         propectedasteroid\n" +
+            "         replenishedreservoir main reserve\n" +
+            "         *Squadrons* name\n" +
+
+            "";
+        }
+
+        #endregion
+
+
 
         //                                  "Options: Interdiction Loc name success isplayer combatrank faction power\n" +
         static string Interdiction(CommandArgs args)
@@ -663,10 +709,10 @@ namespace EDDTest
 
             z = z + 100 * repeatcount;
 
-            string starname = starnameroot + ((z > 0) ? "_" + z.ToString("0") : "");
+            string starname = starnameroot + ((z > 0) ? "_" + z.ToStringInvariant("0") : "");
 
             return "{ " + TimeStamp() + "\"event\":\"FSDJump\", \"StarSystem\":\"" + starname +
-            "\", \"StarPos\":[" + x.ToString("0.000000") + ", " + y.ToString("0.000000") + ", " + z.ToString("0.000000") +
+            "\", \"StarPos\":[" + x.ToStringInvariant("0.000000") + ", " + y.ToStringInvariant("0.000000") + ", " + z.ToStringInvariant("0.000000") +
             "], \"Allegiance\":\"\", \"Economy\":\"$economy_None;\", \"Economy_Localised\":\"None\", \"Government\":\"$government_None;\"," +
             "\"Government_Localised\":\"None\", \"Security\":\"$SYSTEM_SECURITY_low;\", \"Security_Localised\":\"Low Security\"," +
             "\"JumpDist\":10.791, \"FuelUsed\":0.790330, \"FuelLevel\":6.893371 }";
@@ -698,10 +744,10 @@ namespace EDDTest
             y = (dy - y) * percent / 100.0 + y;
             z = (dz - z) * percent / 100.0 + z;
 
-            string starname = starnameroot + percent.ToString("0");
+            string starname = starnameroot + percent.ToStringInvariant("0");
 
             return "{ " + TimeStamp() + "\"event\":\"FSDJump\", \"StarSystem\":\"" + starname +
-            "\", \"StarPos\":[" + x.ToString("0.000000") + ", " + y.ToString("0.000000") + ", " + z.ToString("0.000000") +
+            "\", \"StarPos\":[" + x.ToStringInvariant("0.000000") + ", " + y.ToStringInvariant("0.000000") + ", " + z.ToStringInvariant("0.000000") +
             "], \"Allegiance\":\"\", \"Economy\":\"$economy_None;\", \"Economy_Localised\":\"None\", \"Government\":\"$government_None;\"," +
             "\"Government_Localised\":\"None\", \"Security\":\"$SYSTEM_SECURITY_low;\", \"Security_Localised\":\"Low Security\"," +
             "\"JumpDist\":10.791, \"FuelUsed\":0.790330, \"FuelLevel\":6.893371 }";
@@ -811,143 +857,40 @@ namespace EDDTest
         }
 
 
-        #region DEPRECIATED Helpers for journal writing - USE QuickJSONFormatter!
-
-        public static string TimeStamp()
+        static void Blamtest(string filename, string cmdrname, CommandArgs args)
         {
-            DateTime dt = DateTime.Now.ToUniversalTime();
-            return "\"timestamp\":\"" + dt.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'") + "\", ";
-        }
+            string starname = args.Next();
+            int number = 0;
 
-        public static string F(string name, long v, bool term = false)
-        {
-            return "\"" + name + "\":" + v + (term ? " " : ", ");
-        }
+            double x = double.NaN, y = 0, z = 0;
 
-        public static string F(string name, double v, bool term = false)
-        {
-            return "\"" + name + "\":" + v.ToString("0.######") + (term ? " " : "\", ");
-        }
-
-        public static string F(string name, bool v, bool term = false)
-        {
-            return "\"" + name + "\":" + (v ? "true" : "false") + (term ? " " : "\", ");
-        }
-
-        public static string F(string name, string v, bool term = false)
-        {
-            return "\"" + name + "\":\"" + v + (term ? "\" " : "\", ");
-        }
-
-        public static string F(string name, DateTime v, bool term = false)
-        {
-            return "\"" + name + "\":\"" + v.ToString("yyyy-MM-ddTHH:mm:ssZ") + (term ? "\" " : "\", ");
-        }
-
-        public static string F(string name, int[] array, bool end = false)
-        {
-            string s = "";
-            foreach (int a in array)
+            if (!double.TryParse(args.Next(), out x) || !double.TryParse(args.Next(), out y) || !double.TryParse(args.Next(), out z))
             {
-                if (s.Length > 0)
-                    s += ", ";
-
-                s += a.ToString();
+                Console.WriteLine("** X,Y,Z must be numbers");
+                return;
             }
 
-            return "\"" + name + "\":[" + s + "]" + (end ? "" : ", ");
-        }
-
-        public static string FF(string name, string v)      // no final comma
-        {
-            return F(name, v, true);
-        }
-
-        public static string FF(string name, bool v)      // no final comma
-        {
-            return F(name, v, true);
-        }
-
-        public static string FF(string name, long v)      // no final comma
-        {
-            return F(name, v, true);
-        }
-
-        public static void Write(string filename, string line)
-        {
-            using (Stream fs = new FileStream(filename, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            while (true)
             {
-                using (StreamWriter sr = new StreamWriter(fs))
+                if (Console.KeyAvailable)
                 {
-                    sr.WriteLine(line);
-                    Console.WriteLine(line);
+                    if (Console.ReadKey().Key == ConsoleKey.Escape)
+                        break;
                 }
+
+                string lineout = "{ " + TimeStamp() + "\"event\":\"FSDJump\", \"StarSystem\":\"" + starname + "_" + (number) +
+                "\", \"StarPos\":[" + x.ToStringInvariant("0.000000") + ", " + y.ToStringInvariant("0.000000") + ", " + z.ToStringInvariant("0.000000") +
+                "], \"Allegiance\":\"\", \"Economy\":\"$economy_None;\", \"Economy_Localised\":\"None\", \"Government\":\"$government_None;\"," +
+                "\"Government_Localised\":\"None\", \"Security\":\"$SYSTEM_SECURITY_low;\", \"Security_Localised\":\"Low Security\"," +
+                "\"JumpDist\":10.791, \"FuelUsed\":0.790330, \"FuelLevel\":6.893371 }";
+
+                WriteToLog(filename, cmdrname, lineout, true);
+                number++;
+                x += 0.5;
+                System.Threading.Thread.Sleep(200);
             }
         }
 
-        #endregion
-
-
-        #region Help!
-
-        public static string Help()
-        {
-            return
-            "Usage:\n"+
-            "Journal [-keyrepeat]|[-repeat ms] pathtologfile CMDRname eventname..\n" +
-            "Travel   FSD name x y z (x y z is position as double)\n" +
-            "         FSDTravel name x y z destx desty destz percentint \n" +
-            "         Locdocked\n" +
-            "         Docked station faction\n" +
-            "         Undocked, Touchdown, Liftoff\n" +
-            "         FuelScoop amount total\n" +
-            "         JetConeBoost\n" +
-            "Missions MissionAccepted/MissionCompleted faction victimfaction id\n" +
-            "         MissionRedirected newsystem newstation id\n" +
-            "         Missions activeid\n" +
-            "C/B      Bounty faction reward\n" +
-            "         CommitCrime faction amount\n" +
-            "         CrimeVictim offender amount\n" +
-            "         FactionKillBond faction victimfaction reward\n" +
-            "         CapShipBond faction victimfaction reward\n" +
-            "         Interdiction name success isplayer combatrank faction power\n" +
-            "         TargetShipLost\n" +
-            "         ShipTargeted [ship [pilot rank [health [faction]]]]\n" +
-            "Commds   marketbuy fdname count price\n" +
-            "Scans    ScanPlanet name\n" +
-            "         ScanStar, ScanEarth\n" +
-            "         NavBeaconScan\n" +
-            "         Ring\n" +
-            "Ships    SellShipOnRebuy\n" +
-            "SRV      LaunchSRV DockSRV SRVDestroyed\n" +
-            "Others   SearchAndRescue fdname count\n" +
-            "         MiningRefined\n" +
-            "         Receivetext from channel msg\n" +
-            "         SentText to/channel msg\n" +
-            "         RepairDrone, CommunityGoal\n" +
-            "         MusicNormal, MusicGalMap, MusicSysMap\n" +
-            "         Friends name\n" +
-            "         Died\n" +
-            "         Resurrect cost\n" +
-            "         PowerPlay, UnderAttack\n" +
-            "         CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total\n" +
-            "         FighterDestroyed, FigherRebuilt, NpcCrewRank, NpcCrewPaidWage, LaunchDrone\n" +
-            "         Market (use NOFILE after to say don't write the canned file, or 2 to write the alternate)\n" +
-            "         ModuleInfo, Outfitting, Shipyard (use NOFILE after to say don't write the file)\n" +
-            "         Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber\n" +
-            "         CodexEntry name subcat cat system\n" +
-            "         fsssignaldiscovered name\n" +
-            "         saascancomplete name\n" +
-            "         asteroidcracked name\n" +
-            "         multisellexplorationdata\n" +
-            "         propectedasteroid\n" +
-            "         replenishedreservoir main reserve\n" +
-            "         *Squadrons* name\n" +
-
-            "";
-        }
-
-        #endregion
 
 
     }

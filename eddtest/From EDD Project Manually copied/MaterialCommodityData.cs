@@ -29,12 +29,15 @@ namespace EliteDangerousCore
         public string Name { get; private set; }                    // name of it in nice text
         public string FDName { get; private set; }                  // fdname, lower case..
         public string Type { get; private set; }                    // and its type, for materials its commonality, for commodities its group ("Metals" etc).
-        public string TranslatedType { get; private set; }          // translation of above..
+        public string TranslatedType { get; private set; }          // translation of above..        
         public string Shortname { get; private set; }               // short abv. name
         public Color Colour { get; private set; }                   // colour if its associated with one
         public bool Rarity { get; private set; }                    // if it is a rare commodity
 
         public bool IsCommodity { get { return Category == CommodityCategory; } }
+        public bool IsRaw { get { return Category == MaterialRawCategory; } }
+        public bool IsEncoded { get { return Category == MaterialEncodedCategory; } }
+        public bool IsManufactured { get { return Category == MaterialManufacturedCategory; } }
         public bool IsEncodedOrManufactured { get { return Category == MaterialEncodedCategory || Category == MaterialManufacturedCategory; } }
         public bool IsRareCommodity { get { return Rarity && Category.Equals(CommodityCategory); } }
         public bool IsCommonMaterial { get { return Type == MaterialFreqCommon || Type == MaterialFreqVeryCommon; } }
@@ -109,6 +112,17 @@ namespace EliteDangerousCore
             return i >= 0 ? lst[i] : null;
         }
 
+        public static MaterialCommodityData GetByName(string longname)
+        {
+            if (cachelist == null)
+                FillTable();
+
+            List<MaterialCommodityData> lst = cachelist.Values.ToList();
+            int i = lst.FindIndex(x => x.Name.Equals(longname));
+            return i >= 0 ? lst[i] : null;
+        }
+
+
         public static MaterialCommodityData[] GetAll()
         {
             if (cachelist == null)
@@ -117,20 +131,81 @@ namespace EliteDangerousCore
             return cachelist.Values.ToArray();
         }
 
-        public static MaterialCommodityData[] GetMaterials()
+
+        // use this delegate to find them
+        public static MaterialCommodityData[] Get(Func<MaterialCommodityData,bool> func, bool sorted)
         {
             if (cachelist == null)
                 FillTable();
 
-            return cachelist.Values.Where(x => x.Category != CommodityCategory).ToArray();
+            MaterialCommodityData[] items = cachelist.Values.Where(func).ToArray();
+
+            if ( sorted )
+            {
+                Array.Sort(items, delegate (MaterialCommodityData left, MaterialCommodityData right)     // in order, name
+                {
+                    return left.Name.CompareTo(right.Name.ToString());
+                });
+
+            }
+
+            return items;
         }
 
-        public static MaterialCommodityData[] GetCommodities()
+        public static MaterialCommodityData[] GetCommodities(bool sorted)
         {
-            if (cachelist == null)
-                FillTable();
+            return Get(x => x.Category == CommodityCategory, sorted);
+        }
 
-            return cachelist.Values.Where(x => x.Category == CommodityCategory).ToArray();
+        public static MaterialCommodityData[] GetMaterials(bool sorted)
+        {
+            return Get(x => x.Category != CommodityCategory, sorted);
+        }
+
+        public static Tuple<string, string>[] GetTypes(Func<MaterialCommodityData, bool> func, bool sorted)
+        {
+            MaterialCommodityData[] mcs = GetAll();
+            Tuple<string, string>[] types = mcs.Where(func).Select(x => new Tuple<string, string>(x.Type, x.TranslatedType)).Distinct().ToArray();
+            if (sorted)
+                Array.Sort(types, delegate (Tuple<string, string> l, Tuple<string, string> r) { return l.Item2.CompareTo(r.Item2); });
+            return types;
+        }
+
+        public static Tuple<string, string>[] GetCategories(Func<MaterialCommodityData, bool> func, bool sorted)
+        {
+            MaterialCommodityData[] mcs = GetAll();
+            Tuple<string, string>[] types = mcs.Where(func).Select(x => new Tuple<string, string>(x.Category, x.TranslatedCategory)).Distinct().ToArray();
+            if (sorted)
+                Array.Sort(types, delegate (Tuple<string, string> l, Tuple<string, string> r) { return l.Item2.CompareTo(r.Item2); });
+            return types;
+        }
+
+        public static string[] GetMembersOfType(string typename, bool sorted)
+        {
+            MaterialCommodityData[] mcs = GetAll();
+            string[] members = mcs.Where(x => x.Type.Equals(typename, StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Name).ToArray();
+            if (sorted)
+                Array.Sort(members);
+            return members;
+        }
+
+        public static string[] GetFDNameMembersOfType(string typename, bool sorted)
+        {
+            MaterialCommodityData[] mcs = GetAll();
+            string[] members = mcs.Where(x => x.Type.Equals(typename, StringComparison.InvariantCultureIgnoreCase)).Select(x => x.FDName).ToArray();
+            if (sorted)
+                Array.Sort(members);
+            return members;
+        }
+
+
+        public static string[] GetFDNameMembersOfCategory(string catname, bool sorted)
+        {
+            MaterialCommodityData[] mcs = GetAll();
+            string[] members = mcs.Where(x => x.Category.Equals(catname, StringComparison.InvariantCultureIgnoreCase)).Select(x => x.FDName).ToArray();
+            if (sorted)
+                Array.Sort(members);
+            return members;
         }
 
         #endregion
@@ -142,11 +217,11 @@ namespace EliteDangerousCore
         public MaterialCommodityData(string cs, string n, string fd, string t, string shortn, Color cl, bool rare)
         {
             Category = cs;
-            TranslatedCategory = Category.Tx(typeof(MaterialCommodityData));
+            TranslatedCategory = Category.Tx(typeof(MaterialCommodityData));        // valid to pass this thru the Tx( system
             Name = n;
             FDName = fd;
             Type = t;
-            TranslatedType = Type.Tx(typeof(MaterialCommodityData));
+            TranslatedType = Type.Tx(typeof(MaterialCommodityData));                // valid to pass this thru the Tx( system
             Shortname = shortn;
             Colour = cl;
             Rarity = rare;
@@ -439,6 +514,8 @@ namespace EliteDangerousCore
 
             #region Commodities - checked by netlogentry frontierdata against their spreadsheets. Use this tool to update the tables
 
+            AddCommodity("Rockforth Fertiliser", "Chemicals", "RockforthFertiliser");
+            AddCommodity("Agronomic Treatment", "Chemicals", "AgronomicTreatment");
             AddCommodityList("Explosives;Hydrogen Fuel;Hydrogen Peroxide;Liquid Oxygen;Mineral Oil;Nerve Agents;Pesticides;Surface Stabilisers;Synthetic Reagents;Water", "Chemicals");
 
             string ci = "Consumer Items";
@@ -481,7 +558,8 @@ namespace EliteDangerousCore
             string md = "Medicines";
             AddCommodityList("Advanced Medicines;Basic Medicines;Combat Stabilisers;Performance Enhancers;Progenitor Cells", md);
             AddCommodity("Agri-Medicines", md, "agriculturalmedicines");
-            AddCommodity("Nanomedicines", md, "Nanomedicines");
+
+            AddCommodity("Nanomedicines", md, "Nanomedicines"); // not in frontier data. Keep for now Jan 2020
 
             AddCommodityList("Aluminium;Beryllium;Bismuth;Cobalt;Copper;Gallium;Gold;Hafnium 178;Indium;Lanthanum;Lithium;Osmium;Palladium;Platinum;Praseodymium;Samarium;Silver;Tantalum;Thallium;Thorium;Titanium;Uranium", "Metals");
             AddCommodity("Platinum Alloy", "Metals", "PlatinumAloy");
@@ -491,6 +569,7 @@ namespace EliteDangerousCore
             AddCommodityList("Indite;Jadeite;Lepidolite;Lithium Hydroxide;Moissanite;Painite;Pyrophyllite;Rutile;Taaffeite;Uraninite", mi);
             AddCommodity("Methanol Monohydrate Crystals", mi, "methanolmonohydratecrystals");
             AddCommodity("Low Temperature Diamonds", mi, "lowtemperaturediamond");
+            AddCommodity("Void Opal", mi, "Opal");
 
             AddCommodity("Rhodplumsite", mi, "Rhodplumsite");
             AddCommodity("Serendibite", mi, "Serendibite");
@@ -499,7 +578,6 @@ namespace EliteDangerousCore
             AddCommodity("Benitoite", mi, "Benitoite");
             AddCommodity("Grandidierite", mi, "Grandidierite");
             AddCommodity("Alexandrite", mi, "Alexandrite");
-            AddCommodity("Opal", mi, "Opal");
 
             AddCommodity("Trinkets of Hidden Fortune", sv, "TrinketsOfFortune");
             AddCommodity("Gene Bank", sv, "GeneBank");
@@ -516,12 +594,14 @@ namespace EliteDangerousCore
             AddCommodity("Ancient Key", sv, "AncientKey");
 
             AddCommodityList("Ai Relics;Antimatter Containment Unit;Antiquities;Assault Plans;Data Core;Diplomatic Bag;Encrypted Correspondence;Fossil Remnants", sv);
-            AddCommodityList("Geological Samples;Hostage;Military Intelligence;Mysterious Idol;Occupied CryoPod;Personal Effects;Political Prisoner;Precious Gems;Prohibited Research Materials", sv);
+            AddCommodityList("Geological Samples;Military Intelligence;Mysterious Idol;Occupied CryoPod;Personal Effects;Precious Gems;Prohibited Research Materials", sv);
             AddCommodityList("Sap 8 Core Container;Scientific Research;Scientific Samples;Space Pioneer Relics;Tactical Data;Unstable Data Core", sv);
             AddCommodity("Large Survey Data Cache", sv, "largeexplorationdatacash");
             AddCommodity("Small Survey Data Cache", sv, "smallexplorationdatacash");
             AddCommodity("Ancient Artefact", sv, "USSCargoAncientArtefact");
             AddCommodity("Black Box", sv, "USSCargoBlackBox");
+            AddCommodity("Political Prisoners", sv, "PoliticalPrisoner");
+            AddCommodity("Hostages", sv, "Hostage");
             AddCommodity("Commercial Samples", sv, "ComercialSamples");
             AddCommodity("Encrypted Data Storage", sv, "EncriptedDataStorage");
             AddCommodity("Experimental Chemicals", sv, "USSCargoExperimentalChemicals");
@@ -532,13 +612,24 @@ namespace EliteDangerousCore
             AddCommodity("Rebel Transmissions", sv, "USSCargoRebelTransmissions");
             AddCommodity("Technical Blueprints", sv, "USSCargoTechnicalBlueprints");
             AddCommodity("Trade Data", sv, "USSCargoTradeData");
-            AddCommodity("Ancient Relic", sv, "AncientRelic");
-            AddCommodity("Ancient Orb", sv, "AncientOrb");
-            AddCommodity("Ancient Casket", sv, "AncientCasket");
-            AddCommodity("Ancient Tablet", sv, "AncientTablet");
-            AddCommodity("Ancient Urn", sv, "AncientUrn");
-            AddCommodity("Ancient Totem", sv, "AncientTotem");
+            AddCommodity("Guardian Relic", sv, "AncientRelic");
+            AddCommodity("Guardian Orb", sv, "AncientOrb");
+            AddCommodity("Guardian Casket", sv, "AncientCasket");
+            AddCommodity("Guardian Tablet", sv, "AncientTablet");
+            AddCommodity("Guardian Urn", sv, "AncientUrn");
+            AddCommodity("Guardian Totem", sv, "AncientTotem");
 
+            AddCommodity("Mollusc Soft Tissue", "Salvage", "M_TissueSample_Soft");
+            AddCommodity("Pod Core Tissue", "Salvage", "S_TissueSample_Cells");
+            AddCommodity("Pod Dead Tissue", "Salvage", "S_TissueSample_Surface");
+            AddCommodity("Pod Surface Tissue", "Salvage", "S_TissueSample_Core");
+            AddCommodity("Mollusc Membrane", "Salvage", "M3_TissueSample_Membrane");
+            AddCommodity("Mollusc Mycelium", "Salvage", "M3_TissueSample_Mycelium");
+            AddCommodity("Mollusc Spores", "Salvage", "M3_TissueSample_Spores");
+            AddCommodity("Pod Shell Tissue", "Salvage", "S6_TissueSample_Coenosarc");
+
+
+            AddCommodity("Apa Vietii", "Narcotics", "ApaVietii");
             AddCommodity("Narcotics", "Narcotics", "BasicNarcotics");
 
             AddCommodityList("Imperial Slaves;Slaves", "Slaves");

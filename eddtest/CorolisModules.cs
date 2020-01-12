@@ -20,6 +20,7 @@ namespace EDDTest
 
             foreach (FileInfo f in allFiles)
             {
+                Console.WriteLine("Process " + f.FullName);
                 returnstring += ProcessModulesInfo(f.FullName, names);
             }
 
@@ -155,6 +156,11 @@ namespace EDDTest
 
                 string modtypename = second_ >= 0 ? sym.Substring(0, second_) : sym;        // Modname is normally up to second _ (Int_CargoRack_...)
 
+                if ( modtypename.Equals("hpt_mining",StringComparison.InvariantCultureIgnoreCase) )
+                {
+                //    modtypename = sym.Substring(0,third_);
+                }
+
                 if (modtypename == "Int_DroneControl")                     // these need text to third item
                 {
                     if (third_ == -1)
@@ -163,11 +169,14 @@ namespace EDDTest
                         modtypename = sym.Substring(0, third_);
                 }
 
-                modtypename = modtypename.SplitCapsWord().Replace("Hpt_", "").Replace("Int_", "").Replace("_", " ");
+                modtypename = modtypename.SplitCapsWord().Replace("Hpt_", "", StringComparison.InvariantCultureIgnoreCase).Replace("Int_", "", StringComparison.InvariantCultureIgnoreCase).Replace("_", " ");
 
-               // Console.WriteLine("Compare " + modtypename);
+                Console.Write("Module Compare " + modtypename);
+
                 Tuple<string, string> modtype = MOD_PREFIX_TO_TYPE.Find(x => modtypename.IndexOf(x.Item1, StringComparison.InvariantCultureIgnoreCase) >= 0);
                 modtypename = modtype?.Item2 ?? modtypename;
+
+                Console.WriteLine(".. " + modtypename);
 
                 sym = sym.ToLowerInvariant();
                 if (names.Contains(sym))
@@ -242,6 +251,18 @@ namespace EDDTest
             {"Control", "Controller" },
             {"Resource", "Hatch" },
             {"Siphon", "Breaker" },
+            {"Abr", "Abrasion" },
+            {"Blstr", "Blaster" },
+            {"Abrblstr", "Abrasion Blaster" },
+            {"Seism", "Seismic" },
+            {"Chrg", "Charge" },
+            {"Surf", "Surface" },
+            {"Warhd", "Warhead" },
+            {"Sub", "Sub" },
+            {"Subsurface", "Sub Surface" },
+            {"Disp", "Displacement" },
+            {"Misle", "Missile"},
+            {"Subsurfdispmisle", "Subsurface Displacement Missile" },
         };
 
         private static Dictionary<string, string> shipnames = new Dictionary<string, string>()
@@ -315,6 +336,8 @@ namespace EDDTest
             return s;
         }
 
+        // convert the result of say "hpt_cannon_fixed_small"
+        // after split caps word, after hpt etc removal.
 
         static List<Tuple<string, string>> MOD_PREFIX_TO_TYPE = new List<Tuple<string, string>>()
             {
@@ -341,6 +364,10 @@ namespace EDDTest
                   new Tuple<string,string>("Pack Hound Missile Rack", "Missile Rack"),
                   new Tuple<string,string>("Corrosion Proof Cargo Rack", "Cargo Rack"),
                   new Tuple<string,string>("Advanced Torp Pylon" ,"Missile Rack"),
-            };
+                  new Tuple<string,string>("MRA Scanner" ,"Pulse Wave Analyser"),
+                  new Tuple<string,string>("mrascanner" ,"Pulse Wave Analyser"),
+                  new Tuple<string,string>("xx!",""),
+                  new Tuple<string,string>("xx!",""),
+             };
     }
 }

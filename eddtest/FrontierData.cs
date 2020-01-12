@@ -53,6 +53,8 @@ namespace EDDTest
 {
     static public class FrontierData
     {
+        const string Version = "3.6";
+
         static string MatName(long? matid, long? matcount, CSVFile mat)
         {
             if (matid != null && matcount != null)
@@ -113,7 +115,7 @@ namespace EDDTest
 
             {
                 CSVFile filecommods = new CSVFile();
-                if (filecommods.Read(Path.Combine(rootpath, "ShipData.csv"), FileShare.ReadWrite))
+                if (filecommods.Read(Path.Combine(rootpath, "ShipData" + Version + ".csv"), FileShare.ReadWrite))
                 {
                     foreach (CSVFile.Row rw in filecommods.RowsExcludingHeaderRow)
                     {
@@ -136,7 +138,7 @@ namespace EDDTest
 
                             if (mass != null && mass.Value != ((ShipModuleData.ShipInfoDouble)si[ShipModuleData.ShipPropID.HullMass]).Value)
                             {
-                                Console.WriteLine("Error " + fdname + " disagrees with mass");
+                                Console.WriteLine("Error " + fdname + " disagrees with mass spreadsheet " + mass + " Currently " + ((ShipModuleData.ShipInfoDouble)si[ShipModuleData.ShipPropID.HullMass]).Value);
                             }
 
                             // corolis has very different value for these.. not sure who is right
@@ -162,9 +164,9 @@ namespace EDDTest
 
             {
                 CSVFile filecommods = new CSVFile();
-                if (filecommods.Read(Path.Combine(rootpath, "Commodities.csv"), FileShare.ReadWrite))
+                if (filecommods.Read(Path.Combine(rootpath, "Commodities" + Version + ".csv"), FileShare.ReadWrite))
                 {
-                    List<MaterialCommodityData> ourcommods = MaterialCommodityData.GetCommodities().ToList();
+                    List<MaterialCommodityData> ourcommods = MaterialCommodityData.GetCommodities(true).ToList();
 
                     foreach (MaterialCommodityData m in ourcommods)     // check our list vs the excel
                     {
@@ -175,9 +177,9 @@ namespace EDDTest
 
                         if (n == -1)    // no name in excel
                         {
-                            if (f != -1)
-                                Console.WriteLine("Error " + m.Name + " not found but ID is " + filecommods.Rows[f][2]);
-                            else
+                            if (f != -1)    // N but Fd
+                                Console.WriteLine("Error Data item name '" + m.Name + "' not found in spreadsheet, but fdname is present - misnaming " + filecommods.Rows[f][2]);
+                            else           // No N, No Fd
                                 Console.WriteLine("Error " + m.Name + " not found in frontier data");
                         }
                         else
@@ -253,7 +255,7 @@ namespace EDDTest
 
             {
                 CSVFile fileweapons = new CSVFile();
-                if (fileweapons.Read(Path.Combine(rootpath, "Weapon Values.csv"), FileShare.ReadWrite))
+                if (fileweapons.Read(Path.Combine(rootpath, "Weapon Values" + Version + ".csv"), FileShare.ReadWrite))
                 {
                     foreach (CSVFile.Row rw in fileweapons.RowsExcludingHeaderRow)
                     {
@@ -291,7 +293,7 @@ namespace EDDTest
             // Check modules
             {
                 CSVFile filemodules = new CSVFile();
-                if (filemodules.Read(Path.Combine(rootpath, "ModuleData.csv"), FileShare.ReadWrite))
+                if (filemodules.Read(Path.Combine(rootpath, "ModuleData" + Version + ".csv"), FileShare.ReadWrite))
                 {
                     foreach (CSVFile.Row rw in filemodules.RowsExcludingHeaderRow)
                     {
@@ -321,6 +323,7 @@ namespace EDDTest
                             else
                             {
                                 Console.WriteLine("Missing Module " + fdname);
+                                Console.WriteLine("+ { \"" + fdname.ToLower() + "\", new ShipModule(-1, 1, \"" + ukname.SplitCapsWordFull() + "\", \"Internal Module\")},");
                             }
                         }
                         else
@@ -337,7 +340,7 @@ namespace EDDTest
             {
                 CSVFile filetechbroker = new CSVFile();
 
-                if (filetechbroker.Read(Path.Combine(rootpath, "Tech Broker .csv"), FileShare.ReadWrite))
+                if (filetechbroker.Read(Path.Combine(rootpath, "Tech Broker " + Version + ".csv"), FileShare.ReadWrite))
                 {
                     string ret = "";
                     List<Unlocks> techs = new List<Unlocks>();
@@ -425,12 +428,12 @@ namespace EDDTest
             // check materials, and later recipes
 
             {
-                string materials = Path.Combine(rootpath, "Materials.csv");
+                string materials = Path.Combine(rootpath, "Materials" + Version + ".csv");
                 CSVFile filemats = new CSVFile();
 
                 if (filemats.Read(materials, FileShare.ReadWrite))
                 { 
-                    MaterialCommodityData[] ourmats = MaterialCommodityData.GetMaterials();
+                    MaterialCommodityData[] ourmats = MaterialCommodityData.GetMaterials(true);
 
                     foreach (MaterialCommodityData m in ourmats)
                     {
@@ -518,12 +521,12 @@ namespace EDDTest
 
                                 string engnames = "Not Known";
 
-                                EngineeringRecipe er = Recipes.EngineeringRecipes.Find((x) => x.name == ukname && x.level == level.Value.ToString());
+                                EngineeringRecipe er = Recipes.EngineeringRecipes.Find((x) => x.Name == ukname && x.level == level.Value.ToString());
 
                                 if (er != null)
                                 {
-                                    if ( er.ingredientsstring != ing )
-                                        Console.WriteLine("Engineering disagree on " + ukname + " F: " + ing + " Data: " + er.ingredientsstring);
+                                    if ( er.IngredientsString != ing )
+                                        Console.WriteLine("Engineering disagree on " + ukname + " F: " + ing + " Data: " + er.IngredientsString);
                                 }
                                 else
                                     Console.WriteLine("Engineering missing " + ukname + " F: " + ing );
@@ -554,7 +557,7 @@ namespace EDDTest
                 CSVFile filesd = new CSVFile();
                 CSVFile filemats = new CSVFile();
 
-                if (filesd.Read(Path.Combine(rootpath, "SpecialData.csv"), FileShare.ReadWrite) && filemats.Read(Path.Combine(rootpath, "Materials.csv"), FileShare.ReadWrite))
+                if (filesd.Read(Path.Combine(rootpath, "SpecialData" + Version + ".csv"), FileShare.ReadWrite) && filemats.Read(Path.Combine(rootpath, "Materials.csv"), FileShare.ReadWrite))
                 {
                     string ret = "";
 

@@ -628,8 +628,6 @@ namespace EliteDangerousCore
             AddCommodity("Mollusc Spores", "Salvage", "M3_TissueSample_Spores");
             AddCommodity("Pod Shell Tissue", "Salvage", "S6_TissueSample_Coenosarc");
 
-
-            AddCommodity("Apa Vietii", "Narcotics", "ApaVietii");
             AddCommodity("Narcotics", "Narcotics", "BasicNarcotics");
 
             AddCommodityList("Imperial Slaves;Slaves", "Slaves");
@@ -658,6 +656,7 @@ namespace EliteDangerousCore
 
             #region Rare Commodities - checked by netlogentry frontierdata against their spreadsheets. Use this tool to update the tables
 
+            AddCommodityRare("Apa Vietii", "Narcotics", "ApaVietii");
             AddCommodityRare("The Hutton Mug", "Consumer Items", "TheHuttonMug");
             AddCommodityRare("Eranin Pearl Whisky", "Legal Drugs", "EraninPearlWhisky");
             AddCommodityRare("Lavian Brandy", "Legal Drugs", "LavianBrandy");

@@ -27,7 +27,7 @@ namespace EDDTest
                                   "StatusMove lat long latstep longstep heading headstep steptime\n" +
                                   "Status <Status flags>... UI <Flags> C:cargo F:fuel FG:Firegroup G:Gui L:Legalstate\n" +
                                   "                   superflags: normal,supercruise, landed, SRV, fight, station\n" +
-                                  "StatusRead user\n" +
+                                  "StatusRead\n" +
                                   "CorolisModules rootfolder - process corolis-data\\modules\\<folder>\n" +
                                   "CorolisModule name - process corolis-data\\modules\\<folder>\n" +
                                   "CorolisShips rootfolder - process corolis-data\\ships\n" +

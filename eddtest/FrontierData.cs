@@ -659,7 +659,7 @@ namespace EDDTest
         static string[] InaraRares = new string[]
         {
             // inara 2/7/2018
-
+            "Apa Vietii",
             "Aepyornis Egg",
             "Aganippe Rush",
             "Alacarakmo Skin Art",

@@ -62,7 +62,10 @@ namespace EDDTest
 
         public static void StatusMove(CommandArgs args)
         {
-            long flags = 0;
+            long flags = (1L << (int)StatusFlagsShipType.InSRV) |
+                        (1L << (int)StatusFlagsShip.Landed) |
+                        (1L << (int)StatusFlagsAll.ShieldsUp) |
+                        (1L << (int)StatusFlagsAll.Lights);
 
             double latitude = 0;
             double longitude = 0;
@@ -71,6 +74,12 @@ namespace EDDTest
             double heading = 0;
             double headstep = 1;
             int steptime = 100;
+            int fg = 1;
+            int gui = 0;
+            string legalstate = "Clean";
+            double fuel = 31.2;
+            double fuelres = 0.23;
+            int cargo = 23;
 
             if (!double.TryParse(args.Next(), out latitude) || !double.TryParse(args.Next(), out longitude) ||
                 !double.TryParse(args.Next(), out latstep) || !double.TryParse(args.Next(), out longstep) ||
@@ -86,12 +95,20 @@ namespace EDDTest
                 //{ "timestamp":"2018-03-01T21:51:36Z", "event":"Status", "Flags":18874376,
                 //"Pips":[4,8,0], "FireGroup":1, "GuiFocus":0, "Latitude":-18.978821, "Longitude":-123.642052, "Heading":308, "Altitude":20016 }
 
-                string j = "{ " + Journal.TimeStamp() + Journal.F("event", "Status") + Journal.F("Flags", flags) + Journal.F("Pips", new int[] { 4, 8, 0 }) +
-                            Journal.F("FireGroup", 1) + Journal.F("GuiFocus", 0) + Journal.F("Latitude", latitude) + Journal.F("Longitude", longitude) +
-                            Journal.F("Heading", heading) + Journal.F("Altitude", 20)
-                            + "}";
+                Console.WriteLine("{0:0.00} {1:0.00} H {2:0.00} F {3:0.00}:{4:0.00}", latitude, longitude, heading, fuel, fuelres);
+                BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
-                File.WriteAllText("Status.json", j);
+                qj.Object().UTC("timestamp").V("event", "Status");
+                qj.V("Flags", flags);
+                qj.V("Pips", new int[] { 2, 8, 2 });
+                qj.V("FireGroup", fg);
+                qj.V("GuiFocus", gui);
+                qj.V("LegalState", legalstate);
+                qj.Object("Fuel").V("FuelMain", fuel).V("FuelReservoir", fuelres).Close();
+                qj.V("Cargo", cargo);
+                qj.Close();
+
+                File.WriteAllText("Status.json", qj.Get());
                 System.Threading.Thread.Sleep(steptime);
 
                 if (Console.KeyAvailable && Console.ReadKey().Key == ConsoleKey.Escape)
@@ -102,6 +119,13 @@ namespace EDDTest
                 latitude += latstep;
                 longitude = longitude + longstep;
                 heading = (heading + headstep) % 360;
+
+                fuelres -= 0.02;
+                if ( fuelres < 0 )
+                {
+                    fuel--;
+                    fuelres = 0.99;
+                }
 
             }
         }
@@ -218,7 +242,7 @@ namespace EDDTest
             qj.V("FireGroup", fg);
             qj.V("GuiFocus", gui);
             qj.V("LegalState", legalstate);
-            qj.Object("Fuel").V("FuelMain",fuel).V("FuelReservoir",0.32).Close();
+            qj.Object("Fuel").V("FuelMain", fuel).V("FuelReservoir", 0.32).Close();
             qj.V("Cargo", cargo);
             qj.Close();
 

@@ -615,6 +615,7 @@ namespace EDDTest
             return
             "Usage:\n" +
             "Journal [-keyrepeat]|[-repeat ms] pathtologfile CMDRname eventname..\n" +
+            "File     event filename - read filename with json and store in file\n" + 
             "Travel   FSD name x y z (x y z is position as double)\n" +
             "         FSDTravel name x y z destx desty destz percentint \n" +
             "         Locdocked\n" +

@@ -47,7 +47,7 @@ namespace EDDTest
 
             if (argsentry.Left == 0)
             {
-                Console.WriteLine(Help());
+                Console.WriteLine(Help(false));
                 return;
             }
 
@@ -240,8 +240,12 @@ namespace EDDTest
 
                 }
                 else if (eventtype.Equals("repairdrone"))
-                    lineout = "{ " + TimeStamp() + F("event", "RepairDrone") + "\"HullRepaired\": 0.23, \"CockpitRepaired\": 0.1,  \"CorrosionRepaired\": 0.5 }";
-
+                {
+                    qj.Object().UTC("timestamp").V("event", "RepairDrone");
+                    qj.V("HullRepaired", repeatcount*0.1);
+                    qj.V("CockpitRepaired", 0.1);
+                    qj.V("CorrosionRepaired", 0.2);
+                }
                 else if (eventtype.Equals("communitygoal"))
                     lineout = "{ " + TimeStamp() + F("event", "CommunityGoal") + "\"CurrentGoals\":[ { \"CGID\":726, \"Title\":\"Alliance Research Initiative - Trade\", \"SystemName\":\"Kaushpoos\", \"MarketName\":\"Neville Horizons\", \"Expiry\":\"2017-08-17T14:58:14Z\", \"IsComplete\":false, \"CurrentTotal\":10062, \"PlayerContribution\":562, \"NumContributors\":101, \"TopRankSize\":10, \"PlayerInTopRank\":false, \"TierReached\":\"Tier 1\", \"PlayerPercentileBand\":50, \"Bonus\":200000 } ] }";
 
@@ -572,7 +576,7 @@ namespace EDDTest
                 }
                 else
                 {
-                    Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry");
+                    Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry" + Environment.NewLine + Help(true));
                     break;
                 }
 
@@ -610,11 +614,14 @@ namespace EDDTest
 
         #region Help!
 
-        public static string Help()
+        public static string Help(bool shorthelp)
         {
-            return
+            string s = 
             "Usage:\n" +
-            "Journal [-keyrepeat]|[-repeat ms] pathtologfile CMDRname eventname..\n" +
+            "Journal [-keyrepeat]|[-repeat ms] pathtologfile CMDRname eventname..\n";
+
+            if ( !shorthelp)
+                s += 
             "File     event filename - read filename with json and store in file\n" + 
             "Travel   FSD name x y z (x y z is position as double)\n" +
             "         FSDTravel name x y z destx desty destz percentint \n" +
@@ -665,8 +672,9 @@ namespace EDDTest
             "         propectedasteroid\n" +
             "         replenishedreservoir main reserve\n" +
             "         *Squadrons* name\n" +
-
             "";
+
+            return s;
         }
 
         #endregion

@@ -279,8 +279,17 @@ namespace EDDTest
                 try
                 {
                     string text = File.ReadAllText(path);
-                    JToken tk = JToken.Parse(text);
-                    Console.WriteLine("Output:" + Environment.NewLine + tk.ToString(indent ? Newtonsoft.Json.Formatting.Indented : Newtonsoft.Json.Formatting.None));
+
+                    using (StringReader sr = new StringReader(text))
+                    {
+                        string line;
+                        while( (line= sr.ReadLine())!=null && (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape))
+                        {
+                            JToken tk = JToken.Parse(line);
+                            Console.WriteLine(tk.ToString(indent ? Newtonsoft.Json.Formatting.Indented : Newtonsoft.Json.Formatting.None));
+                        }
+                    }
+
                 }
                 catch (Exception ex)
                 {

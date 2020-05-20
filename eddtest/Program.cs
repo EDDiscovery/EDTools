@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace EDDTest
 {
@@ -365,11 +366,125 @@ namespace EDDTest
                     }
                 }
             }
+            else if (arg1.Equals("xmldump"))
+            {
+                string filename = args.Next();
+
+                XElement bindings = XElement.Load(filename);
+                Dump(bindings, 0);
+            }
+            else if (arg1.Equals("svg"))
+            {
+                string filename = args.Next();
+                int id = 0;
+
+                string[] names = new string[] {
+                "Galactic Centre",
+                "Empyrean Straits",
+                "Ryker's Hope",
+                "Odin's Hold",
+                "Norma Arm",
+                "Arcadian Stream",
+                "Izanami",
+                "Inner Orion-Perseus Conflux",
+                "Inner Scutum-Centaurus Arm",
+                "Norma Expanse",
+                "Trojan Belt",
+                "The Veils",
+                "Newton's Vault",
+                "The Conduit",
+                "Outer Orion-Perseus Conflux",
+                "Orion-Cygnus Arm",
+                "Temple",
+                "Inner Orion Spur",
+                "Hawking's Gap",
+                "Dryman's Point",
+                "Sagittarius-Carina Arm",
+                "Mare Somnia",
+                "Acheron",
+                "Formorian Frontier",
+                "Hieronymus Delta",
+                "Outer Scutum-Centaurus Arm",
+                "Outer Arm",
+                "Aquila's Halo",
+                "Errant Marches",
+                "Perseus Arm",
+                "Formidine Rift",
+                "Vulcan Gate",
+                "Elysian Shore",
+                "Sanguineous Rim",
+                "Outer Orion Spur",
+                "Achilles's Altar",
+                "Xibalba",
+                "Lyra's Song",
+                "Tenebrae",
+                "The Abyss",
+                "Kepler's Crest",
+                "The Void", };
+        
+
+                QuickJSONFormatter qjs = new QuickJSONFormatter();
+                qjs.Array(null).LF();
+
+                XElement bindings = XElement.Load(filename);
+                foreach (XElement x in bindings.Descendants())
+                {
+                    if (x.HasAttributes)
+                    {
+                        foreach (XAttribute y in x.Attributes())
+                        {
+                            if ( x.Name.LocalName == "path" && y.Name.LocalName == "d")
+                            {
+                                //Console.WriteLine(x.Name.LocalName + " attr " + y.Name + " = " + y.Value);
+                                var points = BaseUtils.SVG.ReadSVGPath(y.Value);
+
+                                qjs.Object().V("id", id).V("type", "region").V("name", names[id] );
+                                qjs.Array("coordinates");
+                                foreach (var p in points)
+                                {
+                                    qjs.Array(null).V(null, p.X*100000.0/2048.0-49985).V(null, 0).V(null, p.Y*100000.0/2048.0-24105).Close();
+                                }
+                                qjs.Close().Close().LF();
+                                id++;
+                            }
+                        }
+                    }
+                }
+
+                qjs.Close();
+
+                Console.WriteLine(qjs.ToString());
+            }
             else
             {
                 Console.WriteLine("Unknown command, run with empty line for help");
             }
         }
 
+
+        static void Dump( XElement x, int level)
+        {
+            string pretext = "                                       ".Substring(0, level * 3);
+            Console.WriteLine(level + pretext + x.NodeType + " " + x.Name.LocalName + (x.Value.HasChars() ? (" : " + x.Value) : ""));
+
+            if (x.HasAttributes)
+            {
+                foreach (XAttribute y in x.Attributes())
+                {
+                    Console.WriteLine(level + pretext + "  attr " + y.Name + " = " + y.Value);
+                }
+            }
+
+            if (x.HasElements)
+            {
+                foreach (XElement y in x.Elements())
+                {
+                    //Console.WriteLine(level + pretext + x.Name.LocalName + " desc " + y.Name.LocalName);
+                    Dump(y, level + 1);
+                    //Console.WriteLine(level + pretext + x.Name.LocalName + " Out desc " + y.Name.LocalName);
+                }
+            }
+
+        }
     }
 }

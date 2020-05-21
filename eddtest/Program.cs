@@ -23,8 +23,8 @@ namespace EDDTest
                                   "EDDBSTARS <filename> or EDDBPLANETS or EDDBSTARNAMES for the eddb dump\n" +
                                   "EDSMSTARS <filename> read the main dump and analyse\n" +
                                   "Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
-                                  "Voicerecon <filename>\n" +
-                                  "DeviceMappings <filename>\n" +
+                                  "Voicerecon <filename> - read a elite bindings file and output action script lines\n" +
+                                  "DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
                                   "StatusMove lat long latstep longstep heading headstep steptime\n" +
                                   "Status <Status flags>... UI <Flags> C:cargo F:fuel FG:Firegroup G:Gui L:Legalstate\n" +
                                   "                   superflags: normal,supercruise, landed, SRV, fight, station\n" +
@@ -40,8 +40,10 @@ namespace EDDTest
                                   "journalindented file - read lines from file in journal format and output indented\n" +
                                   "jsonindented file - read a json in file and indent\n" +
                                   "jsoncompressed file - read a json in file and compress\n" +
-                                  "cutdownfile file lines\n" +
-                                  "dwwp file\n"
+                                  "cutdownfile file lines -reduce a file size down to this number of lines\n" +
+                                  "xmldump file - decode xml and output attributes/elements showing structure\n" +
+                                  "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
+                                  "svg file - read svg file of Elite regions and output EDSM JSON galmap file\n"
                                   );
 
                 return;

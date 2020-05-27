@@ -22,7 +22,7 @@ namespace EDDTest
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error in JSON " + ex.Message);
+                    Console.WriteLine("Error in JSON " + ex.Message + Environment.NewLine + lineout);
                     return;
                 }
             }

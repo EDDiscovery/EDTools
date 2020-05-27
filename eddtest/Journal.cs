@@ -512,9 +512,54 @@ namespace EDDTest
                             .V("FuelMain", main)
                             .V("FuelReservoir", res);
                 }
+                else if (eventtype.Equals("carrierdepositfuel") && args.Left >= 1)
+                {
+                    int amount = args.Int();
+
+                    qj.Object().UTC("timestamp").V("event", "CarrierDepositFuel")
+                            .V("CarrierID", 1234)
+                            .V("Amount", amount)
+                            .V("Total", amount + 5000);
+                }
+                else if (eventtype.Equals("carrierfinance") && args.Left >= 1)
+                {
+                    int amount = args.Int();
+
+                    qj.Object().UTC("timestamp").V("event", "CarrierFinance")
+                            .V("CarrierID", 1234)
+                            .V("TaxRate", 23)
+                            .V("CarrierBalance", amount)
+                            .V("ReserveBalance", amount + 2000)
+                            .V("AvailableBalance", amount + 4000)
+                            .V("ReservePercent", 42);
+                }
+                else if (eventtype.Equals("carriernamechanged"))
+                {
+                    qj.Object().UTC("timestamp").V("event", "CarrierNameChanged")
+                            .V("CarrierID", 1234)
+                            .V("Callsign", "sixi-20")
+                            .V("Name", "Big Bertha");
+                }
+                else if (eventtype.Equals("cargotransfer") && args.Left>=3)
+                {
+                    string type = args.Next();
+                    int count = args.Int();
+                    string dir = args.Next();
+                    qj.Object().UTC("timestamp").V("event", "CargoTransfer")
+                            .Array("Transfers")
+                            .Object()
+                            .V("Type", type)
+                            .V("Type_Localised", type + "_loc")
+                            .V("Count", count)
+                            .V("Direction", dir)
+                            .Close()
+                            .Close();
+
+                }
                 else if (eventtype.Equals("event") && args.Left >= 1)   // give it raw json from "event":"wwkwk" onwards, without } at end
                 {
                     string file = args.Next();
+               
                     var textlines = File.ReadLines(file);
 
                     lineout = "";

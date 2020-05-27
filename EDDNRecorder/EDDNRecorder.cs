@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.Serialization.Json;
+using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace EDDNRecorder
 {
@@ -23,36 +25,50 @@ namespace EDDNRecorder
 
         public EDDNRecorder()
         {
-
             InitializeComponent();
-
-
             appdatapath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EDDNRecorder");
 
             if (!Directory.Exists(appdatapath))
                 Directory.CreateDirectory(appdatapath);
         }
 
+        Thread opthread = null;
+
         private void button1_Click(object sender, EventArgs e)
         {
-
-
-            GetEDDNData();
+            opthread = new Thread(GetEDDNData);
+            opthread.Start();
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+            CloseThread = true;
+            opthread.Join();
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
+        private const int WM_VSCROLL = 277;
+        private const int SB_PAGEBOTTOM = 7;
+
+        private bool CloseThread = false;
 
         private void GetEDDNData()
         {
+            System.Diagnostics.Debug.WriteLine("Connecting..");
             using (StreamWriter file = new StreamWriter(Path.Combine(appdatapath, "EDDN" + DateTime.Now.ToString("yyyy-dd-MM-HH-mm-ss") + ".log")))
             {
                 using (NetMQContext ctx = NetMQContext.Create())
                 {
                     using (var subscriber = ctx.CreateSubscriberSocket())
                     {
-                        subscriber.Connect("tcp://eddn-relay.elite-markets.net:9500");
+                        subscriber.Connect("tcp://eddn.edcd.io:9500");
                         subscriber.Subscribe(Encoding.Unicode.GetBytes(string.Empty));
 
-                        while (true) //(this.eddnSubscriberSocket.HasIn)
+                        System.Diagnostics.Debug.WriteLine("Connected");
+
+                        while (!CloseThread)
                         {
                             byte[] response;
                             try
@@ -63,6 +79,8 @@ namespace EDDNRecorder
                             {
                                 return;
                             }
+
+                            System.Diagnostics.Debug.WriteLine("Received");
 
                             var decompressedFileStream = new MemoryStream();
                             using (decompressedFileStream)
@@ -80,11 +98,16 @@ namespace EDDNRecorder
                                 decompressedFileStream.Position = 0;
                                 var sr = new StreamReader(decompressedFileStream);
                                 var myStr = sr.ReadToEnd();
-                                //Log.Debug(myStr);
 
-                                if (myStr.Contains("http://schemas.elite-markets.net/eddn/journal/"))
-                                    file.WriteLine(myStr);
+                                file.WriteLine(myStr);
+                                BeginInvoke((MethodInvoker)delegate 
+                                    {
+                                        richTextBox1.AppendText(myStr.Substring(0, 400) + Environment.NewLine);
+                                        SendMessage(richTextBox1.Handle, WM_VSCROLL, (IntPtr)SB_PAGEBOTTOM, IntPtr.Zero);
+                                      
 
+                                    });
+                                //richTextBox1.Select(richTextBox1.Text.Length, richTextBox1.Text.Length);
                                 decompressedFileStream.Position = 0;
                                 //var serializer = new DataContractJsonSerializer(typeof(EddnRequest));
                                 //var rootObject = (EddnRequest)serializer.ReadObject(decompressedFileStream);

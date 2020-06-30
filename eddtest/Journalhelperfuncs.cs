@@ -11,7 +11,7 @@ namespace EDDTest
 {
     public static partial class Journal
     {
-        static void WriteToLog(string filename, string cmdrname, string lineout, bool checkjson )
+        static void WriteToLog(string filename, string cmdrname, string lineout, bool checkjson ,int part = 1 )
         {
             if (checkjson)
             {
@@ -33,23 +33,32 @@ namespace EDDTest
                 {
                     using (StreamWriter sr = new StreamWriter(fs))
                     {
-                        string line = "{ " + TimeStamp() + "\"event\":\"Fileheader\", \"part\":1, \"language\":\"English\\\\UK\", \"gameversion\":\"2.2 (Beta 2)\", \"build\":\"r121783/r0 \" }";
-sr.WriteLine(line);
-                        Console.WriteLine(line);
+                        QuickJSONFormatter l1 = new QuickJSONFormatter();
+                        l1.Object().UTC("timestamp").V("event", "FileHeader").V("part", 1).V("language", "English\\\\UK").V("gameversion", "2.2 (Beta 2)").V("build", "r121783/r0");
+                        QuickJSONFormatter l2 = new QuickJSONFormatter();
+                        l2.Object().UTC("timestamp").V("event", "LoadGame").V("FID","F1962222").V("Commander", cmdrname)
+                                .V("Horizons", true).V("Ship", "Anaconda").V("Ship_Localised", "Anaconda")
+                                .V("ShipID",5).V("ShipName","CAT MINER").V("ShipIdent","BUD-2")
+                                .V("FuelLevel",32.000000).V("FuelCapacity",32.000000)
+                                .V("GameMode", "Group").V("Group", "FleetComm").V("Credits", 3815287).V("Loan", 0);
 
-                        string line2 = "{ " + TimeStamp() + "\"event\":\"LoadGame\", \"Commander\":\"" + cmdrname + "\", \"Ship\":\"Anaconda\", \"ShipID\":14, \"GameMode\":\"Open\", \"Credits\":18670609, \"Loan\":0 }";
-sr.WriteLine(line2);
-                        Console.WriteLine(line2);
+                        Console.WriteLine(l1.Get());
+                        Console.WriteLine(l2.Get());
+                        sr.WriteLine(l1.Get());
+                        sr.WriteLine(l2.Get());
                     }
                 }
             }
 
-            using (Stream fs = new FileStream(filename, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            if (lineout != null)
             {
-                using (StreamWriter sr = new StreamWriter(fs))
+                using (Stream fs = new FileStream(filename, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                 {
-                    sr.WriteLine(lineout);
-                    Console.WriteLine(lineout);
+                    using (StreamWriter sr = new StreamWriter(fs))
+                    {
+                        sr.WriteLine(lineout);
+                        Console.WriteLine(lineout);
+                    }
                 }
             }
         }

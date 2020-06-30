@@ -43,7 +43,8 @@ namespace EDDTest
                                   "cutdownfile file lines -reduce a file size down to this number of lines\n" +
                                   "xmldump file - decode xml and output attributes/elements showing structure\n" +
                                   "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
-                                  "svg file - read svg file of Elite regions and output EDSM JSON galmap file\n"
+                                  "svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
+                                  "readlog file - read a continuous log or journal file out to stdout\n"
                                   );
 
                 return;
@@ -366,6 +367,48 @@ namespace EDDTest
                                 break;
                         }
                     }
+                }
+            }
+            else if (arg1.Equals("readlog"))
+            {
+                string filename = args.Next();
+                long pos = 0;
+                long lineno = 0;
+
+                while (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape)
+                {
+                    try
+                    {
+                        if (new FileInfo(filename).Length < pos)
+                        {
+                            Console.WriteLine("");
+                            Console.WriteLine("########################################################################################");
+                            Console.WriteLine("");
+                            pos = 0;
+                        }
+
+                        var stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+                        stream.Seek(pos, SeekOrigin.Begin);
+
+                        using (var sr = new StreamReader(stream))
+                        {
+                            string line = null;
+                            while ((line = sr.ReadLine()) != null)
+                            {
+                                Console.Write(string.Format("{0}:", ++lineno));
+                                Console.WriteLine(line);
+                            }
+
+                            pos = stream.Position;
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+
+                    System.Threading.Thread.Sleep(50);
                 }
             }
             else if (arg1.Equals("xmldump"))

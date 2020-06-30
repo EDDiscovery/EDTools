@@ -521,6 +521,40 @@ namespace EDDTest
                             .V("Amount", amount)
                             .V("Total", amount + 5000);
                 }
+                else if (eventtype.Equals("screenshot") && args.Left >= 2)
+                {
+                    string infile = args.Next();
+                    string outfolder = args.Next();
+                    bool nojr = args.Left>=1 && args.Next().Equals("NOJR");
+
+                    if (File.Exists(infile))
+                    {
+                        int n = 100;
+                        string outfile;
+                        do
+                        {
+                            outfile = Path.Combine(outfolder, string.Format("Screenshot_{0}.bmp", n++));
+                        } while (File.Exists(outfile));
+
+                        File.Copy(infile, outfile);
+
+                        Console.WriteLine("{0} -> {1}", infile, outfile);
+
+                        if (!nojr)
+                        {
+                            qj.Object().UTC("timestamp").V("event", "Screenshot")
+                                .V("Filename", "\\\\ED_Pictures\\\\" + Path.GetFileName(outfile))
+                                .V("Width", 1920)
+                                .V("Height", 1200)
+                                .V("System", "Fredsys")
+                                .V("Body", "Jimbody");
+                        }
+                    }
+                    else
+                        Console.WriteLine("No such file {0}", infile);
+
+
+                }
                 else if (eventtype.Equals("carrierfinance") && args.Left >= 1)
                 {
                     int amount = args.Int();
@@ -619,6 +653,15 @@ namespace EDDTest
                         qj.V("ScanStage", stage);
                     }
                 }
+                else if (eventtype.Equals("continued"))
+                {
+                    BaseUtils.QuickJSONFormatter qjc = new QuickJSONFormatter();
+                    qjc.Object().UTC("timestamp").V("event", "Continued").V("Part", 2);
+                    WriteToLog(filename, cmdrname, qjc.Get(), checkjson);
+                    filename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) +".part2" + Path.GetExtension(filename));
+                    Console.WriteLine("Continued.. change to filename " + filename);
+                    WriteToLog(filename, cmdrname, null, false, 2);
+                }
                 else
                 {
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry" + Environment.NewLine + Help(true));
@@ -629,7 +672,7 @@ namespace EDDTest
                     lineout = qj.Get();
 
                 if (lineout != null)
-                    WriteToLog(filename,cmdrname, lineout,checkjson);
+                    WriteToLog(filename, cmdrname, lineout, checkjson);
                 else
                     break;
 
@@ -717,6 +760,7 @@ namespace EDDTest
             "         propectedasteroid\n" +
             "         replenishedreservoir main reserve\n" +
             "         *Squadrons* name\n" +
+            "         screenshot inputfile outputfolder [NOJR]\n" +
             "";
 
             return s;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EDDTest
 {
-    static public class CorolisShips
+    static public class CoriolisShips
     {
         static public string ProcessShips(FileInfo[] allFiles)            // overall index of items
         {

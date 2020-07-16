@@ -29,17 +29,17 @@ namespace EDDTest
                                   "Status <Status flags>... UI <Flags> C:cargo F:fuel FG:Firegroup G:Gui L:Legalstate\n" +
                                   "                   superflags: normal,supercruise, landed, SRV, fight, station\n" +
                                   "StatusRead\n" +
-                                  "CorolisModules rootfolder - process corolis-data\\modules\\<folder>\n" +
-                                  "CorolisModule name - process corolis-data\\modules\\<folder>\n" +
-                                  "CorolisShips rootfolder - process corolis-data\\ships\n" +
-                                  "CorolisShip name - process corolis-data\\ships\n" +
-                                  "Coroliseng rootfolder - process corolis-data\\modifications\n" +
+                                  "CoriolisModules rootfolder - process coriolis-data\\modules\\<folder>\n" +
+                                  "CoriolisModule name - process coriolis-data\\modules\\<folder>\n" +
+                                  "CoriolisShips rootfolder - process coriolis-data\\ships\n" +
+                                  "CoriolisShip name - process coriolis-data\\ships\n" +
+                                  "CoriolisEng rootfolder - process coriolis-data\\modifications\n" +
                                   "FrontierData rootfolder - process cvs file exports of frontier data\n" +
                                   "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
                                   "translatereader - process language files and normalise, run to see options\n" +
                                   "journalindented file - read lines from file in journal format and output indented\n" +
-                                  "jsonindented file - read a json in file and indent\n" +
-                                  "jsoncompressed file - read a json in file and compress\n" +
+                                  "jsonindented/jsoncompressed file - read a json on a single line from the file and output\n" +
+                                  "json - read a json from file and output indented\n" +
                                   "cutdownfile file lines -reduce a file size down to this number of lines\n" +
                                   "xmldump file - decode xml and output attributes/elements showing structure\n" +
                                   "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
@@ -218,30 +218,35 @@ namespace EDDTest
             {
                 Speech.Phoneme(args.Next(), args.Next());
             }
-            else if (arg1.Equals("corolisships"))
+            else if (arg1.Equals("coriolisships"))
             {
                 FileInfo[] allFiles = Directory.EnumerateFiles(args.Next(), "*.json", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-                string ret = CorolisShips.ProcessShips(allFiles);
+                string ret = CoriolisShips.ProcessShips(allFiles);
                 Console.WriteLine(ret);
             }
-            else if (arg1.Equals("corolisship"))
+            else if (arg1.Equals("coriolisship"))
             {
                 FileInfo[] allFiles = Directory.EnumerateFiles(".", args.Next(), SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-                string ret = CorolisShips.ProcessShips(allFiles);
+                string ret = CoriolisShips.ProcessShips(allFiles);
                 Console.WriteLine(ret);
             }
-            else if (arg1.Equals("corolismodules"))
+            else if (arg1.Equals("coriolismodules"))
             {
                 FileInfo[] allFiles = Directory.EnumerateFiles(args.Next(), "*.json", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-
-                string ret = CorolisModules.ProcessModules(allFiles);
+                string ret = CoriolisModules.ProcessModules(allFiles);
                 Console.WriteLine(ret);
             }
-            else if (arg1.Equals("corolismodule"))
+            else if (arg1.Equals("coriolismodule"))
             {
                 FileInfo[] allFiles = Directory.EnumerateFiles(".", args.Next(), SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
-                string ret = CorolisModules.ProcessModules(allFiles);
+                string ret = CoriolisModules.ProcessModules(allFiles);
+                Console.WriteLine(ret);
+            }
+            else if (arg1.Equals("corioliseng"))
+            {
+                FileInfo[] allFiles = Directory.EnumerateFiles(args.Next(), "*.json", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+                string ret = CoriolisEng.ProcessEng(allFiles);
                 Console.WriteLine(ret);
             }
             else if (arg1.Equals("frontierdata"))
@@ -287,13 +292,28 @@ namespace EDDTest
                     using (StringReader sr = new StringReader(text))
                     {
                         string line;
-                        while( (line= sr.ReadLine())!=null && (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape))
+                        while ((line = sr.ReadLine()) != null && (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape))
                         {
                             JToken tk = JToken.Parse(line);
                             Console.WriteLine(tk.ToString(indent ? Newtonsoft.Json.Formatting.Indented : Newtonsoft.Json.Formatting.None));
                         }
                     }
 
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed " + ex.Message);
+                }
+            }
+            else if (arg1.Equals("json") )
+            {
+                string path = args.Next();
+                try
+                {
+                    string text = File.ReadAllText(path);
+
+                    JToken tk = JToken.Parse(text);
+                    Console.WriteLine(tk.ToString(Newtonsoft.Json.Formatting.Indented ));
                 }
                 catch (Exception ex)
                 {
@@ -374,6 +394,19 @@ namespace EDDTest
                 string filename = args.Next();
                 long pos = 0;
                 long lineno = 0;
+
+
+                if ( Path.GetFileName(filename).Contains("*"))
+                {
+                    string dir = Path.GetDirectoryName(filename);
+                    if (dir == "")
+                        dir = ".";
+                    FileInfo[] allFiles = Directory.EnumerateFiles(dir, Path.GetFileName(filename), SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderByDescending(p => p.LastWriteTime).ToArray();
+                    if (allFiles.Length > 1)
+                        filename = allFiles[0].FullName;
+                }
+
+                Console.WriteLine("Reading " + filename);
 
                 while (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape)
                 {

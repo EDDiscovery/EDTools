@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CorolisEng.cs" />
     <Compile Include="CorolisShips.cs" />
     <Compile Include="CorolisModules.cs" />
     <Compile Include="EDDB.cs" />

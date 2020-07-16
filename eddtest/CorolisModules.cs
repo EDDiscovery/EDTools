@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EDDTest
 {
-    static public class CorolisModules
+    static public class CoriolisModules
     {
         static public string ProcessModules(FileInfo[] allFiles)
         {

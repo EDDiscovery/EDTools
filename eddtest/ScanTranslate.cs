@@ -166,35 +166,34 @@ namespace EDDTest
 
                                     string res = null;
 
-                                    if (def != null)
+                                    if (def != null)        // if previously did the def..
                                     {
                                         if (def.text != ret.Item2)
-                                            res = fi.FullName + ":" + lineno + ":ERROR: ID has different text " + id + " " + Environment.NewLine + "   >> " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
+                                            res = "Different Text: " + fi.FullName + ":" + lineno + " ID has different text " + id + " " + Environment.NewLine + "   >> " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
                                         else if (showrepeats)       // if showrepeats is off, then no output, since we already done it
-                                            res = "//Repeat " + id + " " + engquoted;
+                                            res = "Repeat: " + id + " " + engquoted;
                                     }
                                     else
                                     {
                                         idsdone.Add(new Definition(id, ret.Item2, fi.FullName + ":" + lineno));
 
-                                        if ( !showerrorsonly )
-                                            res = id + ": " + engquoted + " @";     // list it
-
                                         if (trans.IsDefined(id))
                                         {
+                                            if (!showerrorsonly)
+                                                res = id + ": " + engquoted + " @";     // list it
+
                                             string foreign = trans.GetTranslation(id);
                                             string english = trans.GetOriginalEnglish(id);
                                             english = english.EscapeControlChars();
 
                                             if (english != ret.Item2)
                                             {
-                                                res = id + " // Translation present, but english differs from \"" + ret.Item2 + "\" vs \"" + english + "\"";
+                                                res = "Translator Difference: " + id + " // English differs from \"" + ret.Item2 + "\" vs \"" + english + "\"";
                                             }
                                         }
                                         else if (trans.Translating)       // if we are checking translation, do it..
                                         {
-                                            if (!showerrorsonly)
-                                                res += " // NOT DEFINED";
+                                            res = ".T( Missing: " + id + ": " + engquoted + " @";
                                         }
                                     }
 
@@ -359,11 +358,11 @@ namespace EDDTest
                                 else
                                     controlname = "";
 
-                                if (!ok || value == "<code>")
+                                if (!ok )
                                     value = null;
                             }
 
-                            if ( value != null )
+                            if ( value != null && value != "<code>" && value != "")
                             {
                                 string classname = (classes.Count > 0) ? classes.Last() : "ERROR NO CLASS!";
                                 string id = classname + (controlname.HasChars() ? "." + controlname : "");
@@ -377,15 +376,14 @@ namespace EDDTest
 
                                     if (english != value)
                                     {
-                                        res = id + " // Translation present, but english differs from \"" + value + "\" vs \"" + english + "\"";
+                                        res = "Translator difference: " + id + " // English differs from \"" + value + "\" vs \"" + english + "\"";
                                     }
                                     else if (showerrorsonly)
                                         res = null;
                                 }
                                 else if (trans.Translating)       // if we are checking translation, do it..
                                 {
-                                    if (!showerrorsonly)
-                                        res += " // NOT DEFINED";
+                                    res = "Designer Missing: " + res;
                                 }
 
                                 if (res != null)

@@ -40,6 +40,8 @@ namespace EDDTest
                                   "journalindented file - read lines from file in journal format and output indented\n" +
                                   "jsonindented/jsoncompressed file - read a json on a single line from the file and output\n" +
                                   "json - read a json from file and output indented\n" +
+                                  "escapestring - read a json from file and output text with quotes escaped for c# source files\n" +
+                                  "@string - read a json from file and output text for @ strings\n" +
                                   "cutdownfile file lines -reduce a file size down to this number of lines\n" +
                                   "xmldump file - decode xml and output attributes/elements showing structure\n" +
                                   "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
@@ -418,6 +420,7 @@ namespace EDDTest
                             Console.WriteLine("########################################################################################");
                             Console.WriteLine("");
                             pos = 0;
+                            lineno = 0;
                         }
 
                         var stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -450,6 +453,22 @@ namespace EDDTest
 
                 XElement bindings = XElement.Load(filename);
                 Dump(bindings, 0);
+            }
+            else if (arg1.Equals("escapestring"))
+            {
+                string filename = args.Next();
+
+                string text = File.ReadAllText(filename);
+                text = text.QuoteString();
+                Console.WriteLine(text);
+            }
+            else if (arg1.Equals("@string"))
+            {
+                string filename = args.Next();
+
+                string text = File.ReadAllText(filename);
+                text = text.Replace("\"", "\"\"");
+                Console.WriteLine(text);
             }
             else if (arg1.Equals("svg"))
             {

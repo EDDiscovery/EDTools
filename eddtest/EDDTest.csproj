@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Github.cs" />
     <Compile Include="CorolisEng.cs" />
     <Compile Include="CorolisShips.cs" />
     <Compile Include="CorolisModules.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="FrontierData.cs" />
     <Compile Include="Journal.cs" />
     <Compile Include="Journalhelperfuncs.cs" />
+    <Compile Include="NewtonsoftJSONObjectExtensions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

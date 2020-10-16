@@ -46,7 +46,8 @@ namespace EDDTest
                                   "xmldump file - decode xml and output attributes/elements showing structure\n" +
                                   "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
                                   "svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
-                                  "readlog file - read a continuous log or journal file out to stdout\n"
+                                  "readlog file - read a continuous log or journal file out to stdout\n" +
+                                  "githubrelease - read the releases list and stat it"
                                   );
 
                 return;
@@ -160,6 +161,11 @@ namespace EDDTest
             else if (arg1.Equals("status"))
             {
                 Status.StatusSet(args);
+            }
+            else if ( arg1.Equals("githubreleases"))
+            {
+                string file = args.Next();
+                GitHub.Stats(file);
             }
             else if (arg1.Equals("dwwp"))
             {

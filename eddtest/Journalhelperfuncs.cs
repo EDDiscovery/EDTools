@@ -34,7 +34,7 @@ namespace EDDTest
                     using (StreamWriter sr = new StreamWriter(fs))
                     {
                         QuickJSONFormatter l1 = new QuickJSONFormatter();
-                        l1.Object().UTC("timestamp").V("event", "FileHeader").V("part", 1).V("language", "English\\\\UK").V("gameversion", "2.2 (Beta 2)").V("build", "r121783/r0");
+                        l1.Object().UTC("timestamp").V("event", "Fileheader").V("part", 1).V("language", "English\\\\UK").V("gameversion", "2.2 (Beta 2)").V("build", "r121783/r0");
                         QuickJSONFormatter l2 = new QuickJSONFormatter();
                         l2.Object().UTC("timestamp").V("event", "LoadGame").V("FID","F1962222").V("Commander", cmdrname)
                                 .V("Horizons", true).V("Ship", "Anaconda").V("Ship_Localised", "Anaconda")

@@ -1,14 +1,22 @@
 ﻿using BaseUtils;
-using Newtonsoft.Json.Linq;
+using BaseUtils.JSON;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 
 namespace EDDTest
 {
     class Program
     {
+
+
         static void Main(string[] stringargs)
         {
             CommandArgs args = new CommandArgs(stringargs);
@@ -23,7 +31,7 @@ namespace EDDTest
                                   "EDDBSTARS <filename> or EDDBPLANETS or EDDBSTARNAMES for the eddb dump\n" +
                                   "EDSMSTARS <filename> read the main dump and analyse\n" +
                                   "Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
-                                  "Voicerecon <filename> - read a elite bindings file and output action script lines\n" +
+                                  "Voicerecon <filename> -  Consol read a elite bindings file and output action script lines\n" +
                                   "DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
                                   "StatusMove lat long latstep longstep heading headstep steptime\n" +
                                   "Status <Status flags>... UI <Flags> C:cargo F:fuel FG:Firegroup G:Gui L:Legalstate\n" +
@@ -47,7 +55,8 @@ namespace EDDTest
                                   "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
                                   "svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
                                   "readlog file - read a continuous log or journal file out to stdout\n" +
-                                  "githubrelease - read the releases list and stat it"
+                                  "githubrelease - read the releases list and stat it" +
+                                  "logs wildcard - read files for json lines and process"
                                   );
 
                 return;
@@ -122,7 +131,7 @@ namespace EDDTest
                                         "If secondary is present, read it, and use its definitions instead of the language-to-use\n" +
                                         "Write back out the tlf and tlp files to the current directory\n" +
                                         "Write out copy instructions to move those files back to their correct places\n" +
-                                        "Example:n" +
+                                        "Example:\n" +
                                         "eddtest translatereader c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n" 
                                         );
                 }
@@ -226,6 +235,10 @@ namespace EDDTest
             {
                 Speech.Phoneme(args.Next(), args.Next());
             }
+            else if (arg1.Equals("wikiconvert"))
+            {
+                WikiConvert.Convert(args.Next(), args.Next());
+            }
             else if (arg1.Equals("coriolisships"))
             {
                 FileInfo[] allFiles = Directory.EnumerateFiles(args.Next(), "*.json", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
@@ -277,7 +290,7 @@ namespace EDDTest
                             {
                                 jo = JObject.Parse(s);
 
-                                Console.WriteLine(jo.ToString(Newtonsoft.Json.Formatting.Indented));
+                                Console.WriteLine(jo.ToString(true));
                             }
                             catch
                             {
@@ -303,7 +316,7 @@ namespace EDDTest
                         while ((line = sr.ReadLine()) != null && (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape))
                         {
                             JToken tk = JToken.Parse(line);
-                            Console.WriteLine(tk.ToString(indent ? Newtonsoft.Json.Formatting.Indented : Newtonsoft.Json.Formatting.None));
+                            Console.WriteLine(tk.ToString(indent));
                         }
                     }
 
@@ -321,7 +334,7 @@ namespace EDDTest
                     string text = File.ReadAllText(path);
 
                     JToken tk = JToken.Parse(text);
-                    Console.WriteLine(tk.ToString(Newtonsoft.Json.Formatting.Indented ));
+                    Console.WriteLine(tk.ToString(true));
                 }
                 catch (Exception ex)
                 {
@@ -364,7 +377,7 @@ namespace EDDTest
                                                 pname = true;
                                                 Console.WriteLine("--------------- FILE " + f.FullName);
                                             }
-                                            Console.WriteLine(jo.ToString(Newtonsoft.Json.Formatting.Indented));
+                                            Console.WriteLine(jo.ToString(true));
                                         }
                                     }
                                 }
@@ -557,6 +570,62 @@ namespace EDDTest
                 qjs.Close();
 
                 Console.WriteLine(qjs.ToString());
+            }
+            else if (arg1.Equals("logs"))
+            {
+                string filename = args.Next();
+
+                FileInfo[] allFiles = Directory.EnumerateFiles(".", filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                Dictionary<string, string> signals = new Dictionary<string, string>();
+
+                foreach( var f in allFiles)
+                {
+                    string text = FileHelpers.TryReadAllTextFromFile(f.FullName);
+                    if (text != null)
+                    {
+                        StringReader sr = new StringReader(text);
+                        string line;
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            JToken tk = JToken.Parse(line);
+                            if ( tk != null)
+                            {
+                                var sn = tk["SignalName"];
+                              //  Console.WriteLine("Read " + tk.ToString());
+                                if ( sn != null)
+                                {
+                                    string str = tk["SignalName"].Str();
+                                    string strl = tk["SignalName_Localised"].Str();
+                                    if (tk["IsStation"].Bool(false) == true)
+                                    {
+                                        if (strl.HasChars())
+                                            Console.WriteLine("***** Station has localisation");
+
+                                        strl = "STATION";
+                                    }
+                                    if (signals.ContainsKey(str))
+                                    {
+                                        if (signals[str] != strl)
+                                            Console.WriteLine("***** Clash, {0} {1} vs {2}", str, strl, signals[str]);
+                                    }
+                                    else
+                                    {
+                                        signals[str] = strl;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                Console.WriteLine("***************************** ID list");
+                foreach (string v in signals.Keys)
+                {
+                    if ( signals[v] != "STATION" && signals[v].HasChars() )
+                        Console.WriteLine("{0} {1}", v, signals[v]);
+                }
             }
             else
             {

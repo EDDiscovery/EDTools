@@ -90,6 +90,7 @@
     </Compile>
     <Compile Include="Bindings.cs" />
     <Compile Include="Edsmstars.cs" />
+    <Compile Include="wikiconvert.cs" />
     <Compile Include="TranslateReader.cs" />
     <Compile Include="ScanTranslate.cs" />
     <Compile Include="Speech.cs" />

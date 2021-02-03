@@ -44,6 +44,7 @@ namespace EDDTest
             string filetowrite = "";
 
             List<StreamWriter> filelist = new List<StreamWriter>();
+            StreamWriter batchfile = null;
 
             bool hasdotted = false;
 
@@ -79,12 +80,13 @@ namespace EDDTest
                             txorgfile = orgfile.Replace(language.Left(language.IndexOf('-')), language2.Left(language2.IndexOf('-')));
                         }
 
-                        Console.WriteLine("copy " + txname + " " + txorgfile);
+                        if (batchfile == null)
+                            batchfile = new StreamWriter("copyback.bat");
+
+                        batchfile.WriteLine("copy " + txname + " " + txorgfile);
                     }
                     else
                     {
-                        Console.WriteLine("copy " + fi.Name + " " + orgfile);
-
                         filelist.Add(new StreamWriter(Path.Combine(".", filetowrite), false, Encoding.UTF8));
 
                         if (filelist.Count > 1)
@@ -111,10 +113,13 @@ namespace EDDTest
                 string orgeng = primary.GetOriginalEnglish(id);
                 string txprimary = primary.GetTranslation(id);
 
+                bool secondarydef = false;
+
                 if (secondary.Translating )
                 {
                     if (secondary.IsDefined(id))
                     {
+                        secondarydef = true;
                         txprimary = secondary.GetTranslation(id);
                         secondary.UnDefine(id);
                     }
@@ -126,7 +131,7 @@ namespace EDDTest
 
                 ret += idtouse + ": " + orgeng.AlwaysQuoteString().EscapeControlChars();
 
-                if (txprimary == null || txprimary.Equals(orgeng) || txprimary.IsEmpty() || (txprimary[0] == '<' && txprimary[txprimary.Length - 1] == '>'))
+                if (txprimary == null || (txprimary.Equals(orgeng)&&!secondarydef) || txprimary.IsEmpty() || (txprimary[0] == '<' && txprimary[txprimary.Length - 1] == '>'))
                 {
                     totalret += id + " in " + primary.GetOriginalFile(id) + " Not defined by secondary" + Environment.NewLine;
                     ret += " @";
@@ -152,6 +157,8 @@ namespace EDDTest
             foreach (var f in filelist)
                 f.Close();
 
+            if (batchfile != null)
+                batchfile.Close();
 
             return totalret;
         }

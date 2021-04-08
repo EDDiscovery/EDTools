@@ -60,6 +60,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -78,6 +79,7 @@
     <Compile Include="From EDD Project Manually copied\MaterialRecipesData.cs" />
     <Compile Include="From EDD Project Manually copied\ShipModuleData.cs" />
     <Compile Include="FrontierData.cs" />
+    <Compile Include="ReadJournals.cs" />
     <Compile Include="Journal.cs" />
     <Compile Include="Journalhelperfuncs.cs" />
     <Compile Include="NewtonsoftJSONObjectExtensions.cs" />
@@ -91,7 +93,7 @@
     <Compile Include="Bindings.cs" />
     <Compile Include="Edsmstars.cs" />
     <Compile Include="wikiconvert.cs" />
-    <Compile Include="TranslateReader.cs" />
+    <Compile Include="NormaliseTranslationFiles.cs" />
     <Compile Include="ScanTranslate.cs" />
     <Compile Include="Speech.cs" />
     <Compile Include="Status.cs" />

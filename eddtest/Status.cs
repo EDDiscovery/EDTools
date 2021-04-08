@@ -1,12 +1,24 @@
-﻿using BaseUtils;
-using Newtonsoft.Json.Linq;
+﻿/*
+ * Copyright © 2015 - 2021 robbyxp @ github.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ * ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ * 
+ * EDDiscovery is not affiliated with Frontier Developments plc.
+ */
+
+using BaseUtils;
+using BaseUtils.JSON;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace EDDTest
 {
@@ -98,12 +110,19 @@ namespace EDDTest
                 Console.WriteLine("{0:0.00} {1:0.00} H {2:0.00} F {3:0.00}:{4:0.00}", latitude, longitude, heading, fuel, fuelres);
                 BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
 
+                double altitude = 404;
+
                 qj.Object().UTC("timestamp").V("event", "Status");
                 qj.V("Flags", flags);
                 qj.V("Pips", new int[] { 2, 8, 2 });
                 qj.V("FireGroup", fg);
                 qj.V("GuiFocus", gui);
                 qj.V("LegalState", legalstate);
+                qj.V("Latitude", latitude);
+                qj.V("Longitude", longitude);
+                qj.V("Heading", heading);
+                qj.V("Altitude", altitude);
+
                 qj.Object("Fuel").V("FuelMain", fuel).V("FuelReservoir", fuelres).Close();
                 qj.V("Cargo", cargo);
                 qj.Close();
@@ -138,6 +157,19 @@ namespace EDDTest
             int gui = 0;
             int fg = 1;
             string legalstate = "Clean";
+
+            if ( args.Left == 0 )
+            {
+                Console.WriteLine("Status [C:cargo] [F:fuel] [FG:Firegroup] [G:Gui] [L:Legalstate] [0x:flag dec int]\n" +
+                                  "       [normal | supercruise | landed | SRV | fight | station | fighter]\n"
+                                );
+                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsShip))));
+                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsSRV))));
+                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsAll))));
+                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsShipType))));
+                return;
+            }
+
 
             string v;
             while ((v = args.Next()) != null)
@@ -203,6 +235,10 @@ namespace EDDTest
                     gui = v.Mid(2).InvariantParseInt(0);
 
                 }
+                else if (v.StartsWith("0x:"))
+                {
+                    flags = long.Parse(v.Mid(3), System.Globalization.NumberStyles.HexNumber);
+                }
                 else if (v.StartsWith("L:"))
                 {
                     legalstate = v.Mid(2);
@@ -260,7 +296,6 @@ namespace EDDTest
             string watchfile = Path.Combine(path, file);
 
             string laststatus = "";
-            Console.Clear();
 
             while (true)
             {
@@ -289,8 +324,58 @@ namespace EDDTest
                 {
                     JToken j = JToken.Parse(nextstatus);
 
+                    Console.Clear();
                     Console.CursorTop = 0;
-                    Console.WriteLine(j.ToString(Newtonsoft.Json.Formatting.Indented));
+
+                    string s = j.ToString(true);
+                    System.Diagnostics.Debug.WriteLine(s);
+                    Console.WriteLine(s);
+
+                    ulong flags = j["Flags"].ULong();
+
+                    foreach (var x in Enum.GetValues(typeof(StatusFlagsShip)))
+                    {
+                        ulong bit = (ulong)(1 << (int)x);
+                        if ((flags & bit) != 0)
+                        {
+                            flags &= ~bit;
+                            Console.WriteLine("+ " + x.ToString());
+                        }
+                    }
+
+                    foreach (var x in Enum.GetValues(typeof(StatusFlagsSRV)))
+                    {
+                        ulong bit = (ulong)(1 << (int)x);
+                        if ((flags & bit) != 0)
+                        {
+                            flags &= ~bit;
+                            Console.WriteLine("+ " + x.ToString());
+                        }
+                    }
+
+                    foreach (var x in Enum.GetValues(typeof(StatusFlagsAll)))
+                    {
+                        ulong bit = (ulong)(1 << (int)x);
+                        if ((flags & bit) != 0)
+                        {
+                            flags &= ~bit;
+                            Console.WriteLine("+ " + x.ToString());
+                        }
+                    }
+
+                    foreach (var x in Enum.GetValues(typeof(StatusFlagsShipType)))
+                    {
+                        ulong bit = (ulong)(1 << (int)x);
+                        if ((flags & bit) != 0)
+                        {
+                            flags &= ~bit;
+                            Console.WriteLine("+ " + x.ToString());
+                        }
+                    }
+
+                    if (flags != 0)
+                        Console.WriteLine(" Remaining bits " + flags.ToString("x"));
+
                     laststatus = nextstatus;
                 }
 

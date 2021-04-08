@@ -1,11 +1,23 @@
-﻿using System;
+﻿/*
+ * Copyright © 2015 - 2021 robbyxp @ github.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ * ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ * 
+ * EDDiscovery is not affiliated with Frontier Developments plc.
+ */
+
 using BaseUtils;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BaseUtils.JSON;
+using System;
 using System.IO;
-using Newtonsoft.Json.Linq;
 
 namespace EDDTest
 {
@@ -15,14 +27,10 @@ namespace EDDTest
         {
             if (checkjson)
             {
-                try
+                JToken jk = JToken.Parse(lineout, out string error, JToken.ParseOptions.CheckEOL);
+                if ( jk == null )
                 {
-                    JToken jk = JToken.Parse(lineout);
-                    Console.WriteLine(jk.ToString(Newtonsoft.Json.Formatting.Indented));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error in JSON " + ex.Message + Environment.NewLine + lineout);
+                    Console.WriteLine("Error in JSON " + error);
                     return;
                 }
             }
@@ -62,71 +70,5 @@ namespace EDDTest
                 }
             }
         }
-
-
-        #region DEPRECIATED Helpers for journal writing - USE QuickJSONFormatter!
-
-        public static string TimeStamp()
-        {
-            DateTime dt = DateTime.Now.ToUniversalTime();
-            return "\"timestamp\":\"" + dt.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'") + "\", ";
-        }
-
-        public static string F(string name, long v, bool term = false)
-        {
-            return "\"" + name + "\":" + v + (term ? " " : ", ");
-        }
-
-        public static string F(string name, double v, bool term = false)
-        {
-            return "\"" + name + "\":" + v.ToStringInvariant("0.######") + (term ? " " : "\", ");
-        }
-
-        public static string F(string name, bool v, bool term = false)
-        {
-            return "\"" + name + "\":" + (v ? "true" : "false") + (term ? " " : "\", ");
-        }
-
-        public static string F(string name, string v, bool term = false)
-        {
-            return "\"" + name + "\":\"" + v + (term ? "\" " : "\", ");
-        }
-
-        public static string F(string name, DateTime v, bool term = false)
-        {
-            return "\"" + name + "\":\"" + v.ToString("yyyy-MM-ddTHH:mm:ssZ") + (term ? "\" " : "\", ");
-        }
-
-        public static string F(string name, int[] array, bool end = false)
-        {
-            string s = "";
-            foreach (int a in array)
-            {
-                if (s.Length > 0)
-                    s += ", ";
-
-                s += a.ToStringInvariant();
-            }
-
-            return "\"" + name + "\":[" + s + "]" + (end ? "" : ", ");
-        }
-
-        public static string FF(string name, string v)      // no final comma
-        {
-            return F(name, v, true);
-        }
-
-        public static string FF(string name, bool v)      // no final comma
-        {
-            return F(name, v, true);
-        }
-
-        public static string FF(string name, long v)      // no final comma
-        {
-            return F(name, v, true);
-        }
-
-        #endregion
-
     }
 }

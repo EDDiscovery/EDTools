@@ -1,22 +1,31 @@
-﻿using BaseUtils;
+﻿/*
+ * Copyright © 2015 - 2021 robbyxp @ github.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ * ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ * 
+ * EDDiscovery is not affiliated with Frontier Developments plc.
+ */
+
+using BaseUtils;
 using BaseUtils.JSON;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Xml.Linq;
 
 namespace EDDTest
 {
     class Program
     {
-
-
         static void Main(string[] stringargs)
         {
             CommandArgs args = new CommandArgs(stringargs);
@@ -34,8 +43,7 @@ namespace EDDTest
                                   "Voicerecon <filename> -  Consol read a elite bindings file and output action script lines\n" +
                                   "DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
                                   "StatusMove lat long latstep longstep heading headstep steptime\n" +
-                                  "Status <Status flags>... UI <Flags> C:cargo F:fuel FG:Firegroup G:Gui L:Legalstate\n" +
-                                  "                   superflags: normal,supercruise, landed, SRV, fight, station\n" +
+                                  "Status - run for help\n" +
                                   "StatusRead\n" +
                                   "CoriolisModules rootfolder - process coriolis-data\\modules\\<folder>\n" +
                                   "CoriolisModule name - process coriolis-data\\modules\\<folder>\n" +
@@ -44,7 +52,7 @@ namespace EDDTest
                                   "CoriolisEng rootfolder - process coriolis-data\\modifications\n" +
                                   "FrontierData rootfolder - process cvs file exports of frontier data\n" +
                                   "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
-                                  "translatereader - process language files and normalise, run to see options\n" +
+                                  "normalisetranslate- process language files and normalise, run to see options\n" +
                                   "journalindented file - read lines from file in journal format and output indented\n" +
                                   "jsonindented/jsoncompressed file - read a json on a single line from the file and output\n" +
                                   "json - read a json from file and output indented\n" +
@@ -55,8 +63,9 @@ namespace EDDTest
                                   "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
                                   "svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
                                   "readlog file - read a continuous log or journal file out to stdout\n" +
-                                  "githubrelease - read the releases list and stat it" +
-                                  "logs wildcard - read files for json lines and process"
+                                  "githubrelease - read the releases list and stat it\n" +
+                                  "logs wildcard - read files for json lines and process\n" +
+                                  "readjournals path - read all .log journal files and check\n"
                                   );
 
                 return;
@@ -115,7 +124,7 @@ namespace EDDTest
 
                 return;
             }
-            else if (arg1.Equals("translatereader"))
+            else if (arg1.Equals("normalisetranslate"))
             {
                 string primarypath = args.Next();
                 int primarysearchdepth = args.Int();
@@ -126,18 +135,18 @@ namespace EDDTest
                 if (primarypath == null || primarylanguage == null)
                 {
                     Console.WriteLine("Usage:\n" +
-                                        "translatereader path-language-files searchdepth language-to-use [secondary-language-to-compare] \n" +
+                                        "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare] \n" +
                                         "Read the language-to-use and write out it into the same files cleanly\n" +
                                         "If secondary is present, read it, and use its definitions instead of the language-to-use\n" +
                                         "Write back out the tlf and tlp files to the current directory\n" +
                                         "Write out copy instructions to move those files back to their correct places\n" +
                                         "Example:\n" +
-                                        "eddtest translatereader c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n" 
+                                        "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n" 
                                         );
                 }
                 else
                 {
-                    string ret = TranslateReader.Process(primarylanguage, primarypath, primarysearchdepth, language2, options);
+                    string ret = NormaliseTranslationFiles.Process(primarylanguage, primarypath, primarysearchdepth, language2, options);
                     Console.WriteLine(ret);
                 }
 
@@ -158,6 +167,11 @@ namespace EDDTest
                 Status.StatusMove(args);
                 return;
             }
+            else if (arg1.Equals("status"))
+            {
+                Status.StatusSet(args);
+                return;
+            }
 
             //*************************************************************************************************************
             // these require 1 arg min
@@ -167,11 +181,7 @@ namespace EDDTest
             {
                 Console.WriteLine("Not enough arguments, please run without options for help");
             }
-            else if (arg1.Equals("status"))
-            {
-                Status.StatusSet(args);
-            }
-            else if ( arg1.Equals("githubreleases"))
+            else if (arg1.Equals("githubreleases"))
             {
                 string file = args.Next();
                 GitHub.Stats(file);
@@ -274,6 +284,10 @@ namespace EDDTest
             {
                 FrontierData.Process(args.Next());
             }
+            else if(arg1.Equals("readjournals"))
+            {
+                JournalReader.ReadJournals(args.Next());
+            }
             else if (arg1.Equals("journalindented"))
             {
                 string path = args.Next();
@@ -339,55 +353,6 @@ namespace EDDTest
                 catch (Exception ex)
                 {
                     Console.WriteLine("Failed " + ex.Message);
-                }
-            }
-            else if (arg1.Equals("specialreadjournals"))       // special one for coding only purposes - need to change code
-            {
-                string path = args.Next();
-                string search = args.Next();
-
-                FileInfo[] allFiles = Directory.EnumerateFiles(path, search, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-
-                foreach (FileInfo f in allFiles)
-                {
-                    bool pname = false;
-
-                    using (Stream fs = new FileStream(f.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        using (StreamReader sr = new StreamReader(fs))
-                        {
-                            string s;
-                            while ((s = sr.ReadLine()) != null)
-                            {
-                                JObject jo = new JObject();
-                                try
-                                {
-                                    jo = JObject.Parse(s);
-
-                                    string ename = jo["event"].Str();
-
-                                    if (ename == "Scan")
-                                    {
-                                        string bname = jo["BodyName"].Str();
-
-                                        if (bname.Contains("Ring"))
-                                        {
-                                            if (pname == false)
-                                            {
-                                                pname = true;
-                                                Console.WriteLine("--------------- FILE " + f.FullName);
-                                            }
-                                            Console.WriteLine(jo.ToString(true));
-                                        }
-                                    }
-                                }
-                                catch
-                                {
-                                    Console.WriteLine("Unable to parse " + s);
-                                }
-                            }
-                        }
-                    }
                 }
             }
             else if (arg1.Equals("cutdownfile"))

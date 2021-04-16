@@ -39,7 +39,6 @@ namespace EDDTest
                 return "";
             }
 
-
             BaseUtils.Translator secondary = new BaseUtils.Translator();
             if (language2 != null)
             {
@@ -164,7 +163,7 @@ namespace EDDTest
                         }
                     }
                     if (containsnonspacedigits)
-                        totalret += id + " in " + primary.GetOriginalFile(id) + " Not defined by secondary" + Environment.NewLine;
+                        totalret += id + " in " + primary.GetOriginalFile(id) + ":" + primary.GetOriginalLine(id) + " Not defined by secondary" + Environment.NewLine;
 
                     ret += " @";
                 }
@@ -184,7 +183,7 @@ namespace EDDTest
             {
                 foreach (string id in secondary.EnumerateKeys)
                 {
-                    totalret += "**************** Secondary defines " + id + " in " + secondary.GetOriginalFile(id) + " but primary does not" + Environment.NewLine;
+                    totalret += "**************** Secondary defines " + id + " in " + secondary.GetOriginalFile(id) + ":" + secondary.GetOriginalLine(id) + " but primary does not" + Environment.NewLine;
                 }
             }
 

@@ -148,6 +148,7 @@ namespace EDDTest
                 {
                     string ret = NormaliseTranslationFiles.Process(primarylanguage, primarypath, primarysearchdepth, language2, options);
                     Console.WriteLine(ret);
+                    System.Diagnostics.Debug.WriteLine(ret);
                 }
 
                 return;

@@ -71,6 +71,22 @@ namespace EDDTest
             ShipMask = (1 << InMainShip) | (1 << InFighter) | (1 << InSRV),
         }
 
+        private enum StatusFlagsOnFoot
+        {
+            OnFoot = 0,                 // alpha4 Station Corolis has OnFoot | OnFootInStation
+            InTaxi = 1,
+            InMulticrew = 2,
+            OnFootInStation = 3,
+            OnFootOnPlanet = 4,
+            AimDownSight = 5,
+            LowOxygen = 6,
+            LowHealth = 7,
+            Cold = 8,
+            Hot = 9,
+            VeryCold = 10,
+            VeryHot = 11
+        }
+
 
         public static void StatusMove(CommandArgs args)
         {
@@ -151,22 +167,38 @@ namespace EDDTest
 
         public static void StatusSet(CommandArgs args)
         {
-            long flags = 0;
+            long flags = 0,flags2=0;
             int cargo = 0;
             double fuel = 0;
             int gui = 0;
             int fg = 1;
+            double oxygen = 1.0;
+            double health = 1.0;
+            double temperature = 293.0;
+            string SelectedWeapon = "";
+            string SelectedWeaponLoc = "";
+            double gravity = 0.166399;
+            double lat = 3.2;
+            double lon = 6.2;
+            double heading = 92.3;
+            double altitude = -999;
+            double planetradius = -999;
+            string bodyname = "";
+
             string legalstate = "Clean";
 
             if ( args.Left == 0 )
             {
                 Console.WriteLine("Status [C:cargo] [F:fuel] [FG:Firegroup] [G:Gui] [L:Legalstate] [0x:flag dec int]\n" +
-                                  "       [normal | supercruise | landed | SRV | fight | station | fighter]\n"
+                                  "       [GV:gravity] [H:health] [O:oxygen] [T:Temp] [S:selectedweapon] [B:bodyname]\n" +
+                                  "       [normalspace | supercruise | dockedstarport | dockedinstallation | onfootinplanetaryport | fight | fighter \n" +
+                                  "        onfootininstallation | onfootplanet | landed | SRV | TaxiNormalSpace | TaxiSupercruise ]\n"
                                 );
-                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsShip))));
-                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsSRV))));
-                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsAll))));
-                Console.WriteLine("       Ship " + string.Join(",", Enum.GetNames(typeof(StatusFlagsShipType))));
+                Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlagsShip))));
+                Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlagsSRV))));
+                Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlagsAll))));
+                Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlagsShipType))));
+                Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlagsOnFoot))));
                 return;
             }
 
@@ -174,38 +206,29 @@ namespace EDDTest
             string v;
             while ((v = args.Next()) != null)
             {
-                if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))
+                if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
                                 (1L << (int)StatusFlagsShip.Supercruise) |
                                 (1L << (int)StatusFlagsAll.ShieldsUp);
                 }
-                else if (v.Equals("Normal", StringComparison.InvariantCultureIgnoreCase))
+                else if (v.Equals("NormalSpace", StringComparison.InvariantCultureIgnoreCase))          // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
                                 (1L << (int)StatusFlagsAll.ShieldsUp);
                 }
-                else if (v.Equals("Station", StringComparison.InvariantCultureIgnoreCase))
+                else if (v.Equals("TaxiSupercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
-                                (1L << (int)StatusFlagsAll.ShieldsUp) |
-                                (1L << (int)StatusFlagsShip.LandingGear) |
-                                (1L << (int)StatusFlagsShip.Docked);
+                                (1L << (int)StatusFlagsShip.Supercruise) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.InTaxi);
                 }
-                else if (v.Equals("Landed", StringComparison.InvariantCultureIgnoreCase))
+                else if (v.Equals("TaxiNormalSpace", StringComparison.InvariantCultureIgnoreCase))          // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
-                                (1L << (int)StatusFlagsShip.Landed) |
-                                (1L << (int)StatusFlagsShip.LandingGear) |
-                                (1L << (int)StatusFlagsAll.ShieldsUp) |
-                                (1L << (int)StatusFlagsAll.Lights);
-                }
-                else if (v.Equals("SRV", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    flags = (1L << (int)StatusFlagsShipType.InSRV) |
-                                (1L << (int)StatusFlagsShip.Landed) |
-                                (1L << (int)StatusFlagsAll.ShieldsUp) |
-                                (1L << (int)StatusFlagsAll.Lights);
+                                (1L << (int)StatusFlagsAll.ShieldsUp);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.InTaxi);
                 }
                 else if (v.Equals("Fight", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -217,6 +240,74 @@ namespace EDDTest
                 {
                     flags = (1L << (int)StatusFlagsShipType.InFighter) |
                                 (1L << (int)StatusFlagsAll.ShieldsUp);
+                }
+                else if (v.Equals("DockedStarPort", StringComparison.InvariantCultureIgnoreCase))                  // checked alpha 4
+                {
+                    flags = (1L << (int)StatusFlagsShipType.InMainShip) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp) |
+                                (1L << (int)StatusFlagsShip.FsdMassLocked) |
+                                (1L << (int)StatusFlagsShip.LandingGear) |
+                                (1L << (int)StatusFlagsShip.Docked);
+                }
+                else if (v.Equals("DockedInstallation", StringComparison.InvariantCultureIgnoreCase))       // checked alpha 4
+                {
+                    flags = (1L << (int)StatusFlagsShip.Docked) |
+                           (1L << (int)StatusFlagsShip.LandingGear) |
+                            (1L << (int)StatusFlagsShip.FsdMassLocked) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp) |
+                                (1L << (int)StatusFlagsAll.HasLatLong) |
+                            (1L << (int)StatusFlagsShipType.InMainShip);
+
+                    bodyname = "Nervi 2g";
+                    altitude = 0;
+                    planetradius = 2796748.25;
+                }
+                else if (v.Equals("OnFootInPlanetaryPort", StringComparison.InvariantCultureIgnoreCase))       // checked alpha 4
+                {
+                    flags = (1L << (int)StatusFlagsAll.HasLatLong);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootOnPlanet);
+                    bodyname = "Nervi 2g";
+                }
+                else if (v.Equals("OnFootInInstallation", StringComparison.InvariantCultureIgnoreCase))       // checked alpha 4
+                {
+                    flags = (1L << (int)StatusFlagsAll.HasLatLong);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootOnPlanet);
+                    temperature = 82;
+                    SelectedWeapon = "$humanoid_fists_name;";
+                    SelectedWeaponLoc = "Unarmed";
+                    bodyname = "Nervi 2g";
+                }
+                else if (v.Equals("OnFootPlanet", StringComparison.InvariantCultureIgnoreCase))     // checked alpha 4
+                {
+                    flags = (1L << (int)StatusFlagsAll.HasLatLong);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootOnPlanet);
+                    temperature = 78;
+                    bodyname = "Nervi 2g";
+                    SelectedWeapon = "$humanoid_fists_name;";
+                    SelectedWeaponLoc = "Unarmed";
+                }
+                else if (v.Equals("Landed", StringComparison.InvariantCultureIgnoreCase))           // checked alpha 4
+                {
+                    flags = (1L << (int)StatusFlagsShipType.InMainShip) |
+                                (1L << (int)StatusFlagsShip.Landed) |
+                                (1L << (int)StatusFlagsShip.LandingGear) |
+                                (1L << (int)StatusFlagsShip.FsdMassLocked) |
+                                (1L << (int)StatusFlagsAll.ShieldsUp) |
+                                (1L << (int)StatusFlagsAll.HasLatLong) |
+                                (1L << (int)StatusFlagsAll.Lights);
+                    bodyname = "Nervi 2g";
+                    planetradius = 292892882.2;
+                    altitude = 0;
+                }
+                else if (v.Equals("SRV", StringComparison.InvariantCultureIgnoreCase))              // checked alpha 4
+                {
+                    flags =     (1L << (int)StatusFlagsAll.ShieldsUp) |
+                                (1L << (int)StatusFlagsAll.Lights) |
+                                (1L << (int)StatusFlagsAll.HasLatLong) |
+                                (1L << (int)StatusFlagsShipType.InSRV);
+                    bodyname = "Nervi 2g";
+                    planetradius = 292892882.2;
+                    altitude = 0;
                 }
                 else if (v.StartsWith("C:"))
                 {
@@ -233,7 +324,6 @@ namespace EDDTest
                 else if (v.StartsWith("G:"))
                 {
                     gui = v.Mid(2).InvariantParseInt(0);
-
                 }
                 else if (v.StartsWith("0x:"))
                 {
@@ -242,6 +332,31 @@ namespace EDDTest
                 else if (v.StartsWith("L:"))
                 {
                     legalstate = v.Mid(2);
+                }
+                else if (v.StartsWith("H:"))
+                {
+                    health = v.Mid(2).InvariantParseDouble(0);
+                }
+                else if (v.StartsWith("T:"))
+                {
+                    temperature= v.Mid(2).InvariantParseDouble(0);
+                }
+                else if (v.StartsWith("O:"))
+                {
+                    oxygen = v.Mid(2).InvariantParseDouble(0);
+                }
+                else if (v.StartsWith("GV:"))
+                {
+                    gravity = v.Mid(3).InvariantParseDouble(0);
+                }
+                else if (v.StartsWith("B:"))
+                {
+                    bodyname = v.Mid(2);
+                }
+                else if (v.StartsWith("S:"))
+                {
+                    SelectedWeapon = v.Mid(2);
+                    SelectedWeaponLoc = SelectedWeapon + "_loc";
                 }
                 else if (Enum.TryParse<StatusFlagsShip>(v, true, out StatusFlagsShip s))
                 {
@@ -259,6 +374,10 @@ namespace EDDTest
                 {
                     flags |= 1L << (int)st;
                 }
+                else if (Enum.TryParse<StatusFlagsOnFoot>(v, true, out StatusFlagsOnFoot of))
+                {
+                    flags2 |= 1L << (int)of;
+                }
                 else
                 {
                     Console.WriteLine("Bad flag " + v);
@@ -266,6 +385,7 @@ namespace EDDTest
                     Console.WriteLine("Flags " + String.Join(",", Enum.GetNames(typeof(StatusFlagsSRV))));
                     Console.WriteLine("Flags " + String.Join(",", Enum.GetNames(typeof(StatusFlagsAll))));
                     Console.WriteLine("Flags " + String.Join(",", Enum.GetNames(typeof(StatusFlagsShipType))));
+                    Console.WriteLine("Flags2 " + String.Join(",", Enum.GetNames(typeof(StatusFlagsOnFoot))));
                     return;
                 }
             }
@@ -274,12 +394,49 @@ namespace EDDTest
 
             qj.Object().UTC("timestamp").V("event", "Status");
             qj.V("Flags", flags);
-            qj.V("Pips", new int[] { 2, 8, 2 });
-            qj.V("FireGroup", fg);
-            qj.V("GuiFocus", gui);
+            qj.V("Flags2", flags2);
+
+            if ((flags2 & (1 << (int)StatusFlagsOnFoot.OnFoot)) != 0)
+            {
+                qj.V("Oxygen", oxygen);
+                qj.V("Health", health);
+                qj.V("Temperature", temperature);
+                qj.V("SelectedWeapon", SelectedWeapon);
+                if ( SelectedWeaponLoc.HasChars())
+                    qj.V("SelectedWeapon_Localised", SelectedWeaponLoc);
+                qj.V("Gravity", gravity);
+            }
+            else
+            {
+                qj.V("Pips", new int[] { 2, 8, 2 });
+                qj.V("FireGroup", fg);
+                qj.V("GuiFocus", gui);
+            }
+
+            if ( (flags & (1 << (int)StatusFlagsShipType.InMainShip)) != 0 || (flags & (1 << (int)StatusFlagsShipType.InSRV)) != 0)
+            {
+                qj.Object("Fuel").V("FuelMain", fuel).V("FuelReservoir", 0.32).Close();
+                qj.V("Cargo", cargo);
+            }
+
             qj.V("LegalState", legalstate);
-            qj.Object("Fuel").V("FuelMain", fuel).V("FuelReservoir", 0.32).Close();
-            qj.V("Cargo", cargo);
+
+            if ((flags & (1 << (int)StatusFlagsAll.HasLatLong)) != 0)
+            {
+                qj.V("Latitude", lat);
+                qj.V("Longitude", lon);
+                qj.V("Heading", heading);
+
+                if ( altitude>=0)
+                    qj.V("Altitude", altitude);
+            }
+
+            if ( bodyname.HasChars())
+                qj.V("BodyName", bodyname);
+
+            if ( planetradius>=0)
+                qj.V("PlanetRadius", planetradius);
+
             qj.Close();
 
             string j = qj.Get();
@@ -287,12 +444,11 @@ namespace EDDTest
             Console.Write(j);
         }
 
-        static public void StatusRead()
+        static public void StatusRead(string file)
         {
             string user = Environment.GetEnvironmentVariable("USERNAME");
 
             string path = @"c:\users\" + user + @"\saved games\frontier developments\elite dangerous\";
-            string file = "status.json";
             string watchfile = Path.Combine(path, file);
 
             string laststatus = "";
@@ -308,7 +464,7 @@ namespace EDDTest
 
                     StreamReader reader = new StreamReader(stream);
 
-                    nextstatus = reader.ReadLine();
+                    nextstatus = reader.ReadToEnd();
 
                     stream.Close();
                 }
@@ -327,56 +483,79 @@ namespace EDDTest
                     Console.Clear();
                     Console.CursorTop = 0;
 
-                    string s = j.ToString(true);
-                    System.Diagnostics.Debug.WriteLine(s);
-                    Console.WriteLine(s);
-
-                    ulong flags = j["Flags"].ULong();
-
-                    foreach (var x in Enum.GetValues(typeof(StatusFlagsShip)))
+                    if (j == null)
                     {
-                        ulong bit = (ulong)(1 << (int)x);
-                        if ((flags & bit) != 0)
-                        {
-                            flags &= ~bit;
-                            Console.WriteLine("+ " + x.ToString());
-                        }
+                        Console.WriteLine("Bad JSON" + nextstatus);
                     }
-
-                    foreach (var x in Enum.GetValues(typeof(StatusFlagsSRV)))
+                    else
                     {
-                        ulong bit = (ulong)(1 << (int)x);
-                        if ((flags & bit) != 0)
+                        string s = j.ToString(true);
+                        System.Diagnostics.Debug.WriteLine(s);
+                        Console.WriteLine(watchfile);
+                        Console.WriteLine(s);
+
+                        ulong flags = j["Flags"].ULong();
+
+                        foreach (var x in Enum.GetValues(typeof(StatusFlagsShip)))
                         {
-                            flags &= ~bit;
-                            Console.WriteLine("+ " + x.ToString());
+                            ulong bit = (ulong)(1 << (int)x);
+                            if ((flags & bit) != 0)
+                            {
+                                flags &= ~bit;
+                                Console.WriteLine("+ " + x.ToString());
+                            }
                         }
-                    }
 
-                    foreach (var x in Enum.GetValues(typeof(StatusFlagsAll)))
-                    {
-                        ulong bit = (ulong)(1 << (int)x);
-                        if ((flags & bit) != 0)
+                        foreach (var x in Enum.GetValues(typeof(StatusFlagsSRV)))
                         {
-                            flags &= ~bit;
-                            Console.WriteLine("+ " + x.ToString());
+                            ulong bit = (ulong)(1 << (int)x);
+                            if ((flags & bit) != 0)
+                            {
+                                flags &= ~bit;
+                                Console.WriteLine("+ " + x.ToString());
+                            }
                         }
-                    }
 
-                    foreach (var x in Enum.GetValues(typeof(StatusFlagsShipType)))
-                    {
-                        ulong bit = (ulong)(1 << (int)x);
-                        if ((flags & bit) != 0)
+                        foreach (var x in Enum.GetValues(typeof(StatusFlagsAll)))
                         {
-                            flags &= ~bit;
-                            Console.WriteLine("+ " + x.ToString());
+                            ulong bit = (ulong)(1 << (int)x);
+                            if ((flags & bit) != 0)
+                            {
+                                flags &= ~bit;
+                                Console.WriteLine("+ " + x.ToString());
+                            }
                         }
+
+                        foreach (var x in Enum.GetValues(typeof(StatusFlagsShipType)))
+                        {
+                            ulong bit = (ulong)(1 << (int)x);
+                            if ((flags & bit) != 0)
+                            {
+                                flags &= ~bit;
+                                Console.WriteLine("+ " + x.ToString());
+                            }
+                        }
+
+                        if (flags != 0)
+                            Console.WriteLine(" Remaining bits " + flags.ToString("x"));
+
+                        ulong flags2 = j["Flags2"].ULong();
+
+                        foreach (var x in Enum.GetValues(typeof(StatusFlagsOnFoot)))
+                        {
+                            ulong bit = (ulong)(1 << (int)x);
+                            if ((flags2 & bit) != 0)
+                            {
+                                flags2 &= ~bit;
+                                Console.WriteLine("+ " + x.ToString());
+                            }
+                        }
+
+                        if (flags2 != 0)
+                            Console.WriteLine(" F2 Remaining bits " + flags2.ToString("x"));
+
+                        laststatus = nextstatus;
                     }
-
-                    if (flags != 0)
-                        Console.WriteLine(" Remaining bits " + flags.ToString("x"));
-
-                    laststatus = nextstatus;
                 }
 
                 if (Console.KeyAvailable)

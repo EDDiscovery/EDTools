@@ -160,7 +160,10 @@ namespace EDDTest
             }
             else if (arg1.Equals("statusread"))
             {
-                Status.StatusRead();
+                string file = "status.json";
+                if (args.Left >= 1)
+                    file = args.Next();
+                Status.StatusRead(file);
                 return;
             }
             else if (arg1.Equals("statusmove"))

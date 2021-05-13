@@ -225,24 +225,28 @@ namespace EDDTest
                 post++;
             }
 
-            int semicolons = 0;
-            for (int i = 0; i < eng.Length; i++)
-                semicolons += eng[i] == ';' ? 1 : 0;
+            { 
+                int engsemicolons = 0;
+                for (int i = 0; i < eng.Length; i++)
+                    engsemicolons += eng[i] == ';' ? 1 : 0;
 
-            if ( semicolons == 2 )
-            {
-                bad = true;
-
-                int semitrans = 0;
+                int foreignsemicolons = 0;
                 for (int i = 0; i < trans.Length; i++)
-                    semitrans += trans[i] == ';' ? 1 : 0;
+                    foreignsemicolons += trans[i] == ';' ? 1 : 0;
 
-                if ( semitrans == semicolons )
+                if (engsemicolons == 2)     // build format prefix;postfix;format
                 {
-                    string e = eng.Substring(eng.LastIndexOf(';'));
-                    string t = trans.Substring(trans.LastIndexOf(';'));
-                    bad = !e.Equals(t);
+                    bad = true;
+
+                    if (foreignsemicolons == engsemicolons)
+                    {
+                        string e = eng.Substring(eng.LastIndexOf(';'));
+                        string t = trans.Substring(trans.LastIndexOf(';'));
+                        bad = !e.Equals(t);
+                    }
                 }
+                else if (engsemicolons != foreignsemicolons)    // warn if different number
+                    bad = true;
 
             }
 

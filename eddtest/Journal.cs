@@ -701,6 +701,16 @@ namespace EDDTest
                     Console.WriteLine("Continued.. change to filename " + filename);
                     WriteToLog(filename, cmdrname, null, false, 2);
                 }
+                else if (eventtype.Equals("buysuit") && args.Left >= 1)
+                {
+                    qj.Object().UTC("timestamp").V("event", "BuySuit")
+                            .V("Name", "TacticalSuit_Class1")
+                            .V("Name_Localised", "Tactical Suit")
+                            .V("SuitID", args.Int())
+                            .V("CommanderId", 23)
+                            .V("Price", 150000);
+                }
+
                 else
                 {
                     Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry" + Environment.NewLine + Help(eventtype));

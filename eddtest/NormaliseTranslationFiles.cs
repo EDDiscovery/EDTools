@@ -135,8 +135,8 @@ namespace EDDTest
                     {
                         secondarydef = true;                                // we have a secondary def of the id
                         translation = secondary.GetTranslation(id);
-                        if ( translation != null )
-                            VerifyFormatting(primaryorgeng, translation, id);
+                        if (translation != null)
+                            VerifyFormatting(secondary.GetOriginalFile(id), secondary.GetOriginalLine(id), primaryorgeng, translation, id);
                         secondary.UnDefine(id);                             // remove id so its not reported as missing
                         System.Diagnostics.Debug.WriteLine($"Found {id} removed");
                     }
@@ -146,7 +146,7 @@ namespace EDDTest
                     }
                 }
 
-                ret += idtouse + ": " + primaryorgeng.AlwaysQuoteString().EscapeControlChars();        // output is id : orgeng
+                ret += idtouse + ": " + primaryorgeng.EscapeControlChars().AlwaysQuoteString();        // output is id : orgeng
 
                 if (translation == null ||                                  // no translation
                     (translation.Equals(primaryorgeng) && !secondarydef) ||          // or same text and its not secondary def
@@ -162,14 +162,15 @@ namespace EDDTest
                             break;
                         }
                     }
-                    if (containsnonspacedigits)
-                        totalret += id + " in " + primary.GetOriginalFile(id) + ":" + primary.GetOriginalLine(id) + " Not defined by secondary" + Environment.NewLine;
+
+                    if (secondary.Translating && containsnonspacedigits)
+                        totalret += "Not defined by secondary: " + id + " in " + primary.GetOriginalFile(id) + ":" + primary.GetOriginalLine(id) + Environment.NewLine;
 
                     ret += " @";
                 }
                 else
                 {
-                    ret += " => " + translation.AlwaysQuoteString().EscapeControlChars();       // place translated string into file again
+                    ret += " => " + translation.EscapeControlChars().AlwaysQuoteString();       // place translated string into file again
                 }
 
                 ret += Environment.NewLine;
@@ -183,7 +184,7 @@ namespace EDDTest
             {
                 foreach (string id in secondary.EnumerateKeys)
                 {
-                    totalret += "**************** Secondary defines " + id + " in " + secondary.GetOriginalFile(id) + ":" + secondary.GetOriginalLine(id) + " but primary does not" + Environment.NewLine;
+                    totalret += "In secondary but not in primary: " + id + " in " + secondary.GetOriginalFile(id) + ":" + secondary.GetOriginalLine(id) + Environment.NewLine;
                 }
             }
 
@@ -196,35 +197,43 @@ namespace EDDTest
             return totalret;
         }
 
-        static public void VerifyFormatting(string eng, string trans, string id)
+        static public void VerifyFormatting(string file, int line, string eng, string trans, string id)
         {
             int pos = 0;
-            int post = 0;
-            bool bad = false;
-            while ((pos = eng.IndexOf("{", pos)) != -1)
-            {
-                bad = true;
+            string bad = null;
 
+            while ((pos = eng.IndexOf("{", pos)) != -1 && bad == null)      // go thru brackets of eng
+            {
                 int endpos = eng.IndexOf("}", pos);
-                if ( endpos != -1 )
+                if (endpos != -1)
                 {
-                    post = trans.IndexOf("{", post);
-                    if ( post != -1 )
-                    {
-                        int endpost = trans.IndexOf("}", post);
-                        if ( endpost != -1 )
-                        {
-                            string endform = eng.Substring(pos, endpos - pos + 1);
-                            string transform = trans.Substring(post, endpost - post + 1);
-                            bad = !endform.Equals(transform);
-                        }
-                    }
+                    string s = eng.Substring(pos, endpos - pos + 1);
+                    int post = trans.IndexOf(s);
+
+                    if (post == -1)       // if not found in string {n}
+                        bad = "Bracket mismatch";
                 }
 
                 pos++;
-                post++;
             }
 
+            pos = 0;
+            while ((pos = trans.IndexOf("{", pos)) != -1 && bad == null)      // go thru brackets of trans
+            {
+                int endpos = trans.IndexOf("}", pos);
+                if (endpos != -1)
+                {
+                    string s = trans.Substring(pos, endpos - pos + 1);
+                    int post = eng.IndexOf(s);
+
+                    if (post == -1)       // if not found in string {n}
+                        bad = "Bracket mismatch (more in trans)";
+                }
+
+                pos++;
+            }
+
+            if ( bad == null )
             { 
                 int engsemicolons = 0;
                 for (int i = 0; i < eng.Length; i++)
@@ -236,23 +245,24 @@ namespace EDDTest
 
                 if (engsemicolons == 2)     // build format prefix;postfix;format
                 {
-                    bad = true;
-
                     if (foreignsemicolons == engsemicolons)
                     {
                         string e = eng.Substring(eng.LastIndexOf(';'));
                         string t = trans.Substring(trans.LastIndexOf(';'));
-                        bad = !e.Equals(t);
+                        bad = e.Equals(t) ? null : "Field builder format difference";
                     }
+
                 }
                 else if (engsemicolons != foreignsemicolons)    // warn if different number
-                    bad = true;
+                {
+                    bad = "Field builder semicolon count";
+                }
 
             }
 
-            if ( bad )
+            if ( bad != null )
             {
-                Console.WriteLine($"Bad formatting {id}: {eng} -> {trans}");
+                Console.WriteLine($"{bad}: {id}: '{eng}' -> '{trans}' in {file}:{line}");
             }
         }
     }

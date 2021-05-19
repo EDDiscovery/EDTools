@@ -84,7 +84,12 @@ namespace EDDTest
             Cold = 8,
             Hot = 9,
             VeryCold = 10,
-            VeryHot = 11
+            VeryHot = 11,
+            GlideMode = 12,
+            OnFootInHangar = 13,
+            OnFootInSocialSpace = 14,
+            OnFootExterior = 15,
+            BreathableAtmosphere = 16,
         }
 
 
@@ -191,8 +196,11 @@ namespace EDDTest
             {
                 Console.WriteLine("Status [C:cargo] [F:fuel] [FG:Firegroup] [G:Gui] [L:Legalstate] [0x:flag dec int]\n" +
                                   "       [GV:gravity] [H:health] [O:oxygen] [T:Temp] [S:selectedweapon] [B:bodyname]\n" +
-                                  "       [normalspace | supercruise | dockedstarport | dockedinstallation | onfootinplanetaryport | fight | fighter \n" +
-                                  "        onfootininstallation | onfootplanet | landed | SRV | TaxiNormalSpace | TaxiSupercruise ]\n"
+                                  "       [normalspace | supercruise | dockedstarport | dockedinstallation | fight | fighter |\n" +
+                                  "        landed | SRV | TaxiNormalSpace | TaxiSupercruise | Off\n" +
+                                  "        onfootininstallation | onfootplanet |\n" +
+                                  "        onfootinplanetaryporthangar | onfootinplanetaryportsocialspace |\n" +
+                                  "        onfootinstarporthangar | onfootinstarportsocialspace |\n"
                                 );
                 Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlagsShip))));
                 Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlagsSRV))));
@@ -206,7 +214,11 @@ namespace EDDTest
             string v;
             while ((v = args.Next()) != null)
             {
-                if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
+                if (v.Equals("Off", StringComparison.InvariantCultureIgnoreCase))            
+                {
+                    flags = 0;
+                }
+                else if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlagsShipType.InMainShip) |
                                 (1L << (int)StatusFlagsShip.Supercruise) |
@@ -262,22 +274,40 @@ namespace EDDTest
                     altitude = 0;
                     planetradius = 2796748.25;
                 }
-                else if (v.Equals("OnFootInPlanetaryPort", StringComparison.InvariantCultureIgnoreCase))       // checked alpha 4
+                else if (v.Equals("OnFootInPlanetaryPortHangar", StringComparison.InvariantCultureIgnoreCase))
                 {
                     flags = (1L << (int)StatusFlagsAll.HasLatLong);
-                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootOnPlanet);
-                    bodyname = "Nervi 2g";
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootInHangar);
+                    bodyname = "Nervi 2g??";
                 }
-                else if (v.Equals("OnFootInInstallation", StringComparison.InvariantCultureIgnoreCase))       // checked alpha 4
+                else if (v.Equals("OnFootInPlanetaryPortSocialSpace", StringComparison.InvariantCultureIgnoreCase))
                 {
                     flags = (1L << (int)StatusFlagsAll.HasLatLong);
-                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootOnPlanet);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootInSocialSpace);
+                    bodyname = "Nervi 2g??";
+                }
+                else if (v.Equals("OnFootInStarportHangar", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    flags = (1L << (int)StatusFlagsAll.HasLatLong);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootInHangar) | (1L << (int)StatusFlagsOnFoot.OnFootInStation);
+                    bodyname = "Starport";
+                }
+                else if (v.Equals("OnFootInStarportSocialSpace", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    flags = (1L << (int)StatusFlagsAll.HasLatLong);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootInSocialSpace) | (1L << (int)StatusFlagsOnFoot.OnFootInStation);
+                    bodyname = "Starport";
+                }
+                else if (v.Equals("OnFootInInstallation", StringComparison.InvariantCultureIgnoreCase))    
+                {
+                    flags = (1L << (int)StatusFlagsAll.HasLatLong);
+                    flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootExterior);     // tbd if this is correct
                     temperature = 82;
                     SelectedWeapon = "$humanoid_fists_name;";
                     SelectedWeaponLoc = "Unarmed";
                     bodyname = "Nervi 2g";
                 }
-                else if (v.Equals("OnFootPlanet", StringComparison.InvariantCultureIgnoreCase))     // checked alpha 4
+                else if (v.Equals("OnFootPlanet", StringComparison.InvariantCultureIgnoreCase))    
                 {
                     flags = (1L << (int)StatusFlagsAll.HasLatLong);
                     flags2 = (1L << (int)StatusFlagsOnFoot.OnFoot) | (1L << (int)StatusFlagsOnFoot.OnFootOnPlanet);
@@ -394,48 +424,52 @@ namespace EDDTest
 
             qj.Object().UTC("timestamp").V("event", "Status");
             qj.V("Flags", flags);
-            qj.V("Flags2", flags2);
 
-            if ((flags2 & (1 << (int)StatusFlagsOnFoot.OnFoot)) != 0)
+            if (flags != 0 || flags2 != 0)
             {
-                qj.V("Oxygen", oxygen);
-                qj.V("Health", health);
-                qj.V("Temperature", temperature);
-                qj.V("SelectedWeapon", SelectedWeapon);
-                if ( SelectedWeaponLoc.HasChars())
-                    qj.V("SelectedWeapon_Localised", SelectedWeaponLoc);
-                qj.V("Gravity", gravity);
+                qj.V("Flags2", flags2);
+
+                if ((flags2 & (1 << (int)StatusFlagsOnFoot.OnFoot)) != 0)
+                {
+                    qj.V("Oxygen", oxygen);
+                    qj.V("Health", health);
+                    qj.V("Temperature", temperature);
+                    qj.V("SelectedWeapon", SelectedWeapon);
+                    if (SelectedWeaponLoc.HasChars())
+                        qj.V("SelectedWeapon_Localised", SelectedWeaponLoc);
+                    qj.V("Gravity", gravity);
+                }
+                else
+                {
+                    qj.V("Pips", new int[] { 2, 8, 2 });
+                    qj.V("FireGroup", fg);
+                    qj.V("GuiFocus", gui);
+                }
+
+                if ((flags & (1 << (int)StatusFlagsShipType.InMainShip)) != 0 || (flags & (1 << (int)StatusFlagsShipType.InSRV)) != 0)
+                {
+                    qj.Object("Fuel").V("FuelMain", fuel).V("FuelReservoir", 0.32).Close();
+                    qj.V("Cargo", cargo);
+                }
+
+                qj.V("LegalState", legalstate);
+
+                if ((flags & (1 << (int)StatusFlagsAll.HasLatLong)) != 0)
+                {
+                    qj.V("Latitude", lat);
+                    qj.V("Longitude", lon);
+                    qj.V("Heading", heading);
+
+                    if (altitude >= 0)
+                        qj.V("Altitude", altitude);
+                }
+
+                if (bodyname.HasChars())
+                    qj.V("BodyName", bodyname);
+
+                if (planetradius >= 0)
+                    qj.V("PlanetRadius", planetradius);
             }
-            else
-            {
-                qj.V("Pips", new int[] { 2, 8, 2 });
-                qj.V("FireGroup", fg);
-                qj.V("GuiFocus", gui);
-            }
-
-            if ( (flags & (1 << (int)StatusFlagsShipType.InMainShip)) != 0 || (flags & (1 << (int)StatusFlagsShipType.InSRV)) != 0)
-            {
-                qj.Object("Fuel").V("FuelMain", fuel).V("FuelReservoir", 0.32).Close();
-                qj.V("Cargo", cargo);
-            }
-
-            qj.V("LegalState", legalstate);
-
-            if ((flags & (1 << (int)StatusFlagsAll.HasLatLong)) != 0)
-            {
-                qj.V("Latitude", lat);
-                qj.V("Longitude", lon);
-                qj.V("Heading", heading);
-
-                if ( altitude>=0)
-                    qj.V("Altitude", altitude);
-            }
-
-            if ( bodyname.HasChars())
-                qj.V("BodyName", bodyname);
-
-            if ( planetradius>=0)
-                qj.V("PlanetRadius", planetradius);
 
             qj.Close();
 

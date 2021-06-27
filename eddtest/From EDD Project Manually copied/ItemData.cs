@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2016 EDDiscovery development team
+ * Copyright © 2016-2021 EDDiscovery development team
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -22,21 +22,23 @@ using System.Linq;
 
 namespace EliteDangerousCore
 {
-    public class ShipModuleData
-    {
-        static ShipModuleData instance = null;
+    // an Item can be a ship, a ship module, a suit module, etc
 
-        private ShipModuleData()
+    public class ItemData
+    {
+        static ItemData instance = null;
+
+        private ItemData()
         {
         }
 
-        public static ShipModuleData Instance
+        public static ItemData Instance
         {
             get
             {
                 if (instance == null)
                 {
-                    instance = new ShipModuleData();
+                    instance = new ItemData();
                 }
                 return instance;
             }
@@ -44,24 +46,24 @@ namespace EliteDangerousCore
 
         public enum ShipPropID { FDID, HullMass, Name, Manu, Speed, Boost, HullCost, Class }
 
-        public Dictionary<ShipPropID, ShipInfo> GetShipProperties(string fdshipname)        // get properties of a ship, case insensitive, may be null
+        public Dictionary<ShipPropID, IModuleInfo> GetShipProperties(string fdshipname)        // get properties of a ship, case insensitive, may be null
         {
             fdshipname = fdshipname.ToLowerInvariant();
-            if (ships.ContainsKey(fdshipname))
-                return ships[fdshipname];
-            else if (noncorolisships.ContainsKey(fdshipname))
-                return noncorolisships[fdshipname];
+            if (coriolisships.ContainsKey(fdshipname))
+                return coriolisships[fdshipname];
+            else if (noncoriolisships.ContainsKey(fdshipname))
+                return noncoriolisships[fdshipname];
             else
                 return null;
         }
 
-        public ShipInfo GetShipProperty(string fdshipname, ShipPropID property)        // get property of a ship, case insensitive.  property is case sensitive.  May be null
+        public IModuleInfo GetShipProperty(string fdshipname, ShipPropID property)        // get property of a ship, case insensitive.  property is case sensitive.  May be null
         {
-            Dictionary<ShipPropID, ShipInfo> info = GetShipProperties(fdshipname);
+            Dictionary<ShipPropID, IModuleInfo> info = GetShipProperties(fdshipname);
             return info != null ? (info.ContainsKey(property) ? info[property] : null) : null;
         }
 
-        public ShipModule GetItemProperties(string fdid)        // given an item name, return its ShipModule properties (id, mass, names). Always returns one
+        public ShipModule GetShipModuleProperties(string fdid)        // given an item name, return its ShipModule properties (id, mass, names). Always returns one
         {
             string lowername = fdid.ToLowerInvariant();
 
@@ -90,7 +92,7 @@ namespace EliteDangerousCore
 
                 m = new ShipModule(-1, 0, candidatename, IsVanity(lowername) ? VanityType : UnknownType);
 
-                System.Diagnostics.Debug.WriteLine(" { \"" + lowername + "\", new ShipModule(-1,0, \"" + m.ModName + "\", " + (IsVanity(lowername) ? "VanityType" : "UnknownType") + " ) },");
+                System.Diagnostics.Debug.WriteLine("Unknown Module { \"" + lowername + "\", new ShipModule(-1,0, \"" + m.ModName + "\", " + (IsVanity(lowername) ? "VanityType" : "UnknownType") + " ) },");
 
                 synthesisedmodules.Add(lowername, m);                   // lets cache them for completeness..
 
@@ -143,6 +145,26 @@ namespace EliteDangerousCore
             return Array.Find(vlist, x => ifd.Contains(x)) != null;
         }
 
+        static public bool IsSuit(string ifd)       // If a suit..
+        {
+            return ifd.Contains("suit", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        static public bool IsTaxi(string ifd)       // If a taxi
+        {
+            return ifd.Contains("_taxi", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        static public bool IsShip(string ifd)      // any which are not one of the others is called a ship, to allow for new unknown ships
+        {
+            return ifd.HasChars() && !IsSRVOrFighter(ifd) && !IsSuit(ifd) && !IsTaxi(ifd);
+        }
+
+        static public bool IsShipSRVOrFighter(string ifd)       
+        {
+            return ifd.HasChars() && !IsSuit(ifd) && !IsTaxi(ifd);
+        }
+
         static public bool IsSRV(string ifd)
         {
             return ifd.Equals("testbuggy", StringComparison.InvariantCultureIgnoreCase);
@@ -159,13 +181,50 @@ namespace EliteDangerousCore
             return IsSRV(ifd) || IsFighter(ifd);
         }
 
+        static public Actor GetActor(string fdname, string locname = null)         // actors are thinks like skimmer drones
+        {
+            fdname = fdname.ToLowerInvariant();
+            if (actors.TryGetValue(fdname, out Actor var))
+                return var;
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Unknown Actor: {{ \"{0}\", new Weapon(\"{1}\") }},", fdname, locname ?? fdname.SplitCapsWordFull());
+                return null;
+            }
+        }
+
+        static public Weapon GetWeapon(string fdname, string locname = null)         // suit weapons
+        {
+            fdname = fdname.ToLowerInvariant();
+            if (weapons.TryGetValue(fdname, out Weapon var))
+                return var;
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Unknown Weapon: {{ \"{0}\", new Weapon(\"{1}\",0.0) }},", fdname, locname ?? fdname.SplitCapsWordFull());
+                return null;
+            }
+        }
+
+        static public Suit GetSuit(string fdname, string locname = null)         // suit weapons
+        {
+            fdname = fdname.ToLowerInvariant();
+            if (suit.TryGetValue(fdname, out Suit var))
+                return var;
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Unknown Suit: {{ \"{0}\", new Suit(\"{1}\") }},", fdname, locname ?? fdname.SplitCapsWordFull());
+                return null;
+            }
+        }
+
+
         #region classes
 
-        public interface ShipInfo
+        public interface IModuleInfo
         {
         };
 
-        public class ShipModule : ShipInfo
+        public class ShipModule : IModuleInfo
         {
             public int ModuleID;
             public double Mass;
@@ -188,28 +247,81 @@ namespace EliteDangerousCore
 
         };
 
-        public class ShipInfoString : ShipInfo
+        public class ShipInfoString : IModuleInfo
         {
             public string Value;
             public ShipInfoString(string s) { Value = s; }
         };
-        public class ShipInfoInt : ShipInfo
+        public class ShipInfoInt : IModuleInfo
         {
             public int Value;
             public ShipInfoInt(int i) { Value = i; }
         };
-        public class ShipInfoDouble : ShipInfo
+        public class ShipInfoDouble : IModuleInfo
         {
             public double Value;
             public ShipInfoDouble(double d) { Value = d; }
         };
+        public class Actor : IModuleInfo
+        {
+            public string Name;
+            public Actor(string name) { Name = name; }
+        }
+
+        public class WeaponStats
+        {
+            public double DPS;
+            public double RatePerSec;
+            public int ClipSize;
+            public int HopperSize;
+            public int Range;
+            public WeaponStats(double dps, double rate, int clip, int hoppersize, int range) { DPS = dps; RatePerSec = rate; ClipSize = clip; HopperSize = hoppersize;  Range = range; }
+
+        }
+        public class Weapon : IModuleInfo
+        {
+            public string Name;
+            public bool Primary;
+            public enum WeaponClass { Launcher, Carbine, LongRangeRifle, Rifle, ShotGun, Pistol }
+            public enum WeaponDamageType { Thermal, Plasma, Kinetic, Explosive }
+            public enum WeaponFireMode { Automatic, SemiAutomatic, Burst }
+            public WeaponClass Class;
+            public WeaponDamageType DamageType;
+            public WeaponFireMode FireMode;
+            public WeaponStats[] Stats;     // 5 classes,0 to 4
+
+            public WeaponStats GetStats(int cls) // 1 to 5
+            {
+                if (cls >= 1 && cls <= 5)
+                    return Stats[cls - 1];
+                else
+                    return null;
+            }
+
+
+            public Weapon(string name, bool primary,  WeaponDamageType ty, WeaponClass ds, WeaponFireMode fr, WeaponStats[] values)
+            {
+                Name = name;
+                Primary = primary;
+                DamageType = ty;
+                Class = ds;
+                FireMode = fr;
+                Stats = values;
+            }
+        }
+
+        public class Suit : IModuleInfo
+        {
+            public string Name;
+            public Suit(string name) { Name = name;  }
+        }
 
         #endregion
 
 
         #region Not in Corolis Data
 
-        static Dictionary<ShipPropID, ShipInfo> imperial_fighter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> imperial_fighter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Empire_Fighter")},
             { ShipPropID.HullMass, new ShipInfoDouble(0F)},
@@ -221,7 +333,7 @@ namespace EliteDangerousCore
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
 
-        static Dictionary<ShipPropID, ShipInfo> federation_fighter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> federation_fighter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Federation_Fighter")},
             { ShipPropID.HullMass, new ShipInfoDouble(0F)},
@@ -234,7 +346,7 @@ namespace EliteDangerousCore
         };
 
 
-        static Dictionary<ShipPropID, ShipInfo> taipan_fighter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> taipan_fighter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Independent_Fighter")},
             { ShipPropID.HullMass, new ShipInfoDouble(0F)},
@@ -246,7 +358,7 @@ namespace EliteDangerousCore
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
 
-        static Dictionary<ShipPropID, ShipInfo> GDN_Hybrid_v1_fighter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> GDN_Hybrid_v1_fighter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("GDN_Hybrid_Fighter_V1")},
             { ShipPropID.HullMass, new ShipInfoDouble(0F)},
@@ -257,7 +369,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(0)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> GDN_Hybrid_v2_fighter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> GDN_Hybrid_v2_fighter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("GDN_Hybrid_Fighter_V2")},
             { ShipPropID.HullMass, new ShipInfoDouble(0F)},
@@ -268,7 +380,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(0)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> GDN_Hybrid_v3_fighter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> GDN_Hybrid_v3_fighter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("GDN_Hybrid_Fighter_V3")},
             { ShipPropID.HullMass, new ShipInfoDouble(0F)},
@@ -280,7 +392,7 @@ namespace EliteDangerousCore
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
 
-        static Dictionary<ShipPropID, ShipInfo> srv = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> srv = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("TestBuggy")},
             { ShipPropID.HullMass, new ShipInfoDouble(0F)},
@@ -292,7 +404,7 @@ namespace EliteDangerousCore
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
 
-        static Dictionary<string, Dictionary<ShipPropID, ShipInfo>> noncorolisships = new Dictionary<string, Dictionary<ShipPropID, ShipInfo>>
+        static Dictionary<string, Dictionary<ShipPropID, IModuleInfo>> noncoriolisships = new Dictionary<string, Dictionary<ShipPropID, IModuleInfo>>
         {
             { "empire_fighter",  imperial_fighter},
             { "federation_fighter",  federation_fighter},
@@ -301,6 +413,75 @@ namespace EliteDangerousCore
             { "gdn_hybrid_fighter_v1",  GDN_Hybrid_v1_fighter},
             { "gdn_hybrid_fighter_v2",  GDN_Hybrid_v2_fighter},
             { "gdn_hybrid_fighter_v3",  GDN_Hybrid_v3_fighter},
+        };
+
+        #endregion
+
+        #region Other fdnames
+
+        public static Dictionary<string, Actor> actors = new Dictionary<string, Actor>   // DO NOT USE DIRECTLY - public is for checking only
+        {
+             { "skimmerdrone", new Actor("Skimmer Drone") },
+             { "ps_turretbasemedium02_6m", new Actor("Turret medium 2-6-M") },
+        };
+
+        public static Dictionary<string, Weapon> weapons = new Dictionary<string, Weapon>   // DO NOT USE DIRECTLY - public is for checking only
+        {
+             { "wpn_m_assaultrifle_kinetic_fauto", new Weapon("Karma AR-50", true, Weapon.WeaponDamageType.Kinetic, Weapon.WeaponClass.LongRangeRifle, Weapon.WeaponFireMode.Automatic, 
+                             new WeaponStats[] {  new WeaponStats(0.9,10,40,240,50), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0),  new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+             { "wpn_m_assaultrifle_laser_fauto", new Weapon("TK Aphelion", true, Weapon.WeaponDamageType.Thermal, Weapon.WeaponClass.Rifle, Weapon.WeaponFireMode.Automatic,
+                                new WeaponStats[] { new WeaponStats(1.6,5.7,25,150,70), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+            { "wpn_m_assaultrifle_plasma_fauto", new Weapon("Manticore Oppressor", true, Weapon.WeaponDamageType.Plasma, Weapon.WeaponClass.Rifle, Weapon.WeaponFireMode.Automatic,
+                                new WeaponStats[] { new WeaponStats(0.8,6.7,50,300,35), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+            { "wpn_m_launcher_rocket_sauto", new Weapon("Karma L-6", true, Weapon.WeaponDamageType.Explosive, Weapon.WeaponClass.Launcher, Weapon.WeaponFireMode.Automatic,
+                                new WeaponStats[] { new WeaponStats(40,1,2,8,300), new WeaponStats(0,0,0,0,0), new WeaponStats(69.2,1,2,8,300), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+            { "wpn_m_shotgun_plasma_doublebarrel", new Weapon("Manticore Intimidator", true,  Weapon.WeaponDamageType.Plasma, Weapon.WeaponClass.ShotGun, Weapon.WeaponFireMode.SemiAutomatic,
+                                new WeaponStats[] { new WeaponStats(1.8,1.25,2,24,7), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+            { "wpn_m_sniper_plasma_charged", new Weapon("Manticore Executioner", true, Weapon.WeaponDamageType.Plasma, Weapon.WeaponClass.LongRangeRifle, Weapon.WeaponFireMode.SemiAutomatic,
+                                new WeaponStats[] { new WeaponStats(15,0.8,3,30,100), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+             { "wpn_m_submachinegun_kinetic_fauto", new Weapon("Karma C-44", true, Weapon.WeaponDamageType.Kinetic, Weapon.WeaponClass.Carbine, Weapon.WeaponFireMode.Automatic,
+                                    new WeaponStats[] { new WeaponStats(0.65,13.3,60,360,20), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+             // TBD range
+             { "wpn_m_submachinegun_laser_fauto", new Weapon("TK Eclipse", true, Weapon.WeaponDamageType.Thermal, Weapon.WeaponClass.Carbine, Weapon.WeaponFireMode.Automatic,
+                    new WeaponStats[] { new WeaponStats(0.9,10,40,280,25), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+             { "wpn_s_pistol_kinetic_sauto", new Weapon("Karma P-15", false, Weapon.WeaponDamageType.Kinetic, Weapon.WeaponClass.Pistol, Weapon.WeaponFireMode.SemiAutomatic,
+                                         new WeaponStats[] { new WeaponStats(1.4,10,24,240,25), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+             { "wpn_s_pistol_laser_sauto", new Weapon("TK Zenith", false, Weapon.WeaponDamageType.Thermal, Weapon.WeaponClass.Pistol, Weapon.WeaponFireMode.Burst, 
+                                                new WeaponStats[] { new WeaponStats(1.7,2.7,18,180,35), new WeaponStats(2.2,5.7,18,180,35), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+             // TBD range
+            { "wpn_s_pistol_plasma_charged", new Weapon("Manticore Tormentor", false, Weapon.WeaponDamageType.Plasma, Weapon.WeaponClass.Pistol, Weapon.WeaponFireMode.SemiAutomatic, 
+                            new WeaponStats[] { new WeaponStats(7.5,1.7,6,72,15), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0), new WeaponStats(0,0,0,0,0) }) },
+
+        };
+
+        public static Dictionary<string, Suit> suit = new Dictionary<string, Suit>   // DO NOT USE DIRECTLY - public is for checking only
+        {
+            { "flightsuit", new Suit("Flight Suit") },
+            { "utilitysuit_class1", new Suit("Maverick Suit") },
+            { "utilitysuit_class2", new Suit("Maverick Suit Class 2") },
+            { "utilitysuit_class3", new Suit("Maverick Suit Class 3") },
+            { "utilitysuit_class4", new Suit("Maverick Suit Class 4") },
+            { "utilitysuit_class5", new Suit("Maverick Suit Class 5") },
+            { "explorationsuit_class1", new Suit("Artemis Suit") },
+            { "explorationsuit_class2", new Suit("Artemis Suit Class 2") },
+            { "explorationsuit_class3", new Suit("Artemis Suit Class 3") },
+            { "explorationsuit_class4", new Suit("Artemis Suit Class 4") },
+            { "explorationsuit_class5", new Suit("Artemis Suit Class 5") },
+            { "tacticalsuit_class1", new Suit("Dominator Suit") },
+            { "tacticalsuit_class2", new Suit("Dominator Suit Class 2") },
+            { "tacticalsuit_class3", new Suit("Dominator Suit Class 3") },
+            { "tacticalsuit_class4", new Suit("Dominator Suit Class 4") },
+            { "tacticalsuit_class5", new Suit("Dominator Suit Class 5") },
         };
 
         #endregion
@@ -489,6 +670,7 @@ namespace EliteDangerousCore
             { "decal_onionhead1", new ShipModule( -1, 0 , "Decal Onionhead 1", VanityType) },
             { "decal_onionhead2", new ShipModule( -1, 0 , "Decal Onionhead 2", VanityType) },
             { "decal_onionhead3", new ShipModule( -1, 0 , "Decal Onionhead 3", VanityType) },
+            { "decal_distantworlds2", new ShipModule(-1,0, "Decal Distantworlds 2", VanityType ) },
             { "decal_paxprime", new ShipModule( -1, 0 , "Decal Pax Prime", VanityType) },
             { "decal_playergroup_wolves_of_jonai", new ShipModule( -1, 0 , "Decal Player Group Wolves Of Jonai", VanityType) },
             { "decal_powerplay_mahon", new ShipModule( -1, 0 , "Decal Power Play Mahon", VanityType) },
@@ -564,6 +746,7 @@ namespace EliteDangerousCore
             { "paintjob_type6_blackfriday_01", new ShipModule( -1, 0 , "Paint Job Type 6 Blackfriday 1", VanityType) },
             { "paintjob_type7_blackfriday_01", new ShipModule( -1, 0 , "Paint Job Type 7 Black Friday 1", VanityType) },
             { "paintjob_type9_military_metallic2_chrome", new ShipModule( -1, 0 , "Paint Job Type 9 Military Metallic 2 Chrome", VanityType) },
+            { "paintjob_type9_blackfriday_01", new ShipModule(-1,0, "Paintjob Type 9 Blackfriday 1", VanityType ) },
             { "paintjob_viper_blackfriday_01", new ShipModule( -1, 0 , "Paint Job Viper Blackfriday 1", VanityType) },
             { "paintjob_viper_mkiv_blackfriday_01", new ShipModule( -1, 0 , "Paint Job Viper Mk IV Black Friday 1", VanityType) },
             { "paintjob_viper_stripe1_02", new ShipModule( -1, 0 , "Paint Job Viper Stripe 1 2", VanityType) },
@@ -961,6 +1144,13 @@ namespace EliteDangerousCore
              { "decal_powerplay_utopia", new ShipModule(-1,0, "Decal Power Play Utopia", VanityType ) },
              { "nameplate_wings03_black", new ShipModule(-1,0, "Nameplate Wings 3 Black", VanityType ) },
              { "nameplate_explorer02_grey", new ShipModule(-1,0, "Nameplate Explorer 2 Grey", VanityType ) },
+
+             { "paintjob_krait_mkii_vibrant_red", new ShipModule(-1,0, "Paintjob Krait Mkii Vibrant Red", VanityType ) },
+
+             { "nameplate_trader02_grey", new ShipModule(-1,0, "Nameplate Trader 2 Grey", VanityType ) },
+             { "bobble_snowman", new ShipModule(-1,0, "Bobble Snowman", VanityType ) },
+             { "bobble_snowflake", new ShipModule(-1,0, "Bobble Snowflake", VanityType ) },
+             { "decal_triple_elite", new ShipModule(-1,0, "Decal Triple Elite", VanityType ) },
         };
 
         #endregion
@@ -1137,7 +1327,7 @@ namespace EliteDangerousCore
             { "hpt_mining_subsurfdispmisle_fixed_medium", new ShipModule(128915457, 4, 1.01F, "Ammo:96/1, Damage:5, Range:3000m, Speed:550m/s, Reload:2s, ThermL:2.9","Mining Sub Surface Displacement Missile Fixed Medium", "Mining")},
             { "hpt_mining_subsurfdispmisle_turret_medium", new ShipModule(128049381, 4, 0.93F, "Ammo:96/1, Damage:5, Range:3000m, Speed:550m/s, Reload:2s, ThermL:2.9","Mining Subsurface Displacement Missile Turret Medium", "Mining")},
             { "hpt_mining_subsurfdispmisle_fixed_small", new ShipModule(128915455, 2, 0.42F, "Ammo:32/1, Damage:5, Range:3000m, Speed:550m/s, Reload:2s, ThermL:2.2","Mining Sub Surface Displacement Missile Fixed Small", "Mining")},
-            { "hpt_mining_subsurfdispmisle_turret_small", new ShipModule(128049381, 2, 0.42F, "Ammo:32/1, Damage:5, Range:3000m, Speed:550m/s, Reload:2s, ThermL:2.2","Mining Subsurface Displacement Missile Turret Small", "Mining")},
+            { "hpt_mining_subsurfdispmisle_turret_small", new ShipModule(128049381, 2, 0.53F, "Ammo:32/1, Damage:5, Range:3000m, Speed:550m/s, Reload:2s, ThermL:2.2","Mining Subsurface Displacement Missile Turret Small", "Mining")},
             { "hpt_advancedtorppylon_fixed_small", new ShipModule(128049509, 2, 0.4F, "Ammo:1/1, Damage:120, Speed:250m/s, Reload:5s, ThermL:45","Advanced Torp Pylon Fixed Small", "Missile Rack")},
             { "hpt_advancedtorppylon_fixed_medium", new ShipModule(128049510, 4, 0.4F, "Ammo:2/1, Damage:120, Speed:250m/s, Reload:5s, ThermL:50","Advanced Torp Pylon Fixed Medium", "Missile Rack")},
             { "hpt_advancedtorppylon_fixed_large", new ShipModule(128049511, 8, 0.6F, "Ammo:4/4, Damage:120, Speed:250m/s, Reload:5s, ThermL:55","Advanced Torp Pylon Fixed Large", "Missile Rack")},
@@ -1426,7 +1616,7 @@ namespace EliteDangerousCore
             { "int_buggybay_size4_class2", new ShipModule(128672291, 10, 1.2F, null,"Planetary Vehicle Hangar Class 4 Rating G", "Planetary Vehicle Hangar")},
             { "int_buggybay_size6_class1", new ShipModule(128672292, 34, 0.6F, null,"Planetary Vehicle Hangar Class 6 Rating H", "Planetary Vehicle Hangar")},
             { "int_buggybay_size6_class2", new ShipModule(128672293, 17, 1.8F, null,"Planetary Vehicle Hangar Class 6 Rating G", "Planetary Vehicle Hangar")},
-            { "int_shieldgenerator_size1_class5_strong", new ShipModule(128671323, 2.5F, 2.52F, "OptMass:25t, MaxMass:63t, MinMass:13t, Explosive:50%, Kinetic:40%, Thermal:-20%","Shield Generator Class 1 Rating A Strong", "Shield Generator")},
+            { "int_shieldgenerator_size1_class5_strong", new ShipModule(128671323, 2.6F, 2.52F, "OptMass:25t, MaxMass:63t, MinMass:13t, Explosive:50%, Kinetic:40%, Thermal:-20%","Shield Generator Class 1 Rating A Strong", "Shield Generator")},
             { "int_shieldgenerator_size2_class5_strong", new ShipModule(128671324, 5, 3.15F, "OptMass:55t, MaxMass:138t, MinMass:23t, Explosive:50%, Kinetic:40%, Thermal:-20%","Shield Generator Class 2 Rating A Strong", "Shield Generator")},
             { "int_shieldgenerator_size3_class5_strong", new ShipModule(128671325, 10, 3.78F, "OptMass:165t, MaxMass:413t, MinMass:83t, Explosive:50%, Kinetic:40%, Thermal:-20%","Shield Generator Class 3 Rating A Strong", "Shield Generator")},
             { "int_shieldgenerator_size4_class5_strong", new ShipModule(128671326, 20, 4.62F, "OptMass:285t, MaxMass:713t, MinMass:143t, Explosive:50%, Kinetic:40%, Thermal:-20%","Shield Generator Class 4 Rating A Strong", "Shield Generator")},
@@ -1655,6 +1845,7 @@ namespace EliteDangerousCore
             { "int_lifesupport_size1_class3", new ShipModule(128064140, 1.3F, 0.4F, "Time:600s","Life Support Class 1 Rating C", "Life Support")},
             { "int_lifesupport_size1_class4", new ShipModule(128064141, 2, 0.44F, "Time:900s","Life Support Class 1 Rating B", "Life Support")},
             { "int_lifesupport_size1_class5", new ShipModule(128064142, 1.3F, 0.48F, "Time:1500s","Life Support Class 1 Rating A", "Life Support")},
+            { "int_planetapproachsuite_advanced", new ShipModule(-1,0,0,null, "Advanced Planet Approach Suite", "Planet Approach Suite" ) },
             { "int_planetapproachsuite", new ShipModule(128672317, 0, 0, null,"Planet Approach Suite", "Planet Approach Suite")},
             { "int_powerdistributor_size8_class1", new ShipModule(128064213, 160, 0.64F, "Sys:3.2MW, Eng:3.2MW, Wep:4.8MW","Power Distributor Class 8 Rating E", "Power Distributor")},
             { "int_powerdistributor_size8_class2", new ShipModule(128064214, 64, 0.72F, "Sys:3.6MW, Eng:3.6MW, Wep:5.4MW","Power Distributor Class 8 Rating D", "Power Distributor")},
@@ -2023,7 +2214,7 @@ namespace EliteDangerousCore
 
         #region ship data FROM COROLIS - use the netlogentry scanner
 
-        static Dictionary<ShipPropID, ShipInfo> adder = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> adder = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Adder")},
             { ShipPropID.HullMass, new ShipInfoDouble(35F)},
@@ -2034,7 +2225,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(40000)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> alliance_challenger = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> alliance_challenger = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("TypeX_3")},
             { ShipPropID.HullMass, new ShipInfoDouble(450F)},
@@ -2045,7 +2236,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(28041035)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> alliance_chieftain = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> alliance_chieftain = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("TypeX")},
             { ShipPropID.HullMass, new ShipInfoDouble(400F)},
@@ -2056,7 +2247,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(18182883)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> alliance_crusader = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> alliance_crusader = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("TypeX_2")},
             { ShipPropID.HullMass, new ShipInfoDouble(500F)},
@@ -2067,7 +2258,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(22866341)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> anaconda = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> anaconda = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Anaconda")},
             { ShipPropID.HullMass, new ShipInfoDouble(400F)},
@@ -2078,7 +2269,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(141889930)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> asp = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> asp = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Asp")},
             { ShipPropID.HullMass, new ShipInfoDouble(280F)},
@@ -2089,7 +2280,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(6135660)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> asp_scout = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> asp_scout = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Asp_Scout")},
             { ShipPropID.HullMass, new ShipInfoDouble(150F)},
@@ -2100,7 +2291,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(3818240)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> beluga = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> beluga = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("BelugaLiner")},
             { ShipPropID.HullMass, new ShipInfoDouble(950F)},
@@ -2111,7 +2302,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(79654610)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> cobra_mk_iii = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> cobra_mk_iii = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("CobraMkIII")},
             { ShipPropID.HullMass, new ShipInfoDouble(180F)},
@@ -2122,7 +2313,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(205800)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> cobra_mk_iv = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> cobra_mk_iv = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("CobraMkIV")},
             { ShipPropID.HullMass, new ShipInfoDouble(210F)},
@@ -2133,7 +2324,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(603740)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> diamondback_explorer = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> diamondback_explorer = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("DiamondBackXL")},
             { ShipPropID.HullMass, new ShipInfoDouble(260F)},
@@ -2144,7 +2335,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(1635700)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> diamondback = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> diamondback = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("DiamondBack")},
             { ShipPropID.HullMass, new ShipInfoDouble(170F)},
@@ -2155,7 +2346,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(461340)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> dolphin = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> dolphin = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Dolphin")},
             { ShipPropID.HullMass, new ShipInfoDouble(140F)},
@@ -2166,7 +2357,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(1115330)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> eagle = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> eagle = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Eagle")},
             { ShipPropID.HullMass, new ShipInfoDouble(50F)},
@@ -2177,7 +2368,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(10440)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> federal_assault_ship = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> federal_assault_ship = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Federation_Dropship_MkII")},
             { ShipPropID.HullMass, new ShipInfoDouble(480F)},
@@ -2188,7 +2379,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(19072000)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> federal_corvette = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> federal_corvette = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Federation_Corvette")},
             { ShipPropID.HullMass, new ShipInfoDouble(900F)},
@@ -2199,7 +2390,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(182589570)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> federal_dropship = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> federal_dropship = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Federation_Dropship")},
             { ShipPropID.HullMass, new ShipInfoDouble(580F)},
@@ -2210,7 +2401,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(13469990)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> federal_gunship = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> federal_gunship = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Federation_Gunship")},
             { ShipPropID.HullMass, new ShipInfoDouble(580F)},
@@ -2221,7 +2412,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(34774790)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> fer_de_lance = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> fer_de_lance = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("FerDeLance")},
             { ShipPropID.HullMass, new ShipInfoDouble(250F)},
@@ -2232,7 +2423,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(51232230)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> hauler = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> hauler = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Hauler")},
             { ShipPropID.HullMass, new ShipInfoDouble(14F)},
@@ -2243,7 +2434,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(29790)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> imperial_clipper = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> imperial_clipper = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Empire_Trader")},
             { ShipPropID.HullMass, new ShipInfoDouble(400F)},
@@ -2254,7 +2445,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(21077780)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> imperial_courier = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> imperial_courier = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Empire_Courier")},
             { ShipPropID.HullMass, new ShipInfoDouble(35F)},
@@ -2265,7 +2456,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(2481550)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> imperial_cutter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> imperial_cutter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Cutter")},
             { ShipPropID.HullMass, new ShipInfoDouble(1100F)},
@@ -2276,7 +2467,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(199926890)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> imperial_eagle = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> imperial_eagle = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Empire_Eagle")},
             { ShipPropID.HullMass, new ShipInfoDouble(50F)},
@@ -2287,7 +2478,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(72180)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> keelback = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> keelback = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Independant_Trader")},
             { ShipPropID.HullMass, new ShipInfoDouble(180F)},
@@ -2298,7 +2489,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(2943870)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> krait_mkii = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> krait_mkii = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Krait_MkII")},
             { ShipPropID.HullMass, new ShipInfoDouble(320F)},
@@ -2309,7 +2500,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(42409425)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> krait_phantom = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> krait_phantom = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Krait_Light")},
             { ShipPropID.HullMass, new ShipInfoDouble(270F)},
@@ -2320,7 +2511,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(42409425)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> mamba = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> mamba = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Mamba")},
             { ShipPropID.HullMass, new ShipInfoDouble(250F)},
@@ -2331,7 +2522,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(55866341)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> orca = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> orca = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Orca")},
             { ShipPropID.HullMass, new ShipInfoDouble(290F)},
@@ -2342,7 +2533,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(47790590)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> python = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> python = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Python")},
             { ShipPropID.HullMass, new ShipInfoDouble(350F)},
@@ -2353,7 +2544,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(55171380)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> sidewinder = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> sidewinder = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("SideWinder")},
             { ShipPropID.HullMass, new ShipInfoDouble(25F)},
@@ -2364,7 +2555,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(4070)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> type_10_defender = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> type_10_defender = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Type9_Military")},
             { ShipPropID.HullMass, new ShipInfoDouble(1200F)},
@@ -2375,7 +2566,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(121454173)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> type_6_transporter = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> type_6_transporter = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Type6")},
             { ShipPropID.HullMass, new ShipInfoDouble(155F)},
@@ -2386,7 +2577,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(865790)},
             { ShipPropID.Class, new ShipInfoInt(2)},
         };
-        static Dictionary<ShipPropID, ShipInfo> type_7_transport = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> type_7_transport = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Type7")},
             { ShipPropID.HullMass, new ShipInfoDouble(350F)},
@@ -2397,7 +2588,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(16780510)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> type_9_heavy = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> type_9_heavy = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Type9")},
             { ShipPropID.HullMass, new ShipInfoDouble(850F)},
@@ -2408,7 +2599,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(73255150)},
             { ShipPropID.Class, new ShipInfoInt(3)},
         };
-        static Dictionary<ShipPropID, ShipInfo> viper = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> viper = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Viper")},
             { ShipPropID.HullMass, new ShipInfoDouble(50F)},
@@ -2419,7 +2610,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(95900)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> viper_mk_iv = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> viper_mk_iv = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Viper_MkIV")},
             { ShipPropID.HullMass, new ShipInfoDouble(190F)},
@@ -2430,7 +2621,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(310220)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<ShipPropID, ShipInfo> vulture = new Dictionary<ShipPropID, ShipInfo>
+        static Dictionary<ShipPropID, IModuleInfo> vulture = new Dictionary<ShipPropID, IModuleInfo>
         {
             { ShipPropID.FDID, new ShipInfoString("Vulture")},
             { ShipPropID.HullMass, new ShipInfoDouble(230F)},
@@ -2441,7 +2632,7 @@ namespace EliteDangerousCore
             { ShipPropID.HullCost, new ShipInfoInt(4689640)},
             { ShipPropID.Class, new ShipInfoInt(1)},
         };
-        static Dictionary<string, Dictionary<ShipPropID, ShipInfo>> ships = new Dictionary<string, Dictionary<ShipPropID, ShipInfo>>
+        static Dictionary<string, Dictionary<ShipPropID, IModuleInfo>> coriolisships = new Dictionary<string, Dictionary<ShipPropID, IModuleInfo>>
         {
             { "adder",adder},
             { "typex_3",alliance_challenger},

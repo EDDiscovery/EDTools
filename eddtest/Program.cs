@@ -286,6 +286,7 @@ namespace EDDTest
             }
             else if (arg1.Equals("frontierdata"))
             {
+                EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
                 FrontierData.Process(args.Next());
             }
             else if(arg1.Equals("readjournals"))

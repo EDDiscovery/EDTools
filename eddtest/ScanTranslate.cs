@@ -33,7 +33,7 @@ namespace EDDTest
             public string firstdeflocation;
         };
 
-        static public Tuple<string, string> ProcessLine(string combinedline, string curline, int txpos, int parapos , bool warnoldidchange)
+        static public Tuple<string, string> ProcessTLine(string combinedline, string curline, int txpos, int parapos , bool warnoldidchange)
                                     
         {
             bool ok = false;
@@ -162,79 +162,103 @@ namespace EDDTest
                         while (true)
                         {
                             int txpos = combined.IndexOf(".T(", startpos);
-                            int parapos = txpos + 3;
+                            int txposcond = combined.IndexOf(".TCond(", startpos);
 
+                            if (txpos == -1 && txposcond == -1)     // if nothing, stop
+                                break;
+
+                            Tuple<string, string> ret = null;
                             string localtext = "";
 
-                            if (txpos != -1)
+                            if (txposcond != -1 && ( txpos == -1 || txposcond < txpos ))                // if txposcond set, AND txpos is not there, or its less than it
                             {
-                                Tuple<string, string> ret = ProcessLine(combined, line, txpos, parapos, false);
-
-                                if (ret == null)
-                                    localtext = fi.FullName + ":" + lineno + ":Miss formed line around " + combined.Mid(txpos, 30) + Environment.NewLine;
-                                else
+                                StringParser s0 = new StringParser(combined, txposcond);
+                                if (s0.NextWordComma() != null)     // waste text up to comma
                                 {
-                                    string id = ret.Item1;
-                                    string engquoted = ret.Item2.AlwaysQuoteString();
-
-                                    Definition def = idsdone.Find(x => x.token.Equals(ret.Item1, StringComparison.InvariantCultureIgnoreCase));
-
-                                    string res = null;
-
-                                    if (def != null)        // if previously did the def..
+                                    string english = s0.NextQuotedWordComma();
+                                    if (english != null)
                                     {
-                                        if (def.text != ret.Item2)
-                                            res = "Different Text: " + fi.FullName + ":" + lineno + " ID has different text " + id + " " + Environment.NewLine + "   >> " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
-                                        else if (showrepeats)       // if showrepeats is off, then no output, since we already done it
-                                            res = "Repeat: " + id + " " + engquoted;
-                                    }
-                                    else
-                                    {
-                                        idsdone.Add(new Definition(id, ret.Item2, fi.FullName + ":" + lineno));
+                                        string identifier = s0.NextWord(" )");
 
-                                        if (trans.IsDefined(id))
+                                        if (identifier != null && identifier.StartsWith("EDTx."))
                                         {
-                                            if (!showerrorsonly)
-                                                res = id + ": " + engquoted + " @";     // list it
-
-                                            string foreign = trans.GetTranslation(id);
-                                            string english = trans.GetOriginalEnglish(id);
-                                            english = english.EscapeControlChars();
-
-                                            if (english != ret.Item2)
-                                            {
-                                                res = "Translator Difference: " + id + " // English differs from \"" + ret.Item2 + "\" vs \"" + english + "\"";
-                                            }
+                                            identifier = identifier.Substring(5).Replace("_", ".");
+                                            ret = new Tuple<string, string>(identifier, english);
                                         }
-                                        else if (trans.Translating)       // if we are checking translation, do it..
-                                        {
-                                            res = ".T( Missing: " + id + ": " + engquoted + " @";
-                                        }
-                                    }
-
-                                    if (res != null)
-                                    {
-                                        res += Environment.NewLine;
-                                        localtext = res;
                                     }
                                 }
 
-
-                                if (localtext.HasChars())
-                                {
-                                    if (!donelocaltitle)
-                                    {
-                                        string text = "///////////////////////////////////////////////////// " + (classes.Count > 0 ? classes[0] : "?") + " in " + fi.Name + Environment.NewLine;
-                                        locals += text;
-                                        donelocaltitle = true;
-                                    }
-                                    locals += localtext;
-                                }
-
-                                startpos = parapos;
+                                startpos = txposcond + 7;
                             }
                             else
-                                break;
+                            {
+                                ret = ProcessTLine(combined, line, txpos, txpos+3, false);
+                                if (ret == null)
+                                    localtext = fi.FullName + ":" + lineno + ":Miss formed line around " + combined.Mid(txpos, 30) + Environment.NewLine;
+
+                                startpos = txpos + 3;     // skip over it
+                            }
+
+                            if ( ret != null )
+                            {
+                                System.Diagnostics.Debug.WriteLine("{0} Check {1} {2}", lineno, ret.Item1, ret.Item2);
+                                string id = ret.Item1;
+                                string engquoted = ret.Item2.AlwaysQuoteString();
+
+                                Definition def = idsdone.Find(x => x.token.Equals(ret.Item1, StringComparison.InvariantCultureIgnoreCase));
+
+                                string res = null;
+
+                                if (def != null)        // if previously did the def..
+                                {
+                                    if (def.text != ret.Item2)
+                                        res = "Different Text: " + id + " at " + fi.FullName + ":" + lineno + Environment.NewLine + "   >> " + ret.Item2.AlwaysQuoteString() + " orginal " + def.text.AlwaysQuoteString() + " at " + def.firstdeflocation;
+                                    else if (showrepeats)       // if showrepeats is off, then no output, since we already done it
+                                        res = "Repeat: " + id + " at " + fi.FullName + ":" + lineno + " " + engquoted;
+                                }
+                                else
+                                {
+                                    idsdone.Add(new Definition(id, ret.Item2, fi.FullName + ":" + lineno));
+
+                                    if (trans.IsDefined(id))
+                                    {
+                                        if (!showerrorsonly)
+                                            res = id + ": " + engquoted + " @";     // list it
+
+                                        string foreign = trans.GetTranslation(id);
+                                        string english = trans.GetOriginalEnglish(id);
+                                        english = english.EscapeControlChars();
+
+                                        if (english != ret.Item2)
+                                        {
+                                            res = "Translator Difference: " + id + " at " + fi.FullName + ":" + lineno + Environment.NewLine + 
+                                                "     >> English differs from \"" + ret.Item2 + "\" vs \"" + english + "\"";
+                                        }
+                                    }
+                                    else if (trans.Translating)       // if we are checking translation, do it..
+                                    {
+                                        res = ".T( Missing: " + id + " at " + fi.FullName + ":" + lineno + " => " + engquoted + " @";
+                                    }
+                                }
+
+                                if (res != null)
+                                {
+                                    res += Environment.NewLine;
+                                    localtext = res;
+                                }
+                            }
+
+
+                            if (localtext.HasChars())
+                            {
+                                if (!donelocaltitle)
+                                {
+                                    string text = "///////////////////////////////////////////////////// " + (classes.Count > 0 ? classes[0] : "?") + " in " + fi.Name + Environment.NewLine;
+                                    locals += text;
+                                    donelocaltitle = true;
+                                }
+                                locals += localtext;
+                            }
                         }
 
                         previoustext += line;
@@ -260,14 +284,14 @@ namespace EDDTest
                             classes.Add(sp.NextWord(":").Trim());
                             baseclasses.Add(sp.IsCharMoveOn(':') ? sp.NextWord(",") : null);
                             classeslevel.Add(bracketlevel);
-                            System.Diagnostics.Debug.WriteLine(lineno + " {" + bracketlevel * 4 + " Push " + classes.Last() + " " + baseclasses.Last());
+                           // System.Diagnostics.Debug.WriteLine(lineno + " {" + bracketlevel * 4 + " Push " + classes.Last() + " " + baseclasses.Last());
                         }
 
                         if (line.StartsWith("{"))
                         {
                             if (line.Length == 1 || !line.Substring(1).Trim().StartsWith("}"))
                             {
-                                System.Diagnostics.Debug.WriteLine(lineno + " {" + bracketlevel * 4);
+                              //  System.Diagnostics.Debug.WriteLine(lineno + " {" + bracketlevel * 4);
                                 bracketlevel++;
                             }
                             else
@@ -280,13 +304,13 @@ namespace EDDTest
                             {
                                 if (classeslevel.Count > 0 && classeslevel.Last() == bracketlevel - 1)
                                 {
-                                    System.Diagnostics.Debug.WriteLine(lineno + " Pop {" + (bracketlevel-1) * 4 + " " + classes.Last());
+                                 //   System.Diagnostics.Debug.WriteLine(lineno + " Pop {" + (bracketlevel-1) * 4 + " " + classes.Last());
                                     classes.RemoveAt(classes.Count - 1);
                                     classeslevel.RemoveAt(classeslevel.Count - 1);
                                     baseclasses.RemoveAt(baseclasses.Count - 1);
                                 }
                                 bracketlevel--;
-                                System.Diagnostics.Debug.WriteLine(lineno + " }" + bracketlevel * 4);
+                                //System.Diagnostics.Debug.WriteLine(lineno + " }" + bracketlevel * 4);
                             }
                             else
                                 System.Diagnostics.Debug.WriteLine(lineno + " Rejected }" + bracketlevel * 4);

@@ -1228,12 +1228,7 @@ namespace EliteDangerousCore
                 return old;
         }
 
-
-
         #endregion
-
-
-
     }
 }
 

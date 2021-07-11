@@ -94,13 +94,6 @@ namespace EDDTest
             return "";
         }
 
-        struct Unlocks
-        {
-            public string name;
-            public string auxdata;
-            public string ingr;
-        }
-
         static public void Process(string rootpath)            // overall index of items
         {
             string de = "", fr = "", es = "", ru = "", pr = "";
@@ -123,7 +116,7 @@ namespace EDDTest
             // check for non cororolis now being in frontier data in main module section - this is due to previous undeclared modes becoming public
 
             {
-                foreach( var x in ItemData.noncorolismodules )
+                foreach (var x in ItemData.noncorolismodules)
                 {
                     if (ItemData.modules.ContainsKey(x.Key))
                         Console.WriteLine("Error Non cororolis list contains " + x.Key + " and so does main module list");
@@ -152,7 +145,7 @@ namespace EDDTest
                             Console.WriteLine("Error " + fdname + " not found in ship data");
                         else
                         {
-                            if ( ukname != ((ItemData.ShipInfoString)si[ItemData.ShipPropID.Name]).Value)
+                            if (ukname != ((ItemData.ShipInfoString)si[ItemData.ShipPropID.Name]).Value)
                             {
                                 Console.WriteLine("Error " + fdname + " disagrees with uk name");
                             }
@@ -166,7 +159,7 @@ namespace EDDTest
 
                             if (basespeed != null && basespeed.Value != ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Speed]).Value)
                             {
-                                Console.WriteLine("Error " + fdname + " disagrees with speed " + basespeed + " Currently "  + ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Speed]).Value);
+                                Console.WriteLine("Error " + fdname + " disagrees with speed " + basespeed + " Currently " + ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Speed]).Value);
                             }
 
                             if (boostspeed != null && boostspeed.Value != ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Boost]).Value)
@@ -207,7 +200,7 @@ namespace EDDTest
                         }
                         else
                         {            // name found,
-                            if ( f == - 1 )
+                            if (f == -1)
                             {
                                 Console.WriteLine("Error FDNAME " + m.FDName + " not found in frontier data but Name is");
                             }
@@ -241,9 +234,9 @@ namespace EDDTest
 
                             if (cached == null)
                             {
-                                Console.WriteLine("+ AddCommodity" + (isinararare ? "Rare" : "") + "(\"" + ukname + "\", ItemType." + type.Replace(" ","") + ", \"" + fdname + "\");");
+                                Console.WriteLine("+ AddCommodity" + (isinararare ? "Rare" : "") + "(\"" + ukname + "\", ItemType." + type.Replace(" ", "") + ", \"" + fdname + "\");");
                             }
-                            else if (cached.Type.ToString() != type.Replace(" ",""))
+                            else if (cached.Type.ToString() != type.Replace(" ", ""))
                             {
                                 // excel has tobacco as are narcotic, but its a legal drug!!
                                 // this will produce errors until fixed
@@ -299,7 +292,7 @@ namespace EDDTest
                         else if (ItemData.noncorolismodules.ContainsKey(fdname.ToLowerInvariant()))
                             minfo = ItemData.noncorolismodules[fdname.ToLowerInvariant()];
 
-                        if ( minfo != null)
+                        if (minfo != null)
                         {
                             if (Math.Abs(minfo.Power - powerdraw) > 0.05)
                                 Console.WriteLine("Weapon " + fdname + " incorrect power draw " + minfo.Power + " vs " + powerdraw);
@@ -341,7 +334,7 @@ namespace EDDTest
                             else if (ItemData.noncorolismodules.ContainsKey(fdname.ToLowerInvariant()))
                                 minfo = ItemData.noncorolismodules[fdname.ToLowerInvariant()];
 
-                            if (minfo != null )
+                            if (minfo != null)
                             {
                                 if (Math.Abs(minfo.Power - powerdraw) > 0.05)
                                     Console.WriteLine("Module " + fdname + " incorrect power draw " + minfo.Power + " vs " + powerdraw);
@@ -381,6 +374,7 @@ namespace EDDTest
 
                         string nicename = fdname.Replace("hpt_", "").Replace("Hpt_", "").Replace("int_", "").Replace("Int_", "");
                         nicename = nicename.Replace("guardian", "Guardian", StringComparison.InvariantCultureIgnoreCase);
+                        nicename = nicename.Replace("gausscannon", "Gauss Cannon", StringComparison.InvariantCultureIgnoreCase);
                         nicename = nicename.Replace("fsdbooster", "FSD Booster ", StringComparison.InvariantCultureIgnoreCase);
                         nicename = nicename.Replace("powerdistributor", "Power Distributor ", StringComparison.InvariantCultureIgnoreCase);
                         nicename = nicename.Replace("plasmalauncher", "Plasma Launcher", StringComparison.InvariantCultureIgnoreCase);
@@ -434,11 +428,11 @@ namespace EDDTest
                         for (int i = 0; i < ic; i++)
                             ilist = ilist.AppendPrePad(count[i].ToStringInvariant() + mat[i].Shortname, ",");
 
-                        var techunlocks = Recipes.TechBrokerUnlocks;
+                        var techunlocks = Recipes.EngineeringRecipes;
                         var find = techunlocks.Find(x => x.IngredientsString.Replace(" ", "") == ilist);
                         if (find == null)
                         {
-                            Console.WriteLine("Missing tech broker new TechBrokerUnlockRecipe(\"" + nicename + "\",\"" + type + "\",\"" + ilist + "\")," + Environment.NewLine);
+                            Console.WriteLine("Missing tech broker new EngineeringRecipe(\"" + nicename + "\",\"" + type + "\",\"?\",\"" + ilist + "\")," + Environment.NewLine);
                         }
                     }
                 }
@@ -552,7 +546,7 @@ namespace EDDTest
 
                                 if (er != null)
                                 {
-                                    if ( er.IngredientsString.Replace(" ","") != ing )
+                                    if (er.IngredientsString.Replace(" ", "") != ing)
                                         Console.WriteLine("Engineering disagree on " + ukname + " F: " + ing + " Data: " + er.IngredientsString);
                                 }
                                 else
@@ -579,7 +573,6 @@ namespace EDDTest
                 if (filesd.Read(Path.Combine(rootpath, "SpecialData" + Version + ".csv"), FileShare.ReadWrite) && filemats.Read(Path.Combine(rootpath, "Materials.csv"), FileShare.ReadWrite))
                 {
                     Console.WriteLine("******************** Check Special Data");
-                    string ret = "";
 
                     foreach (CSVFile.Row rw in filesd.RowsExcludingHeaderRow)
                     {
@@ -590,7 +583,7 @@ namespace EDDTest
                         rw.SetPosition("X");
                         string modules = "";
                         string mn;
-                        while( (mn = rw.Next()).HasChars() )
+                        while ((mn = rw.Next()).HasChars())
                         {
                             modules = modules.AppendPrePad(mn.SplitCapsWord(), ",");
                         }
@@ -603,7 +596,7 @@ namespace EDDTest
 
                         rw.SetPosition("N");
 
-                        for( int i = 0; i < 5; i++ )
+                        for (int i = 0; i < 5; i++)
                         {
                             name[i] = rw.Next();
                             count[i] = rw.NextInt();
@@ -638,13 +631,13 @@ namespace EDDTest
                             }
                         }
 
-                        var sf = Recipes.SpecialEffects;
+                        var sf = Recipes.EngineeringRecipes;
                         var find = sf.Find(x => x.IngredientsString.Replace(" ", "") == ilist);
                         if (find == null)
                         {
-                            Console.WriteLine("Missing Special effects SpecialEffectRecipe(\"" + ukname + "\",\"" + modules + "\",\"" + ilist + "\")," + Environment.NewLine);
+                            Console.WriteLine("Missing Special effects EngineeringRecipe(\"" + ukname + "\",\"" + modules + "\",\"" + ilist + "\")," + Environment.NewLine);
                         }
-                   }
+                    }
 
                 }
                 else
@@ -652,7 +645,7 @@ namespace EDDTest
             }
 
             // Check MRs
-            
+
             {
                 string file = Path.Combine(rootpath, "OnFootAssest" + Version + ".csv");
                 CheckMR(file, MaterialCommodityMicroResourceType.CatType.Component);
@@ -672,7 +665,6 @@ namespace EDDTest
                 string file = Path.Combine(rootpath, "OnFootGoods" + Version + ".csv");
                 CheckMR(file, MaterialCommodityMicroResourceType.CatType.Item);
             }
-
 
             // SuitValues..
 
@@ -701,9 +693,9 @@ namespace EDDTest
                         string fdname = rw[0].ToLower();
                         string ukname = rw[1].Trim();
 
-                        if ( ItemData.weapons.TryGetValue(fdname,out ItemData.Weapon w))
+                        if (ItemData.weapons.TryGetValue(fdname, out ItemData.Weapon w))
                         {
-                            if ( !( ( w.Primary && rw[14]=="Primary") || (!w.Primary && rw[14] == "Secondary")))
+                            if (!((w.Primary && rw[14] == "Primary") || (!w.Primary && rw[14] == "Secondary")))
                             {
                                 Console.WriteLine("Error " + fdname + " Class type wrong");
                             }
@@ -724,18 +716,158 @@ namespace EDDTest
             }
 
 
+            // upgrade recipes
+            {
+                CSVFile upgrade = new CSVFile();
+
+                if (upgrade.Read(Path.Combine(rootpath, "UpgradeRecipes" + Version + ".csv"), FileShare.ReadWrite))
+                {
+                    Console.WriteLine("******************** Check Suit/Weapon Upgrades");
+
+                    foreach (CSVFile.Row rw in upgrade.RowsExcludingHeaderRow)
+                    {
+                        string type = rw[0].Trim();
+
+                        if (type.HasChars())
+                        {
+                            string manu = rw[1].Trim();
+                            string level = rw[2].Trim();
+
+                            int[] count = new int[10];
+                            MaterialCommodityMicroResourceType[] mat = new MaterialCommodityMicroResourceType[10];
+                            int ic = 0;
+
+                            while (true)
+                            {
+                                string ingfd = rw["D", ic * 2];
+
+                                if (ingfd.HasChars())
+                                {
+                                    ingfd = ingfd.Trim();
+                                    count[ic] = rw["E", ic * 2].InvariantParseInt(0);
+
+                                    mat[ic] = MaterialCommodityMicroResourceType.GetByName(ingfd);
+                                    if (mat[ic] == null)
+                                    {
+                                        Console.WriteLine("Material DB does not have " + ingfd);
+                                        break;
+                                    }
+                                    else if (!mat[ic].Shortname.HasChars())
+                                    {
+                                        Console.WriteLine("Material DB entry " + ingfd + " does not have a shortname for recipe " + type + ":" + manu + ":" + level);
+                                        break;
+                                    }
+
+                                    ic++;
+                                }
+                                else
+                                    break;
+                            }
+
+                            string ilist = "";
+                            for (int i = 0; i < ic; i++)
+                                ilist = ilist.AppendPrePad(count[i].ToStringInvariant() + mat[i].Shortname, ",");
+
+                            var sf = Recipes.EngineeringRecipes;
+                            var find = sf.Find(x => x.IngredientsString.Replace(" ", "") == ilist);
+                            if (find == null)
+                            {
+                                Console.WriteLine("Missing Upgrade new EngineeringRecipe(\"" + type + "\",\"" + manu + "\"," + level[6] + ",\"" + ilist +"\")," );
+                            }
+                        }
+
+                    }
+                }
+                else
+                    Console.WriteLine("No Upgrade Receipes suits/weapons CSV");
+
+                // engineering recipes for suits/weapons
+                {
+                    CSVFile engrec = new CSVFile();
+
+                    if (engrec.Read(Path.Combine(rootpath, "EngineeringRecipes" + Version + ".csv"), FileShare.ReadWrite))
+                    {
+                        Console.WriteLine("******************** Check Engineer Recp for suit/weapons Upgrades");
+
+                        foreach (CSVFile.Row rw in engrec.RowsExcludingHeaderRow)
+                        {
+                            string type = rw[0].Trim();
+
+                            if (type.HasChars())
+                            {
+                                string manu = rw[1].Trim();
+                                string modtext = rw["S"].Trim();
+                                string cost = rw[3].Trim();
+
+                                int[] count = new int[5];
+                                MaterialCommodityMicroResourceType[] mat = new MaterialCommodityMicroResourceType[10];
+                                int ic = 0;
+
+                                while (ic<count.Length)
+                                {
+                                    string ingfd = rw["E", ic * 2];
+
+                                    if (ingfd.HasChars())
+                                    {
+                                        ingfd = ingfd.Trim();
+                                        ingfd = ingfd.Replace("Surveilleance Logs", "Surveillance Logs");
+                                        ingfd = ingfd.Replace("Medical Trial Records", "Medical Records");
+                                        ingfd = ingfd.Replace("\xa0", " ");     // non breaking space found !! confusing
+
+                                        count[ic] = rw["F", ic * 2].InvariantParseInt(0);
+
+                                        mat[ic] = MaterialCommodityMicroResourceType.GetByName(ingfd);
+                                        if (mat[ic] == null)
+                                        {
+                                            Console.WriteLine("Material DB does not have " + ingfd);
+                                            break;
+                                        }
+                                        else if (!mat[ic].Shortname.HasChars())
+                                        {
+                                            Console.WriteLine("Material DB entry " + ingfd + " does not have a shortname for recipe " + type + ":" + manu );
+                                            break;
+                                        }
+
+                                        ic++;
+                                    }
+                                    else
+                                        break;
+                                }
+
+                                string ilist = "";
+                                for (int i = 0; i < ic; i++)
+                                    ilist = ilist.AppendPrePad(count[i].ToStringInvariant() + mat[i].Shortname, ",");
+
+                                var sf = Recipes.EngineeringRecipes;
+                                var find = sf.Find(x => x.IngredientsString.Replace(" ", "") == ilist);
+                                if (find == null)
+                                {
+                                    Console.WriteLine("Missing Eng Recp new EngineeringRecipe(\"" + type + "\",\"" + manu + "\",\"" + modtext + "\"," + 
+                                                cost.Replace(",","") + ",\"" + ilist + "\",\"Eng?\"),");
+                                }
+                            }
+
+                        }
+                    }
+                    else
+                        Console.WriteLine("No Upgrade Receipes suits/weapons CSV");
+
+                }
 
 
 
 
-            //if (de.Length > 0)
-            //{
-            //    File.WriteAllText(Path.Combine(rootpath, "mat-de.part.txt"), de, Encoding.UTF8);
-            //    File.WriteAllText(Path.Combine(rootpath, "mat-fr.part.txt"), fr, Encoding.UTF8);
-            //    File.WriteAllText(Path.Combine(rootpath, "mat-es.part.txt"), es, Encoding.UTF8);
-            //    File.WriteAllText(Path.Combine(rootpath, "mat-ru.part.txt"), ru, Encoding.UTF8);
-            //    File.WriteAllText(Path.Combine(rootpath, "mat-pr.part.txt"), pr, Encoding.UTF8);
-            //}
+
+
+                //if (de.Length > 0)
+                //{
+                //    File.WriteAllText(Path.Combine(rootpath, "mat-de.part.txt"), de, Encoding.UTF8);
+                //    File.WriteAllText(Path.Combine(rootpath, "mat-fr.part.txt"), fr, Encoding.UTF8);
+                //    File.WriteAllText(Path.Combine(rootpath, "mat-es.part.txt"), es, Encoding.UTF8);
+                //    File.WriteAllText(Path.Combine(rootpath, "mat-ru.part.txt"), ru, Encoding.UTF8);
+                //    File.WriteAllText(Path.Combine(rootpath, "mat-pr.part.txt"), pr, Encoding.UTF8);
+                //}
+            }
         }
 
         static void CheckMR(string file, MaterialCommodityMicroResourceType.CatType cattype )

@@ -24,10 +24,15 @@ namespace EliteDangerousCore
     [System.Diagnostics.DebuggerDisplay("Mat {Category} {Type} {MaterialGroup} {Name} {FDName} {Shortname}")]
     public class MaterialCommodityMicroResourceType
     {
-        public enum CatType { Commodity, Raw, Encoded, Manufactured,        // all
-                                Item, Component, Data, Consumable,          // odyssey 4.0
-                            };
-        public CatType Category { get; private set; }                // either Commodity, Encoded, Manufactured, Raw
+        public enum CatType
+        {
+            Commodity, Raw, Encoded, Manufactured,          // all
+            Item,                                           // odyssey 4.0.  Called goods in game
+            Component,                                      // odyssey 4.0.  Called assets in game
+            Data,                                           // odyssey 4.0.  
+            Consumable,                                     // odyssey 4.0. 
+        };
+        public CatType Category { get; private set; }               // see above
 
         public string TranslatedCategory { get; private set; }      // translation of above..
 
@@ -45,17 +50,17 @@ namespace EliteDangerousCore
         public ItemType Type { get; private set; }                  // and its type, for materials its commonality, for commodities its group ("Metals" etc), for microresources Unknown
         public string TranslatedType { get; private set; }          // translation of above..        
 
-        public enum MaterialGroupType
+        public enum MaterialGroupType                               // Material trader group type
         {
             NA,
             RawCategory1, RawCategory2, RawCategory3, RawCategory4, RawCategory5, RawCategory6, RawCategory7,
             EncodedEmissionData, EncodedWakeScans, EncodedShieldData, EncodedEncryptionFiles, EncodedDataArchives, EncodedFirmware,
             ManufacturedChemical, ManufacturedThermic, ManufacturedHeat, ManufacturedConductive, ManufacturedMechanicalComponents,
-                    ManufacturedCapacitors, ManufacturedShielding, ManufacturedComposite, ManufacturedCrystals, ManufacturedAlloys, 
+            ManufacturedCapacitors, ManufacturedShielding, ManufacturedComposite, ManufacturedCrystals, ManufacturedAlloys,
         };
 
         public MaterialGroupType MaterialGroup { get; private set; } // only for materials, grouping
-        public string TranslatedMaterialGroup { get; private set; } 
+        public string TranslatedMaterialGroup { get; private set; }
 
         public string Shortname { get; private set; }               // short abv. name
         public Color Colour { get; private set; }                   // colour if its associated with one
@@ -85,7 +90,7 @@ namespace EliteDangerousCore
                     || FDName.Contains("vanadium") || FDName.Contains("yttrium"));
             }
         }
-        
+
         // expects lower case
         static public bool IsJumponiumType(string fdname)
         {
@@ -249,7 +254,8 @@ namespace EliteDangerousCore
         public MaterialCommodityMicroResourceType(CatType cs, string n, string fd, ItemType t, MaterialGroupType mtg, string shortn, Color cl, bool rare)
         {
             Category = cs;
-            TranslatedCategory = Category.ToString().Tx(typeof(MaterialCommodityMicroResourceType));        // valid to pass this thru the Tx( system
+            TranslatedCategory = (Category ==CatType.Item) ? "Goods" : (Category==CatType.Component) ? "Assets" : Category.ToString();      // name is as the game does
+            TranslatedCategory = TranslatedCategory.Tx(typeof(MaterialCommodityMicroResourceType));        // valid to pass this thru the Tx( system
             Name = n;
             FDName = fd;
             Type = t;
@@ -284,15 +290,15 @@ namespace EliteDangerousCore
                 MaterialCommodityMicroResourceType mcdb = new MaterialCommodityMicroResourceType(cat, fdname.SplitCapsWordFull(), fdname, ItemType.Unknown, MaterialGroupType.NA, "", Color.Green, false);
                 mcdb.SetCache();
 
-                string shortnameguess = "MR"+cat.ToString()[0];
-                foreach(var c in locname)
+                string shortnameguess = "MR" + cat.ToString()[0];
+                foreach (var c in locname)
                 {
                     if (char.IsUpper(c))
                         shortnameguess += c;
                 }
 
                 System.Diagnostics.Debug.WriteLine("** Made MCMRType: {0},{1},{2},{3}", "?", fdname, cat.ToString(), locname);
-                System.Diagnostics.Debug.WriteLine("** AddMicroResource(CatType.{0},\"{1}\",\"{2}\",\"{3}\");" ,cat.ToString(), locname, fdname , shortnameguess);
+                System.Diagnostics.Debug.WriteLine("** AddMicroResource(CatType.{0},\"{1}\",\"{2}\",\"{3}\");", cat.ToString(), locname, fdname, shortnameguess);
             }
 
             return cachelist[fdname.ToLowerInvariant()];
@@ -456,7 +462,7 @@ namespace EliteDangerousCore
             AddEnc("Unusual Encrypted Files", ItemType.VeryCommon, MaterialGroupType.EncodedEncryptionFiles, "UEF", "encryptedfiles");
             AddEnc("Anomalous Bulk Scan Data", ItemType.VeryCommon, MaterialGroupType.EncodedDataArchives, "ABSD", "bulkscandata");
             AddEnc("Specialised Legacy Firmware", ItemType.VeryCommon, MaterialGroupType.EncodedFirmware, "SLF", "legacyfirmware");
-            
+
             // common data
             AddEnc("Irregular Emission Data", ItemType.Common, MaterialGroupType.EncodedEmissionData, "IED", "archivedemissiondata");
             AddEnc("Anomalous FSD Telemetry", ItemType.Common, MaterialGroupType.EncodedWakeScans, "AFT", "fsdtelemetry");
@@ -479,7 +485,7 @@ namespace EliteDangerousCore
             AddEnc("Eccentric Hyperspace Trajectories", ItemType.Rare, MaterialGroupType.EncodedWakeScans, "EHT", "hyperspacetrajectories");
             AddEnc("Aberrant Shield Pattern Analysis", ItemType.Rare, MaterialGroupType.EncodedShieldData, "ASPA", "shieldpatternanalysis");
             AddEnc("Atypical Encryption Archives", ItemType.Rare, MaterialGroupType.EncodedEncryptionFiles, "AEA", "encryptionarchives");
-            AddEnc("Divergent Scan Data", ItemType.Rare,  MaterialGroupType.EncodedDataArchives, "DSD", "encodedscandata");
+            AddEnc("Divergent Scan Data", ItemType.Rare, MaterialGroupType.EncodedDataArchives, "DSD", "encodedscandata");
             AddEnc("Security Firmware Patch", ItemType.Rare, MaterialGroupType.EncodedFirmware, "SFP", "securityfirmware");
 
             // very rare data
@@ -558,11 +564,11 @@ namespace EliteDangerousCore
 
             // Obelisk
 
-            AddEnc("Pattern Beta Obelisk Data", ItemType.Common, MaterialGroupType.NA, "PBOD", "ancientculturaldata");
-            AddEnc("Pattern Gamma Obelisk Data", ItemType.Common, MaterialGroupType.NA, "PGOD", "ancienthistoricaldata");
-            AddEnc("Pattern Alpha Obelisk Data", ItemType.Standard, MaterialGroupType.NA, "PAOD", "ancientbiologicaldata");
+            AddEnc("Pattern Alpha Obelisk Data", ItemType.Rare, MaterialGroupType.NA, "PAOD", "ancientbiologicaldata");
+            AddEnc("Pattern Beta Obelisk Data", ItemType.Rare, MaterialGroupType.NA, "PBOD", "ancientculturaldata");
+            AddEnc("Pattern Gamma Obelisk Data", ItemType.Rare, MaterialGroupType.NA, "PGOD", "ancienthistoricaldata");
             AddEnc("Pattern Delta Obelisk Data", ItemType.Rare, MaterialGroupType.NA, "PDOD", "ancientlanguagedata");
-            AddEnc("Pattern Epsilon Obelisk Data", ItemType.VeryRare, MaterialGroupType.NA, "PEOD", "ancienttechnologicaldata");
+            AddEnc("Pattern Epsilon Obelisk Data", ItemType.Rare, MaterialGroupType.NA, "PEOD", "ancienttechnologicaldata");
 
             // new to 3.1 frontier data
 
@@ -577,11 +583,11 @@ namespace EliteDangerousCore
             // new to 3.2 frontier data
             AddEnc("Guardian Vessel Blueprint Fragment", ItemType.VeryRare, MaterialGroupType.NA, "GMVB", "guardian_vesselblueprint");
             AddManu("Bio-Mechanical Conduits", ItemType.Standard, MaterialGroupType.NA, "BMC", "TG_BioMechanicalConduits");
-            AddManu("Propulsion Elements", ItemType.Standard, MaterialGroupType.NA, "PE", "TG_PropulsionElement");
-            AddManu("Weapon Parts", ItemType.Standard, MaterialGroupType.NA, "WP", "TG_WeaponParts");
+            AddManu("Propulsion Elements", ItemType.VeryRare, MaterialGroupType.NA, "PE", "TG_PropulsionElement");
+            AddManu("Weapon Parts", ItemType.Rare, MaterialGroupType.NA, "WP", "TG_WeaponParts");
             AddManu("Wreckage Components", ItemType.Standard, MaterialGroupType.NA, "WRC", "TG_WreckageComponents");
             AddEnc("Ship Flight Data", ItemType.Standard, MaterialGroupType.NA, "SFD", "TG_ShipFlightData");
-            AddEnc("Ship Systems Data", ItemType.Standard, MaterialGroupType.NA, "SSD", "TG_ShipSystemsData");
+            AddEnc("Ship Systems Data", ItemType.Rare, MaterialGroupType.NA, "SSD", "TG_ShipSystemsData");
 
             ItemType sv = ItemType.Salvage;
             AddCommodity("Thargoid Sensor", sv, "UnknownArtifact");
@@ -655,7 +661,7 @@ namespace EliteDangerousCore
 
             ItemType mt = ItemType.Metals;
             AddCommodityList("Aluminium;Beryllium;Bismuth;Cobalt;Copper;Gallium;Gold;Hafnium 178;Indium;Lanthanum;Lithium;Palladium;Platinum;Praseodymium;Samarium;Silver;Tantalum;Thallium;Thorium;Titanium;Uranium", mt);
-            AddCommoditySN("Osmium", mt,"OSM","osmium");
+            AddCommoditySN("Osmium", mt, "OSM", "osmium");
             AddCommodity("Platinum Alloy", mt, "PlatinumAloy");
 
             ItemType mi = ItemType.Minerals;
@@ -1028,9 +1034,9 @@ namespace EliteDangerousCore
             AddMicroResource(CatType.Component, "Ion Battery", "ionbattery", "MRCIB");
             AddMicroResource(CatType.Component, "Scrambler", "scrambler", "MRCS");
             AddMicroResource(CatType.Component, "Oxygenic Bacteria", "oxygenicbacteria", "MRCOXYBAC");
-            AddMicroResource(CatType.Component, "Epinephrine","Epinephrine", "MRCEPINE");
-            AddMicroResource(CatType.Component, "pH Neutraliser","pHNeutraliser", "MRCPHN");
-            AddMicroResource(CatType.Component, "Transmitter","Transmitter", "MRCTX");
+            AddMicroResource(CatType.Component, "Epinephrine", "Epinephrine", "MRCEPINE");
+            AddMicroResource(CatType.Component, "pH Neutraliser", "pHNeutraliser", "MRCPHN");
+            AddMicroResource(CatType.Component, "Transmitter", "Transmitter", "MRCTX");
 
             AddMicroResource(CatType.Data, "Chemical Inventory", "chemicalinventory", "MRDCI");
             AddMicroResource(CatType.Data, "Duty Rota", "dutyrota", "MRDDR");
@@ -1160,7 +1166,7 @@ namespace EliteDangerousCore
                 x.Name = BaseUtils.Translator.Instance.Translate(x.Name, "MaterialCommodityMicroResourceType." + x.FDName);
             }
 
-           // foreach (MaterialCommodityData d in cachelist.Values) System.Diagnostics.Debug.WriteLine(string.Format("{0},{1},{2},{3},{4},{5},{6}", d.Category, d.Type.ToString().SplitCapsWord(), d.MaterialGroup.ToString(), d.FDName, d.Name, d.Shortname, d.Rarity ));
+            // foreach (MaterialCommodityData d in cachelist.Values) System.Diagnostics.Debug.WriteLine(string.Format("{0},{1},{2},{3},{4},{5},{6}", d.Category, d.Type.ToString().SplitCapsWord(), d.MaterialGroup.ToString(), d.FDName, d.Name, d.Shortname, d.Rarity ));
         }
 
 

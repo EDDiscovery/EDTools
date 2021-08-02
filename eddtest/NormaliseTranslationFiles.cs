@@ -33,6 +33,9 @@ namespace EDDTest
             BaseUtils.Translator primary = BaseUtils.Translator.Instance;
             primary.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), loadorgenglish: true, loadfile: true);
 
+            if (options == null)
+                options = "";
+
             if (!primary.Translating)
             {
                 Console.WriteLine("Primary translation did not load " + language);
@@ -163,7 +166,7 @@ namespace EDDTest
                         }
                     }
 
-                    if (secondary.Translating && containsnonspacedigits)
+                    if (secondary.Translating && containsnonspacedigits && !options.Contains("NS"))
                         totalret += "Not defined by secondary: " + id + " in " + primary.GetOriginalFile(id) + ":" + primary.GetOriginalLine(id) + Environment.NewLine;
 
                     ret += " @";

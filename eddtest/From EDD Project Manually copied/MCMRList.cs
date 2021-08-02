@@ -77,6 +77,11 @@ namespace EliteDangerousCore
             return items.GetValues(gen);
         }
 
+        public Dictionary<string, MaterialCommodityMicroResource> GetDict(uint gen)
+        {
+            return items.Get(gen);
+        }
+
         public List<MaterialCommodityMicroResource> GetMaterialsSorted(uint gen)
         {
             var list = items.GetValues(gen, x => x.Details.IsMaterial);
@@ -88,7 +93,6 @@ namespace EliteDangerousCore
             var list = items.GetValues(gen, x => x.Details.IsCommodity);
             return list.OrderBy(x => x.Details.Type).ThenBy(x => x.Details.Name).ToList();
         }
-
 
         public List<MaterialCommodityMicroResource> GetMicroResourcesSorted(uint gen)
         {
@@ -109,24 +113,16 @@ namespace EliteDangerousCore
             return ret;
         }
 
-        static public int Count(List<MaterialCommodityMicroResource> list, params MaterialCommodityMicroResourceType.CatType [] cats)    // for all types of cat, if item matches or does not, count
+        static public int[] Count(List<MaterialCommodityMicroResource> list, int cn = 0)        // Counts of different types, array, use CatType to index it
         {
-            int total = 0;
+            System.Diagnostics.Debug.Assert(Enum.GetNames(typeof(MaterialCommodityMicroResourceType.CatType)).Length == 8);  // done purposely this way so only debug builds pay the price for getnames
+            int[] ret = new int[8];
             foreach (MaterialCommodityMicroResource c in list)
-            {
-                if ( Array.IndexOf<MaterialCommodityMicroResourceType.CatType>(cats, c.Details.Category) != -1 )
-                    total += c.Count;
-            }
-
-            return total;
+                ret[(int)c.Details.Category] += c.Counts[cn];
+            return ret;
         }
 
-        static public int DataCount(List<MaterialCommodityMicroResource> list) { return Count(list, MaterialCommodityMicroResourceType.CatType.Encoded); }
-        static public int MaterialsCount(List<MaterialCommodityMicroResource> list) { return Count(list, MaterialCommodityMicroResourceType.CatType.Raw, MaterialCommodityMicroResourceType.CatType.Manufactured); }
-        static public int CargoCount(List<MaterialCommodityMicroResource> list) { return Count(list, MaterialCommodityMicroResourceType.CatType.Commodity); }
-        static public int MicroResourcesCount(List<MaterialCommodityMicroResource> list) { return Count(list, MaterialCommodityMicroResourceType.CatType.Component, MaterialCommodityMicroResourceType.CatType.Consumable, MaterialCommodityMicroResourceType.CatType.Item, MaterialCommodityMicroResourceType.CatType.Data); }
-
-        public int CargoCount(uint gen) { return Count(Get(gen), MaterialCommodityMicroResourceType.CatType.Commodity); }
+        public int CargoCount(uint gen) { return Count(Get(gen))[(int)MaterialCommodityMicroResourceType.CatType.Commodity]; }
 
         // change entry 0
         public void Change(DateTime utc, string catname, string fdname, int num, long price, int cnum = 0, bool setit = false)        
@@ -178,8 +174,13 @@ namespace EliteDangerousCore
             for (int i = 0; i < counts.Length; i++)
             {
                 int newcount = set[i] ? counts[i] : Math.Max(mc.Counts[i] + counts[i], 0);       // don't let it go below zero if changing
-                changed |= newcount != mc.Counts[i];                        // have we changed? we are trying to minimise deltas to the gen dictionary, so don't add if nothing changed
-                mc.Counts[i] = newcount;
+                if (newcount != mc.Counts[i])
+                {
+                    changed = true;
+                  //  System.Diagnostics.Debug.WriteLine("MCMRLIST {0} Gen {1} Changed {2}:{3} Entry {4} {5} -> {6} {7}", utc.ToString(), items.Generation, mc.Details.Category, mc.Details.FDName, i, mc.Counts[i], newcount, mc.Counts[i]<newcount ? "+++" : "---");
+                 //   System.Diagnostics.Debug.WriteLine(Environment.StackTrace);
+                    mc.Counts[i] = newcount;
+                }
             }
 
             if (changed)                                                    // only store back a new entry if material change to counts
@@ -188,8 +189,6 @@ namespace EliteDangerousCore
                     mc.Price = (costprev + costofnew) / mc.Counts[0];       // price is now a combination of the current cost and the new cost. in case we buy in tranches
 
                 items[fdname] = mc;                                         // and set fdname to mc - this allows for any repeat adds due to frontier data repeating stuff in things like cargo
-
-                //System.Diagnostics.Debug.WriteLine("MCMRLIST {0} Changed {1} {2} {3} {4}", utc.ToString(), items.Generation, mc.Details.FDName, mc.Counts[0], mc.Counts[1]);
             }
             else
             {
@@ -241,6 +240,7 @@ namespace EliteDangerousCore
 
             int changed = 0;
 
+            //System.Diagnostics.Debug.WriteLine("Perform update for " + cat.ToString());
             foreach (var v in values)           
             {
                 varray[cnum] = v.Item2;                         // set cnum value
@@ -253,19 +253,20 @@ namespace EliteDangerousCore
 
             foreach( var c in curlist)                                          //go thru the non zero list of cat
             {
-                if ( values.Find(x=>x.Item1.Equals(c.Details.FDName,StringComparison.InvariantCultureIgnoreCase)) == null)       // if not in updated list
+                if ( values.Find(x=>x.Item1.Equals(c.Details.FDName,StringComparison.InvariantCultureIgnoreCase)) == null )       // if not in updated list
                 {
                     var mc = new MaterialCommodityMicroResource(c);     // clone it
                     mc.Counts[cnum] = 0;            // zero cnum
                     items[c.Details.FDName.ToLowerInvariant()] = mc;
-                    //System.Diagnostics.Debug.WriteLine("MCMRLIST {0} Found {1} not in update list, zeroing", utc.ToString(), mc.Details.FDName);
+                    //System.Diagnostics.Debug.WriteLine("MCMRLIST {0} Found {1}:{2} not in update list, zeroing", utc.ToString(), mc.Details.Category, mc.Details.FDName);
                     changed++;
                 }
             }
 
-            //System.Diagnostics.Debug.WriteLine("MCMRLIST {0} update changed {1}", utc.ToString(), changed);
+            //if (changed > 0) System.Diagnostics.Debug.WriteLine("MCMRLIST {0} {1} fixed {2}", utc.ToString() , cat, changed);
+
             return changed;
         }
 
-       }
+    }
 }

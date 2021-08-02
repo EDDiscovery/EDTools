@@ -484,6 +484,10 @@ namespace EDDTest
                         {
                             Console.WriteLine("Error " + fdname + " name '" + ukname + "' disagrees with '" + cached.Name + "'");
                         }
+                        else if ( (int)cached.Type +1 != rw[2].InvariantParseInt(-1))
+                        {
+                            Console.WriteLine("Error " + fdname + " name '" + ukname + "' rarity " + cached.Type + " disagrees with " + rarity);
+                        }
                     }
 
                     foreach (CSVFile.Row rw in filemats.RowsExcludingHeaderRow)
@@ -570,7 +574,7 @@ namespace EDDTest
                 CSVFile filesd = new CSVFile();
                 CSVFile filemats = new CSVFile();
 
-                if (filesd.Read(Path.Combine(rootpath, "SpecialData" + Version + ".csv"), FileShare.ReadWrite) && filemats.Read(Path.Combine(rootpath, "Materials.csv"), FileShare.ReadWrite))
+                if (filesd.Read(Path.Combine(rootpath, "SpecialData" + Version + ".csv"), FileShare.ReadWrite) && filemats.Read(Path.Combine(rootpath, "Materials" + Version + ".csv"), FileShare.ReadWrite))
                 {
                     Console.WriteLine("******************** Check Special Data");
 

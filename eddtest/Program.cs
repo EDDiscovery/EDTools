@@ -135,9 +135,10 @@ namespace EDDTest
                 if (primarypath == null || primarylanguage == null)
                 {
                     Console.WriteLine("Usage:\n" +
-                                        "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare] \n" +
+                                        "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare] [options]\n" +
                                         "Read the language-to-use and write out it into the same files cleanly\n" +
                                         "If secondary is present, read it, and use its definitions instead of the language-to-use\n" +
+                                        "Options: Use NS for don't report secondary\n" +
                                         "Write back out the tlf and tlp files to the current directory\n" +
                                         "Write out copy instructions to move those files back to their correct places\n" +
                                         "Example:\n" +

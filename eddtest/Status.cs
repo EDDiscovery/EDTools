@@ -379,7 +379,10 @@ namespace EDDTest
                 {
                     qj.V("Oxygen", oxygen);
                     qj.V("Health", health);
-                    qj.V("Temperature", temperature);
+                    if (temperature < 0)
+                        qj.Literal("\"Temperature\":nan");
+                    else
+                        qj.V("Temperature", temperature);
                     qj.V("SelectedWeapon", SelectedWeapon);
                     if (SelectedWeaponLoc.HasChars())
                         qj.V("SelectedWeapon_Localised", SelectedWeaponLoc);
@@ -422,7 +425,10 @@ namespace EDDTest
             string j = qj.Get();
             File.WriteAllText("Status.json", j);
             JToken jk = JToken.Parse(j);
-            DecodeJson("Status Write", jk);
+            if (jk != null)
+                DecodeJson("Status Write", jk);
+            else
+                Console.WriteLine("Bad JSON written");
         }
 
         static public void StatusRead(string file)

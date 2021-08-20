@@ -672,6 +672,58 @@ namespace EDDTest
 
             // SuitValues..
 
+            {
+                CSVFile csv = new CSVFile();
+
+                if (csv.Read(Path.Combine(rootpath, "On-FootSuitValues" + Version + ".csv"), FileShare.ReadWrite) )
+                {
+                    Console.WriteLine("******************** On Foot Suit Values");
+
+                    foreach (CSVFile.Row rw in csv.RowsExcludingHeaderRow)
+                    {
+                        string fdname = rw["A"].Trim().ToLower();
+                        int classno = fdname.Contains("class") ? (fdname.Last() - '0') : 0;
+                        string ukname = rw["B"].Trim();
+                        int primary = rw["O"].InvariantParseInt(0);
+                        int secondary = rw["P"].InvariantParseInt(0);
+                        string u1 = rw["Q"];
+                        string u2 = rw["R"];
+                        string u3 = rw["S"];
+                        if (u3 == "NA")
+                            u3 = "";
+                        double HK = rw["U"].InvariantParseDouble(0);
+                        double HV = rw["V"].InvariantParseDouble(0);
+                        double HP = rw["W"].InvariantParseDouble(0);
+                        double HX = rw["X"].InvariantParseDouble(0);
+                        double BSH = rw["Y"].InvariantParseDouble(0);
+                        double OM = rw["Z"].InvariantParseDouble(0);
+                        double sregen = rw["AA"].InvariantParseDouble(0);
+                        double SK = rw["AE"].InvariantParseDouble(0);
+                        double SV = rw["AF"].InvariantParseDouble(0);
+                        double SP = rw["AG"].InvariantParseDouble(0);
+                        double SX = rw["AH"].InvariantParseDouble(0);
+                        double EC = rw["AI"].InvariantParseDouble(0);
+                        int OT = rw["AJ"].InvariantParseInt(0);
+                        int I = rw["AQ"].InvariantParseInt(0);
+                        int C = rw["AR"].InvariantParseInt(0);
+                        int D = rw["AS"].InvariantParseInt(0);
+
+                        if (false)
+                        {
+                            Console.WriteLine($" {{ \"{fdname}\", new Suit( \"{ukname}\", {classno}, {primary}, {secondary}, \"{u1}\", \"{u2}\", \"{u3}\",\n" +
+                                          $"new SuitStats( {HK}, {HV}, {HP}, {HX}, // health kinetic, thermal, plasma, explosive\n" +
+                                          $"{SK}, {SV}, {SP}, {SX}, // shield kinetic, thermal, plasma, explosive\n" +
+                                          $"{sregen}, {BSH * OM:0.#}, // regen, shield health\n" +
+                                          $"{EC}, {OT}, {I},{C},{D} )) }}, // battery, oxygen, items, components, data\n");
+                        }
+                    }
+
+                }
+                else
+                    Console.WriteLine("No on foot suit values CSV");
+            }
+
+
             // ToolValues.. not in itemdata
 
             // WeaponValues
@@ -802,6 +854,7 @@ namespace EDDTest
                                 string manu = rw[1].Trim();
                                 string modtext = rw["S"].Trim();
                                 string cost = rw[3].Trim();
+                                string fdname = rw["O"].Trim();
 
                                 int[] count = new int[5];
                                 MaterialCommodityMicroResourceType[] mat = new MaterialCommodityMicroResourceType[10];
@@ -846,8 +899,14 @@ namespace EDDTest
                                 var find = sf.Find(x => x.IngredientsString.Replace(" ", "") == ilist);
                                 if (find == null)
                                 {
-                                    Console.WriteLine("Missing Eng Recp new EngineeringRecipe(\"" + type + "\",\"" + manu + "\",\"" + modtext + "\"," + 
-                                                cost.Replace(",","") + ",\"" + ilist + "\",\"Eng?\"),");
+                                    Console.WriteLine("        new EngineeringRecipe(\"" + type + "\",\"" + fdname.ToLower() + "\",\"" + manu + "\",\"" + modtext + "\"," +
+                                                cost.Replace(",", "") + ",\"" + ilist + "\",\"Eng?\"),");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("        new EngineeringRecipe(\"" + type + "\",\"" + fdname.ToLower() + "\",\"" + manu + "\",\"" + modtext + "\"," +
+                                                cost.Replace(",", "") + ",\"" + ilist + "\",\"" + find.engineersstring + "\"),");
+
                                 }
                             }
 

@@ -1308,7 +1308,8 @@ namespace EliteDangerousCore
             new EngineeringRecipe("Weapon","Takada","Higher Accuracy",500000,"10MRCMETALCOIL,5MRCOL,15MRCEW,5MRDRD,10MRDCOMBPERF","Yarden Bond,Terra Velasquez"),
             new EngineeringRecipe("Weapon","Takada","Greater Range",500000,"15MRCMICTRANS,5MRCOL,5MRCCB,10MRDSAL,15MRDRA","Domino Green,Wellington Beck"),
             new EngineeringRecipe("Weapon","Takada","Headshot damage",750000,"10MRCIB,5MRCOL,10MRCS,10MRDSAD,5MRDBIOD","Uma Laszlo"),
-            #endregion
+
+             #endregion
 
 
 

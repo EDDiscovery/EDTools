@@ -355,6 +355,20 @@ namespace EDDTest
 
                     qj.Close();
                 }
+                else if (eventtype.Equals("modulebuyandstore") && args.Left >= 2)
+                {
+                    string name = args.Next();
+                    int cost = args.Int();
+
+                    qj.Object().UTC("timestamp").V("event", "ModuleBuyAndStore");
+                    qj.V("BuyItem", name);
+                    qj.V("BuyItem_Localised", name + "Loc");
+                    qj.V("MarketID", 292929222);
+                    qj.V("BuyPrice", 4144);
+                    qj.V("Ship", "ferdelance");
+                    qj.V("ShipID", 35);
+                    qj.Close();
+                }
                 else if (eventtype.Equals("codexentry") && args.Left >= 4)
                 {
                     string name = args.Next();
@@ -782,8 +796,9 @@ namespace EDDTest
             s+=he("", "NavBeaconScan", eventtype);
             s+=he("", "Ring", eventtype);
             s+=he("Ships", "SellShipOnRebuy", eventtype);
-            s+=he("SRV", "LaunchSRV, DockSRV, SRVDestroyed", eventtype);
-            s+=he("Others", "SearchAndRescue fdname count", eventtype);
+            s += he("SRV", "LaunchSRV, DockSRV, SRVDestroyed", eventtype);
+            s += he("Modules", "ModuleBuyAndStore fdname price", eventtype);
+            s += he("Others", "SearchAndRescue fdname count", eventtype);
             s+=he("", "MiningRefined", eventtype);
             s+=he("", "Receivetext from channel msg", eventtype);
             s+=he("", "SentText to/channel msg", eventtype);

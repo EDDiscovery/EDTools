@@ -14,7 +14,7 @@
  * EDDiscovery is not affiliated with Frontier Developments plc.
  */
 
-using Newtonsoft.Json.Linq;
+using BaseUtils.JSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,14 +50,11 @@ namespace EDDTest
             JObject jo = new JObject();
             jo = JObject.Parse(json);
 
-            JToken first = jo.First;
-            JToken first1 = first.First;
-            JArray ja = (JArray)first1;
-            string pname = ja.Path;
+            JArray array = jo.First().Array();
 
             string returnstring = "";
 
-            foreach (JObject j in ja.Children())
+            foreach (JObject j in array )
             {
                 string betternameprefix = "";
                 string sym = (string)j["symbol"];

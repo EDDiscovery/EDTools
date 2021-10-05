@@ -14,7 +14,7 @@
  * EDDiscovery is not affiliated with Frontier Developments plc.
  */
 
-using Newtonsoft.Json.Linq;
+using BaseUtils.JSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,9 +30,9 @@ namespace EDDTest
 
             Dictionary<Tuple<string, int>, string> engresults = new Dictionary<Tuple<string, int>, string>();
 
-            foreach( var top in jo.Children() )
+            foreach( var top in jo )
             {
-                JObject inner = top.First as JObject;
+                JObject inner = top.Value.Object();
                 var blueprints = inner["blueprints"] as JObject;
 
                 foreach ( var b in blueprints)      // kvp
@@ -47,11 +47,11 @@ namespace EDDTest
                     {
                         //System.Diagnostics.Debug.WriteLine("Key " + g.Key + " value " + g.Value);
                         var engineers = g.Value["engineers"];
-                        foreach (var e in engineers.Children())
+                        foreach (var e in engineers)
                         {
-                            var eng = e.Value<string>();
+                            var eng = e.Str();
                             System.Diagnostics.Debug.WriteLine("B " + bname + " g:" + g.Key + " e:" + eng);
-                            var keyvp = new Tuple<string, int>(inner.Path + "-" + bname, g.Key.InvariantParseInt(0));
+                            var keyvp = new Tuple<string, int>(inner.Name + "-" + bname, g.Key.InvariantParseInt(0));
                             if ( engresults.ContainsKey(keyvp))
                             {
                                 engresults[keyvp] += "," + eng;

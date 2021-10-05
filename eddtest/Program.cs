@@ -37,8 +37,6 @@ namespace EDDTest
             if (arg1 == null )
             {
                 Console.WriteLine("Journal - write journal, run for help\n"+
-                                  "EDDBSTARS <filename> or EDDBPLANETS or EDDBSTARNAMES for the eddb dump\n" +
-                                  "EDSMSTARS <filename> read the main dump and analyse\n" +
                                   "Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
                                   "Voicerecon <filename> -  Consol read a elite bindings file and output action script lines\n" +
                                   "DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
@@ -221,22 +219,6 @@ namespace EDDTest
                     }
                 }
                 return;
-            }
-            else if (arg1.Equals("eddbstars"))
-            {
-                EDDB.EDDBLog(args.Next(), "\"Star\"", "\"spectral_class\"", "Star class ");
-            }
-            else if (arg1.Equals("eddbplanets"))
-            {
-                EDDB.EDDBLog(args.Next(), "\"Planet\"", "\"type_name\"", "Planet class");
-            }
-            else if (arg1.Equals("eddbstarnames"))
-            {
-                EDDB.EDDBLog(args.Next(), "\"Star\"", "\"name\"", "Star Name");
-            }
-            else if (arg1.Equals("edsmstars"))
-            {
-                EDSMStars.Process(args);
             }
             else if (arg1.Equals("voicerecon"))
             {

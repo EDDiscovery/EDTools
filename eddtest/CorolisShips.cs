@@ -14,7 +14,7 @@
  * EDDiscovery is not affiliated with Frontier Developments plc.
  */
 
-using Newtonsoft.Json.Linq;
+using BaseUtils.JSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -72,8 +72,8 @@ namespace EDDTest
                 JObject jo = new JObject();
                 jo = JObject.Parse(json);
 
-                JToken first = jo.First;        // ship name
-                string name = first.Path;
+                JObject first = jo.First().Object(); 
+                string name = first.Name;       
                 string fdshipname = null;
 
                 foreach (Tuple<string, string> t in SHIP_FD_NAME_TO_CORIOLIS_NAME)
@@ -91,7 +91,7 @@ namespace EDDTest
                     return "";
                 }
 
-                JObject second = (JObject)first.First;
+                JObject second = first;
 
                 JToken bulk = second["bulkheads"];
 
@@ -106,7 +106,7 @@ namespace EDDTest
                 int index = 0;
                 string[] names = { "Grade1", "Grade2", "Grade3", "Mirrored", "Reactive" };
                 string[] fullnames = { "Lightweight", "Reinforced", "Military", "Mirrored Surface Composite", "Reactive Surface Composite" };
-                foreach (JObject j in bulk.Children())
+                foreach (JObject j in bulk)
                 {
                     int edid = (int)j["edID"];
                     double mass = (double)j["mass"];
@@ -127,10 +127,10 @@ namespace EDDTest
                 returnstring += "            { ShipPropID.HullMass, new ShipInfoDouble(" + ((double)prop["hullMass"]) + "F)}," + Environment.NewLine;
                 returnstring += "            { ShipPropID.Name, new ShipInfoString(\"" + ((string)prop["name"]) + "\")}," + Environment.NewLine;
                 returnstring += "            { ShipPropID.Manu, new ShipInfoString(\"" + ((string)prop["manufacturer"]) + "\")}," + Environment.NewLine;
-                returnstring += "            { ShipPropID.Speed, new ShipInfoInt(" + ((string)prop["speed"]) + ")}," + Environment.NewLine;
-                returnstring += "            { ShipPropID.Boost, new ShipInfoInt(" + ((string)prop["boost"]) + ")}," + Environment.NewLine;
-                returnstring += "            { ShipPropID.HullCost, new ShipInfoInt(" + ((string)prop["hullCost"]) + ")}," + Environment.NewLine;
-                returnstring += "            { ShipPropID.Class, new ShipInfoInt(" + ((string)prop["class"]) + ")}," + Environment.NewLine;
+                returnstring += "            { ShipPropID.Speed, new ShipInfoInt(" + ((double)prop["speed"]) + ")}," + Environment.NewLine;
+                returnstring += "            { ShipPropID.Boost, new ShipInfoInt(" + ((double)prop["boost"]) + ")}," + Environment.NewLine;
+                returnstring += "            { ShipPropID.HullCost, new ShipInfoInt(" + ((int)prop["hullCost"]) + ")}," + Environment.NewLine;
+                returnstring += "            { ShipPropID.Class, new ShipInfoInt(" + ((int)prop["class"]) + ")}," + Environment.NewLine;
 
                 returnstring += "        };" + Environment.NewLine;
             }

@@ -708,14 +708,14 @@ namespace EDDTest
                         int C = rw["AR"].InvariantParseInt(0);
                         int D = rw["AS"].InvariantParseInt(0);
 
-                        if (false)
-                        {
-                            Console.WriteLine($" {{ \"{fdname}\", new Suit( \"{ukname}\", {classno}, {primary}, {secondary}, \"{u1}\", \"{u2}\", \"{u3}\",\n" +
-                                          $"new SuitStats( {HK}, {HV}, {HP}, {HX}, // health kinetic, thermal, plasma, explosive\n" +
-                                          $"{SK}, {SV}, {SP}, {SX}, // shield kinetic, thermal, plasma, explosive\n" +
-                                          $"{sregen}, {BSH * OM:0.#}, // regen, shield health\n" +
-                                          $"{EC}, {OT}, {I},{C},{D} )) }}, // battery, oxygen, items, components, data\n");
-                        }
+                        //if (false)
+                        //{
+                        //    Console.WriteLine($" {{ \"{fdname}\", new Suit( \"{ukname}\", {classno}, {primary}, {secondary}, \"{u1}\", \"{u2}\", \"{u3}\",\n" +
+                        //                  $"new SuitStats( {HK}, {HV}, {HP}, {HX}, // health kinetic, thermal, plasma, explosive\n" +
+                        //                  $"{SK}, {SV}, {SP}, {SX}, // shield kinetic, thermal, plasma, explosive\n" +
+                        //                  $"{sregen}, {BSH * OM:0.#}, // regen, shield health\n" +
+                        //                  $"{EC}, {OT}, {I},{C},{D} )) }}, // battery, oxygen, items, components, data\n");
+                        //}
                     }
 
                 }

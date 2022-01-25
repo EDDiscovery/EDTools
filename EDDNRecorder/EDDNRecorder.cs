@@ -15,18 +15,22 @@ using System.Windows.Forms;
 using System.Runtime.Serialization.Json;
 using System.Threading;
 using System.Runtime.InteropServices;
+using BaseUtils.JSON;
 
 namespace EDDNRecorder
 {
     public partial class EDDNRecorder : Form
     {
-
         private string appdatapath;
+        private bool beta = false;
 
         public EDDNRecorder()
         {
             InitializeComponent();
             appdatapath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EDDNRecorder");
+
+            checkBoxFollow.Checked = true;
+            checkBoxWrapBody.Checked = false;
 
             if (!Directory.Exists(appdatapath))
                 Directory.CreateDirectory(appdatapath);
@@ -34,23 +38,28 @@ namespace EDDNRecorder
 
         Thread opthread = null;
 
-        private void button1_Click(object sender, EventArgs e)
+        private void buttonLive_Click(object sender, EventArgs e)
         {
             opthread = new Thread(GetEDDNData);
             opthread.Start();
+            buttonLive.Enabled = buttonBeta.Enabled = false;
+        }
+
+        private void buttonBeta_Click(object sender, EventArgs e)
+        {
+            beta = true;
+            opthread = new Thread(GetEDDNData);
+            opthread.Start();
+            buttonLive.Enabled = buttonBeta.Enabled = false;
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
             base.OnClosing(e);
             CloseThread = true;
-            opthread.Join();
+            if ( opthread != null )
+                opthread.Join();
         }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
-        private const int WM_VSCROLL = 277;
-        private const int SB_PAGEBOTTOM = 7;
 
         private bool CloseThread = false;
 
@@ -63,7 +72,15 @@ namespace EDDNRecorder
                 {
                     using (var subscriber = ctx.CreateSubscriberSocket())
                     {
-                        subscriber.Connect("tcp://eddn.edcd.io:9500");
+                        string endpoint = beta ? "tcp://beta.eddn.edcd.io:9510" : "tcp://eddn.edcd.io:9500";
+                        BeginInvoke((MethodInvoker)delegate
+                        {
+                            dgv.Rows.Add(new object[] { "", "","","","", endpoint });
+                        });
+
+                        file.WriteLine($"Listening to {endpoint}");
+
+                        subscriber.Connect(endpoint);
                         subscriber.Subscribe(Encoding.Unicode.GetBytes(string.Empty));
 
                         System.Diagnostics.Debug.WriteLine("Connected");
@@ -100,25 +117,32 @@ namespace EDDNRecorder
                                 var myStr = sr.ReadToEnd();
 
                                 file.WriteLine(myStr);
-                                BeginInvoke((MethodInvoker)delegate 
-                                    {
-                                        richTextBox1.AppendText(myStr.Substring(0, 400) + Environment.NewLine);
-                                        SendMessage(richTextBox1.Handle, WM_VSCROLL, (IntPtr)SB_PAGEBOTTOM, IntPtr.Zero);
-                                      
 
+                                JToken tk = JToken.Parse(myStr, JToken.ParseOptions.CheckEOL);
+                                if( tk != null )
+                                {
+                                    string schema = tk["$schemaRef"].Str().ReplaceIfStartsWith("https://eddn.edcd.io/schemas/");
+                                    JObject header = tk["header"].Object();
+                                    JObject message = tk["message"].Object();
+
+                                    object[] rowt = { header["gatewayTimestamp"].Str(), schema, header["softwareName"].Str(), header["softwareVersion"].Str()
+                                                            , header["uploaderID"].Str(), message.ToString() };
+
+                                    BeginInvoke((MethodInvoker)delegate
+                                    {
+                                        dgv.Rows.Add(rowt);
+                                        var row = dgv.Rows[dgv.Rows.Count - 1];
+                                        if (checkBoxFollow.Checked )
+                                            dgv.CurrentCell = row.Cells[0];
+                                        if (checkBoxWrapBody.Checked)
+                                        {
+                                            row.Cells[5].Style.WrapMode = DataGridViewTriState.True;
+                                            dgv.AutoResizeRow(row.Index, DataGridViewAutoSizeRowMode.AllCells);
+                                        }
                                     });
-                                //richTextBox1.Select(richTextBox1.Text.Length, richTextBox1.Text.Length);
+                                }
+
                                 decompressedFileStream.Position = 0;
-                                //var serializer = new DataContractJsonSerializer(typeof(EddnRequest));
-                                //var rootObject = (EddnRequest)serializer.ReadObject(decompressedFileStream);
-                                //var message = rootObject.Message;
-                                /*                    Log.Debug(rootObject.SchemaRef);
-                                                    Log.DebugFormat(
-                                                        "Station: {0}, Item: {1}, BuyPrice: {2}",
-                                                        message.StationName,
-                                                        message.ItemName,
-                                                        message.BuyPrice);
-                                                        */
                                 decompressedFileStream.Close();
                             }
                         }
@@ -126,5 +150,11 @@ namespace EDDNRecorder
                 }
             }
         }
+
+        private void checkBoxWrapBody_CheckedChanged(object sender, EventArgs e)
+        {
+            //Column6.DefaultCellStyle.WrapMode = checkBoxWrapBody.Checked ? DataGridViewTriState.True : DataGridViewTriState.False;
+        }
+
     }
 }

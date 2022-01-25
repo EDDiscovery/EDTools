@@ -434,6 +434,10 @@ namespace EDDTest
                         {
                             Console.WriteLine("Missing tech broker new EngineeringRecipe(\"" + nicename + "\",\"" + type + "\",\"?\",\"" + ilist + "\")," + Environment.NewLine);
                         }
+                        else
+                        {
+                            Console.WriteLine($"Tech Broker {fdname},{find.engineersstring}");
+                        }
                     }
                 }
                 else
@@ -552,6 +556,8 @@ namespace EDDTest
                                 {
                                     if (er.IngredientsString.Replace(" ", "") != ing)
                                         Console.WriteLine("Engineering disagree on " + ukname + " F: " + ing + " Data: " + er.IngredientsString);
+
+                                    Console.WriteLine($"RecipeData: {fdname},{level},{er.engineersstring}");
                                 }
                                 else
                                     Console.WriteLine("Engineering missing new EngineeringRecipe(\"" + ukname + "\", \"" + ing + "\", \"" + cat + "\", \"" + level.Value.ToString() + "\", \"" + engnames + "\" ),");
@@ -640,6 +646,10 @@ namespace EDDTest
                         if (find == null)
                         {
                             Console.WriteLine("Missing Special effects EngineeringRecipe(\"" + ukname + "\",\"" + modules + "\",\"" + ilist + "\")," + Environment.NewLine);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Special Data: {fdname},{find.engineersstring}");
                         }
                     }
 
@@ -840,6 +850,7 @@ namespace EDDTest
                 // engineering recipes for suits/weapons
                 {
                     CSVFile engrec = new CSVFile();
+
 
                     if (engrec.Read(Path.Combine(rootpath, "EngineeringRecipes" + Version + ".csv"), FileShare.ReadWrite))
                     {

@@ -63,7 +63,9 @@ namespace EDDTest
                                   "readlog file - read a continuous log or journal file out to stdout\n" +
                                   "githubrelease - read the releases list and stat it\n" +
                                   "logs wildcard - read files for json lines and process\n" +
-                                  "readjournals path - read all .log journal files and check\n"
+                                  "readjournals path - read all .log journal files and check\n" +
+                                  "csvtocs path - read csv and turn into a cs class\n"+
+                                  "comments path"
                                   );
 
                 return;
@@ -122,6 +124,53 @@ namespace EDDTest
 
                 return;
             }
+            else if (arg1.Equals("xmltomd"))
+            {
+                // eddtest xmltomd . *.md OpenTK.Graphics.OpenGL c:\code\ofc\ofc\docexternlinks.txt opengl
+
+                string path = args.Next();
+                string wildcard = args.Next();
+                string typename = args.Next();
+                string existingfile = args.Next();
+                string searchstr = args.Next();
+
+                if (path != null && wildcard != null && typename != null)
+                {
+                    FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                    MDDoc.Process(allFiles, typename, existingfile, searchstr);
+                }
+                else
+                {
+                    Console.WriteLine("Usage:\n" + ""
+                             );
+                }
+
+                return;
+            }
+
+            else if (arg1.Equals("inserttext"))
+            {
+                string path = args.Next();
+                string wildcard = args.Next();
+                string find = args.Next();
+                string insert = args.Next();
+
+                if (path != null && wildcard != null && find != null && insert != null )
+                {
+                    FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                    MDDoc.ProcessInsert(allFiles, find, insert);
+                }
+                else
+                {
+                    Console.WriteLine("Usage:\n" + ""
+                             );
+                }
+
+                return;
+            }
+
             else if (arg1.Equals("normalisetranslate"))
             {
                 string primarypath = args.Next();
@@ -272,7 +321,7 @@ namespace EDDTest
                 EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
                 FrontierData.Process(args.Next());
             }
-            else if(arg1.Equals("readjournals"))
+            else if (arg1.Equals("readjournals"))
             {
                 JournalReader.ReadJournals(args.Next());
             }
@@ -328,7 +377,7 @@ namespace EDDTest
                     Console.WriteLine("Failed " + ex.Message);
                 }
             }
-            else if (arg1.Equals("json") )
+            else if (arg1.Equals("json"))
             {
                 string path = args.Next();
                 try
@@ -370,7 +419,7 @@ namespace EDDTest
                 long lineno = 0;
 
 
-                if ( Path.GetFileName(filename).Contains("*"))
+                if (Path.GetFileName(filename).Contains("*"))
                 {
                     string dir = Path.GetDirectoryName(filename);
                     if (dir == "")
@@ -490,7 +539,7 @@ namespace EDDTest
                 "The Abyss",
                 "Kepler's Crest",
                 "The Void", };
-        
+
 
                 QuickJSONFormatter qjs = new QuickJSONFormatter();
                 qjs.Array(null).LF();
@@ -502,16 +551,16 @@ namespace EDDTest
                     {
                         foreach (XAttribute y in x.Attributes())
                         {
-                            if ( x.Name.LocalName == "path" && y.Name.LocalName == "d")
+                            if (x.Name.LocalName == "path" && y.Name.LocalName == "d")
                             {
                                 //Console.WriteLine(x.Name.LocalName + " attr " + y.Name + " = " + y.Value);
                                 var points = BaseUtils.SVG.ReadSVGPath(y.Value);
 
-                                qjs.Object().V("id", id).V("type", "region").V("name", names[id] );
+                                qjs.Object().V("id", id).V("type", "region").V("name", names[id]);
                                 qjs.Array("coordinates");
                                 foreach (var p in points)
                                 {
-                                    qjs.Array(null).V(null, p.X*100000.0/2048.0-49985).V(null, 0).V(null, p.Y*100000.0/2048.0-24105).Close();
+                                    qjs.Array(null).V(null, p.X * 100000.0 / 2048.0 - 49985).V(null, 0).V(null, p.Y * 100000.0 / 2048.0 - 24105).Close();
                                 }
                                 qjs.Close().Close().LF();
                                 id++;
@@ -532,7 +581,7 @@ namespace EDDTest
 
                 Dictionary<string, string> signals = new Dictionary<string, string>();
 
-                foreach( var f in allFiles)
+                foreach (var f in allFiles)
                 {
                     string text = FileHelpers.TryReadAllTextFromFile(f.FullName);
                     if (text != null)
@@ -542,11 +591,11 @@ namespace EDDTest
                         while ((line = sr.ReadLine()) != null)
                         {
                             JToken tk = JToken.Parse(line);
-                            if ( tk != null)
+                            if (tk != null)
                             {
                                 var sn = tk["SignalName"];
-                              //  Console.WriteLine("Read " + tk.ToString());
-                                if ( sn != null)
+                                //  Console.WriteLine("Read " + tk.ToString());
+                                if (sn != null)
                                 {
                                     string str = tk["SignalName"].Str();
                                     string strl = tk["SignalName_Localised"].Str();
@@ -576,9 +625,39 @@ namespace EDDTest
                 Console.WriteLine("***************************** ID list");
                 foreach (string v in signals.Keys)
                 {
-                    if ( signals[v] != "STATION" && signals[v].HasChars() )
+                    if (signals[v] != "STATION" && signals[v].HasChars())
                         Console.WriteLine("{0} {1}", v, signals[v]);
                 }
+            }
+            else if (arg1.Equals("csvtocs"))
+            {
+                string filename = args.Next();
+                string precode = args.Next();
+                CSVFile reader = new CSVFile();
+
+                if ( reader.Read(filename,FileShare.Read,true))
+                {
+                    foreach( var row in reader.Rows)
+                    {
+                        string line = "";
+                        foreach( var cell in row.Cells)
+                        {
+                            if (cell.InvariantParseDoubleNull() != null || cell.InvariantParseLongNull() != null)
+                            {
+                                line = line.AppendPrePad(cell, ",");
+                            }
+                            else
+                            {
+                                string celln = cell.Replace("_Name;", "");
+
+                                line = line.AppendPrePad(celln.AlwaysQuoteString(), ",");
+                            }
+                        }
+
+                        Console.WriteLine($"    {precode}({line}),");
+                    }
+                }
+
             }
             else
             {

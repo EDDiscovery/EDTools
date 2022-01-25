@@ -644,6 +644,26 @@ namespace EDDTest
                             .Close();
 
                 }
+                else if (eventtype.Equals("scanorganic") && args.Left >= 4)
+                {
+                    string st = args.Next();
+                    if (st == "Log" || st == "Sample" || st == "Analyse")
+                    {
+                        string genus = args.Next();
+                        string species = args.Next();
+                        int body = args.Int();
+
+                        qj.Object().UTC("timestamp").V("event", "ScanOrganic");
+                        qj.V("ScanType", st);
+                        qj.V("Genus", genus);
+                        qj.V("Genus_Localised",  genus.Replace("$Codex_Ent_", "").Replace("_Genus_Name;", ""));
+                        qj.V("Species", species);
+                        qj.V("Species_Localised", species.Replace("$Codex_Ent_","").Replace("_Name;",""));
+                        qj.V("SystemAddress", 1416164883666);
+                        qj.V("Body", body);
+                        qj.Close();
+                    }
+                }
                 else if (eventtype.Equals("event") && args.Left >= 1)   // give it raw json from "event":"wwkwk" onwards, without } at end
                 {
                     string file = args.Next();
@@ -819,8 +839,9 @@ namespace EDDTest
             s+=he("", "saasignalsfound bodyname", eventtype);
             s+=he("", "asteroidcracked name", eventtype);
             s+=he("", "multisellexplorationdata", eventtype);
-            s+=he("", "propectedasteroid", eventtype);
-            s+=he("", "replenishedreservoir main reserve", eventtype);
+            s += he("", "propectedasteroid", eventtype);
+            s += he("", "scanorganic scantype (Log/Sample/Analyse) genus species bodyid" , eventtype);
+            s += he("", "reservoirreplenished main reserve", eventtype);
             s+=he("", "*Squadrons* name", eventtype);
             s+=he("", "screenshot inputfile outputfolder [NOJR]", eventtype);
             return s;

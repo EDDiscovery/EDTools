@@ -217,6 +217,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Bindings.cs" />
+    <Compile Include="MDDoc.cs" />
     <Compile Include="wikiconvert.cs" />
     <Compile Include="NormaliseTranslationFiles.cs" />
     <Compile Include="ScanTranslate.cs" />

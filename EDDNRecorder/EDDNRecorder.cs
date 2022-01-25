@@ -78,62 +78,61 @@ namespace EDDNRecorder
                     while (!CloseThread)
                     {
                         byte[] response;
+                        bool rxed = false;
                         try
                         {
-                            response = subscriber.ReceiveFrameBytes();
+                            rxed = subscriber.TryReceiveFrameBytes(new TimeSpan(0, 0, 1), out response);
                         }
                         catch (NetMQException)
                         {
                             return;
                         }
 
-                        System.Diagnostics.Debug.WriteLine("Received");
-
-                        var decompressedFileStream = new MemoryStream();
-                        using (decompressedFileStream)
+                        if (rxed)
                         {
-                            var stream = new MemoryStream(response);
+                            System.Diagnostics.Debug.WriteLine("Received");
 
-                            // Don't forget to ignore the first two bytes of the stream (!)
-                            stream.ReadByte();
-                            stream.ReadByte();
-                            using (var decompressionStream = new DeflateStream(stream, CompressionMode.Decompress))
+                            var decompressedFileStream = new MemoryStream();
+                            using (decompressedFileStream)
                             {
-                                decompressionStream.CopyTo(decompressedFileStream);
-                            }
+                                var stream = new MemoryStream(response);
 
-                            decompressedFileStream.Position = 0;
-                            var sr = new StreamReader(decompressedFileStream);
-                            var myStr = sr.ReadToEnd();
-
-                            file.WriteLine(myStr);
-
-                            JToken tk = JToken.Parse(myStr, JToken.ParseOptions.CheckEOL);
-                            if( tk != null )
-                            {
-                                string schema = tk["$schemaRef"].Str().ReplaceIfStartsWith("https://eddn.edcd.io/schemas/");
-                                JObject header = tk["header"].Object();
-                                JObject message = tk["message"].Object();
-
-                                object[] rowt = { header["gatewayTimestamp"].Str(), schema, header["softwareName"].Str(), header["softwareVersion"].Str()
-                                                        , header["uploaderID"].Str(), message.ToString() };
-
-                                BeginInvoke((MethodInvoker)delegate
+                                // Don't forget to ignore the first two bytes of the stream (!)
+                                stream.ReadByte();
+                                stream.ReadByte();
+                                using (var decompressionStream = new DeflateStream(stream, CompressionMode.Decompress))
                                 {
-                                    dgv.Rows.Add(rowt);
-                                    var row = dgv.Rows[dgv.Rows.Count - 1];
-                                    if (checkBoxFollow.Checked )
-                                        dgv.CurrentCell = row.Cells[0];
-                                    if (checkBoxWrapBody.Checked)
-                                    {
-                                        row.Cells[5].Style.WrapMode = DataGridViewTriState.True;
-                                        dgv.AutoResizeRow(row.Index, DataGridViewAutoSizeRowMode.AllCells);
-                                    }
-                                });
-                            }
+                                    decompressionStream.CopyTo(decompressedFileStream);
+                                }
 
-                            decompressedFileStream.Position = 0;
-                            decompressedFileStream.Close();
+                                decompressedFileStream.Position = 0;
+                                var sr = new StreamReader(decompressedFileStream);
+                                var myStr = sr.ReadToEnd();
+
+                                file.WriteLine(myStr);
+
+                                JToken tk = JToken.Parse(myStr, JToken.ParseOptions.CheckEOL);
+                                if (tk != null)
+                                {
+                                    string schema = tk["$schemaRef"].Str().ReplaceIfStartsWith("https://eddn.edcd.io/schemas/");
+                                    JObject header = tk["header"].Object();
+                                    JObject message = tk["message"].Object();
+
+                                    object[] rowt = { header["gatewayTimestamp"].Str(), schema, header["softwareName"].Str(), header["softwareVersion"].Str()
+                                                            , header["uploaderID"].Str(), JToken.ToString(message,"", " ","",false) };
+
+                                    BeginInvoke((MethodInvoker)delegate
+                                    {
+                                        dgv.Rows.Add(rowt);
+                                        var row = dgv.Rows[dgv.Rows.Count - 1];
+                                        if (checkBoxFollow.Checked)
+                                            dgv.CurrentCell = row.Cells[0];
+                                    });
+                                }
+
+                                decompressedFileStream.Position = 0;
+                                decompressedFileStream.Close();
+                            }
                         }
                     }
                 }
@@ -143,6 +142,8 @@ namespace EDDNRecorder
         private void checkBoxWrapBody_CheckedChanged(object sender, EventArgs e)
         {
             //Column6.DefaultCellStyle.WrapMode = checkBoxWrapBody.Checked ? DataGridViewTriState.True : DataGridViewTriState.False;
+            dgv.DefaultCellStyle.WrapMode = checkBoxWrapBody.Checked ? DataGridViewTriState.True : DataGridViewTriState.False;
+            dgv.AutoSizeRowsMode = checkBoxWrapBody.Checked ? DataGridViewAutoSizeRowsMode.DisplayedCells : DataGridViewAutoSizeRowsMode.None;
         }
 
     }

@@ -18,6 +18,7 @@ using BaseUtils;
 using BaseUtils.JSON;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -52,7 +53,7 @@ namespace EDDTest
                                   "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
                                   "normalisetranslate- process language files and normalise, run to see options\n" +
                                   "journalindented file - read lines from file in journal format and output indented\n" +
-                                  "jsonindented/jsoncompressed file - read a json on a single line from the file and output\n" +
+                                  "jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
                                   "json - read a json from file and output indented\n" +
                                   "escapestring - read a json from file and output text with quotes escaped for c# source files\n" +
                                   "@string - read a json from file and output text for @ strings\n" +
@@ -65,7 +66,11 @@ namespace EDDTest
                                   "logs wildcard - read files for json lines and process\n" +
                                   "readjournals path - read all .log journal files and check\n" +
                                   "csvtocs path - read csv and turn into a cs class\n"+
-                                  "comments path"
+                                  "comments path\n" +
+                                  "mddoc path wildcard [REMOVE]\n" +
+                                  "finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
+                                  "insertext path wildcard find insert\n" 
+
                                   );
 
                 return;
@@ -124,9 +129,10 @@ namespace EDDTest
 
                 return;
             }
-            else if (arg1.Equals("xmltomd"))
+            else if (arg1.Equals("finddoclinks"))
             {
-                // eddtest xmltomd . *.md OpenTK.Graphics.OpenGL c:\code\ofc\ofc\docexternlinks.txt opengl
+                // used to search the md files from default documentation for links to external objects
+                // paras: . *.md OpenTK.Graphics.OpenGL c:\code\ofc\ofc\docexternlinks.txt opengl
 
                 string path = args.Next();
                 string wildcard = args.Next();
@@ -148,9 +154,30 @@ namespace EDDTest
 
                 return;
             }
+            else if (arg1.Equals("mddoc"))
+            {
+                string path = args.Next();
+                string wildcard = args.Next();
+                bool removerootnamespace = args.NextEmpty().Contains("REMOVE",StringComparison.InvariantCultureIgnoreCase);
+
+                if (path != null && wildcard != null )
+                {
+                    FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                    MDDoc.PostProcessMD(allFiles, removerootnamespace);
+                }
+                else
+                {
+                    Console.WriteLine("Usage:\n" + ""
+                             );
+                }
+
+                return;
+            }
 
             else if (arg1.Equals("inserttext"))
             {
+                // find lext in string, if found, insert line
                 string path = args.Next();
                 string wildcard = args.Next();
                 string find = args.Next();
@@ -352,7 +379,7 @@ namespace EDDTest
                 }
 
             }
-            else if (arg1.Equals("jsonindented") || arg1.Equals("jsoncompressed"))
+            else if (arg1.Equals("jsonlines") || arg1.Equals("jsonlinescompressed"))
             {
                 bool indent = arg1.Equals("jsonindented");
 
@@ -366,8 +393,11 @@ namespace EDDTest
                         string line;
                         while ((line = sr.ReadLine()) != null && (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape))
                         {
-                            JToken tk = JToken.Parse(line);
-                            Console.WriteLine(tk.ToString(indent));
+                            JToken tk = JToken.Parse(line, out string err, JToken.ParseOptions.CheckEOL);
+                            if (tk != null)
+                                Console.WriteLine(tk.ToString(indent));
+                            else
+                                Console.WriteLine($"Error in JSON {err}");
                         }
                     }
 
@@ -384,8 +414,11 @@ namespace EDDTest
                 {
                     string text = File.ReadAllText(path);
 
-                    JToken tk = JToken.Parse(text);
-                    Console.WriteLine(tk.ToString(true));
+                    JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
+                    if (tk != null)
+                        Console.WriteLine(tk.ToString(true));
+                    else
+                        Console.WriteLine($"{err}\r\nERROR in JSON");
                 }
                 catch (Exception ex)
                 {
@@ -394,6 +427,7 @@ namespace EDDTest
             }
             else if (arg1.Equals("cutdownfile"))
             {
+
                 string filename = args.Next();
                 int numberlines = args.Int();
 

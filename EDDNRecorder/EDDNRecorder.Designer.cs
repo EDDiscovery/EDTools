@@ -40,6 +40,7 @@
             this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.buttonDev = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv)).BeginInit();
             this.SuspendLayout();
@@ -58,6 +59,7 @@
             // 
             this.panel1.Controls.Add(this.checkBoxWrapBody);
             this.panel1.Controls.Add(this.checkBoxFollow);
+            this.panel1.Controls.Add(this.buttonDev);
             this.panel1.Controls.Add(this.buttonBeta);
             this.panel1.Controls.Add(this.buttonLive);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
@@ -69,7 +71,7 @@
             // checkBoxWrapBody
             // 
             this.checkBoxWrapBody.AutoSize = true;
-            this.checkBoxWrapBody.Location = new System.Drawing.Point(252, 12);
+            this.checkBoxWrapBody.Location = new System.Drawing.Point(373, 12);
             this.checkBoxWrapBody.Name = "checkBoxWrapBody";
             this.checkBoxWrapBody.Size = new System.Drawing.Size(79, 17);
             this.checkBoxWrapBody.TabIndex = 2;
@@ -80,7 +82,7 @@
             // checkBoxFollow
             // 
             this.checkBoxFollow.AutoSize = true;
-            this.checkBoxFollow.Location = new System.Drawing.Point(358, 12);
+            this.checkBoxFollow.Location = new System.Drawing.Point(479, 12);
             this.checkBoxFollow.Name = "checkBoxFollow";
             this.checkBoxFollow.Size = new System.Drawing.Size(56, 17);
             this.checkBoxFollow.TabIndex = 1;
@@ -93,7 +95,7 @@
             this.buttonBeta.Name = "buttonBeta";
             this.buttonBeta.Size = new System.Drawing.Size(108, 32);
             this.buttonBeta.TabIndex = 0;
-            this.buttonBeta.Text = "RecordBeta";
+            this.buttonBeta.Text = "Record Beta";
             this.buttonBeta.UseVisualStyleBackColor = true;
             this.buttonBeta.Click += new System.EventHandler(this.buttonBeta_Click);
             // 
@@ -159,6 +161,16 @@
             this.Column6.Name = "Column6";
             this.Column6.ReadOnly = true;
             // 
+            // buttonDev
+            // 
+            this.buttonDev.Location = new System.Drawing.Point(231, 3);
+            this.buttonDev.Name = "buttonDev";
+            this.buttonDev.Size = new System.Drawing.Size(108, 32);
+            this.buttonDev.TabIndex = 0;
+            this.buttonDev.Text = "Record Dev";
+            this.buttonDev.UseVisualStyleBackColor = true;
+            this.buttonDev.Click += new System.EventHandler(this.buttonDev_Click);
+            // 
             // EDDNRecorder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -189,6 +201,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column6;
         private System.Windows.Forms.Button buttonBeta;
+        private System.Windows.Forms.Button buttonDev;
     }
 }
 

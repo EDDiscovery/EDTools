@@ -15,6 +15,7 @@ namespace EDDNRecorder
     {
         private string appdatapath;
         private bool beta = false;
+        private bool dev = false;
 
         public EDDNRecorder()
         {
@@ -34,7 +35,7 @@ namespace EDDNRecorder
         {
             opthread = new Thread(GetEDDNData);
             opthread.Start();
-            buttonLive.Enabled = buttonBeta.Enabled = false;
+            buttonLive.Enabled = buttonBeta.Enabled = buttonDev.Enabled = false;
         }
 
         private void buttonBeta_Click(object sender, EventArgs e)
@@ -42,7 +43,15 @@ namespace EDDNRecorder
             beta = true;
             opthread = new Thread(GetEDDNData);
             opthread.Start();
-            buttonLive.Enabled = buttonBeta.Enabled = false;
+            buttonLive.Enabled = buttonBeta.Enabled = buttonDev.Enabled = false;
+        }
+
+        private void buttonDev_Click(object sender, EventArgs e)
+        {
+            dev = true;
+            opthread = new Thread(GetEDDNData);
+            opthread.Start();
+            buttonLive.Enabled = buttonBeta.Enabled = buttonDev.Enabled = false;
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -62,7 +71,7 @@ namespace EDDNRecorder
             {
                 using (var subscriber = new SubscriberSocket())
                 {
-                    string endpoint = beta ? "tcp://beta.eddn.edcd.io:9510" : "tcp://eddn.edcd.io:9500";
+                    string endpoint = dev ? "tcp://beta.eddn.edcd.io:9520" : beta ? "tcp://beta.eddn.edcd.io:9510" : "tcp://eddn.edcd.io:9500";
                     BeginInvoke((MethodInvoker)delegate
                     {
                         dgv.Rows.Add(new object[] { "", "","","","", endpoint });

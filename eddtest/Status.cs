@@ -15,7 +15,7 @@
  */
 
 using BaseUtils;
-using BaseUtils.JSON;
+using QuickJSON;
 using System;
 using System.IO;
 using System.Threading;
@@ -366,7 +366,7 @@ namespace EDDTest
                 }
             }
 
-            BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+            JSONFormatter qj = new JSONFormatter();
 
             qj.Object().UTC("timestamp").V("event", "Status");
             qj.V("Flags", flags);
@@ -379,10 +379,7 @@ namespace EDDTest
                 {
                     qj.V("Oxygen", oxygen);
                     qj.V("Health", health);
-                    if (temperature < 0)
-                        qj.Literal("\"Temperature\":nan");
-                    else
-                        qj.V("Temperature", temperature);
+                    qj.V("Temperature", temperature);
                     qj.V("SelectedWeapon", SelectedWeapon);
                     if (SelectedWeaponLoc.HasChars())
                         qj.V("SelectedWeapon_Localised", SelectedWeaponLoc);
@@ -390,7 +387,7 @@ namespace EDDTest
                 }
                 else
                 {
-                    qj.V("Pips", pips);
+                    qj.Array("Pips").V(pips[0]).V(pips[1]).V(pips[2]).Close();
                     qj.V("FireGroup", fg);
                     qj.V("GuiFocus", gui);
                 }
@@ -608,13 +605,13 @@ namespace EDDTest
                 //"Pips":[4,8,0], "FireGroup":1, "GuiFocus":0, "Latitude":-18.978821, "Longitude":-123.642052, "Heading":308, "Altitude":20016 }
 
                 Console.WriteLine("{0:0.00} {1:0.00} H {2:0.00} F {3:0.00}:{4:0.00}", latitude, longitude, heading, fuel, fuelres);
-                BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+                JSONFormatter qj = new JSONFormatter();
 
                 double altitude = 404;
 
                 qj.Object().UTC("timestamp").V("event", "Status");
                 qj.V("Flags", flags);
-                qj.V("Pips", new int[] { 2, 8, 2 });
+                qj.Array("Pips").V(2).V(8).V(2).Close();
                 qj.V("FireGroup", fg);
                 qj.V("GuiFocus", gui);
                 qj.V("LegalState", legalstate);

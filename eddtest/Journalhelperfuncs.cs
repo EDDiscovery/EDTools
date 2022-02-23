@@ -15,7 +15,7 @@
  */
 
 using BaseUtils;
-using BaseUtils.JSON;
+using QuickJSON;
 using System;
 using System.IO;
 
@@ -41,9 +41,9 @@ namespace EDDTest
                 {
                     using (StreamWriter sr = new StreamWriter(fs))
                     {
-                        QuickJSONFormatter l1 = new QuickJSONFormatter();
+                        JSONFormatter l1 = new JSONFormatter();
                         l1.Object().UTC("timestamp").V("event", "Fileheader").V("part", 1).V("language", "English\\\\UK").V("gameversion", "2.2 (Beta 2)").V("build", "r121783/r0");
-                        QuickJSONFormatter l2 = new QuickJSONFormatter();
+                        JSONFormatter l2 = new JSONFormatter();
                         l2.Object().UTC("timestamp").V("event", "LoadGame").V("FID","F1962222").V("Commander", cmdrname)
                                 .V("Horizons", true).V("Ship", "Anaconda").V("Ship_Localised", "Anaconda")
                                 .V("ShipID",5).V("ShipName","CAT MINER").V("ShipIdent","BUD-2")

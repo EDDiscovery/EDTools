@@ -254,18 +254,18 @@ namespace EliteDangerousCore
         public MaterialCommodityMicroResourceType(CatType cs, string n, string fd, ItemType t, MaterialGroupType mtg, string shortn, Color cl, bool rare)
         {
             Category = cs;
-            TranslatedCategory = (Category ==CatType.Item) ? "Goods" : (Category==CatType.Component) ? "Assets" : Category.ToString();      // name is as the game does
-            TranslatedCategory = TranslatedCategory.Tx(typeof(MaterialCommodityMicroResourceType));        // valid to pass this thru the Tx( system
+            TranslatedCategory = (Category == CatType.Item) ? "Goods" : (Category == CatType.Component) ? "Assets" : Category.ToString();      // name is as the game does
+            TranslatedCategory = TranslatedCategory.TxID(typeof(MaterialCommodityMicroResourceType), TranslatedCategory);        // valid to pass this thru the Tx( system
             Name = n;
             FDName = fd;
             Type = t;
-            string tn = Type.ToString().SplitCapsWord();
-            TranslatedType = tn.Tx(typeof(MaterialCommodityMicroResourceType));                // valid to pass this thru the Tx( system
+            TranslatedType = Type.ToString().SplitCapsWord().TxID(typeof(MaterialCommodityMicroResourceType), Type.ToString());                // valid to pass this thru the Tx( system
             MaterialGroup = mtg;
-            TranslatedMaterialGroup = MaterialGroup.ToString().SplitCapsWordFull().Tx(typeof(MaterialCommodityMicroResourceType));                // valid to pass this thru the Tx( system
+            TranslatedMaterialGroup = MaterialGroup.ToString().SplitCapsWordFull().TxID(typeof(MaterialCommodityMicroResourceType), MaterialGroup.ToString());                // valid to pass this thru the Tx( system
             Shortname = shortn;
             Colour = cl;
             Rarity = rare;
+            //System.Diagnostics.Debug.WriteLine($"Added {FDName} {Name} {Shortname}");
         }
 
         private void SetCache()
@@ -643,7 +643,8 @@ namespace EliteDangerousCore
             AddCommodityList("Building Fabricators;Crop Harvesters;Emergency Power Cells;Exhaust Manifold;Geological Equipment", m);
             AddCommoditySN("HN Shock Mount", m, "HNSM", "");
             AddCommodityList("Mineral Extractors;Modular Terminals;Power Generators", m);
-            AddCommodityList("Thermal Cooling Units;Water Purifiers", m);
+            AddCommoditySN("Thermal Cooling Units", m, "TCU", "");
+            AddCommoditySN("Water Purifiers", m, "WPURE", "");
             AddCommoditySN("Heatsink Interlink", m, "HSI", "");
             AddCommoditySN("Energy Grid Assembly", m, "EGA", "powergridassembly");
             AddCommoditySN("Radiation Baffle", m, "RB", "");
@@ -1163,7 +1164,7 @@ namespace EliteDangerousCore
 
             foreach (var x in cachelist.Values)
             {
-                x.Name = BaseUtils.Translator.Instance.Translate(x.Name, "MaterialCommodityMicroResourceType." + x.FDName);
+                x.Name = x.Name.TxID(typeof(MaterialCommodityMicroResourceType), x.FDName);
             }
 
             // foreach (MaterialCommodityData d in cachelist.Values) System.Diagnostics.Debug.WriteLine(string.Format("{0},{1},{2},{3},{4},{5},{6}", d.Category, d.Type.ToString().SplitCapsWord(), d.MaterialGroup.ToString(), d.FDName, d.Name, d.Shortname, d.Rarity ));

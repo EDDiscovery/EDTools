@@ -15,7 +15,7 @@
  */
 
 using BaseUtils;
-using BaseUtils.JSON;
+using QuickJSON;
 using System;
 using System.IO;
 
@@ -75,7 +75,7 @@ namespace EDDTest
 
                 string lineout = null;      //quick writer
                 bool checkjson = true;  // check json before writing to file
-                BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+                QuickJSON.JSONFormatter qj = new QuickJSON.JSONFormatter();
 
                 if (eventtype.Equals("fsd"))
                     lineout = FSDJump(args, repeatcount);
@@ -94,13 +94,13 @@ namespace EDDTest
                     qj.Object("SystemFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
                     qj.V("StarSystem", args.Next());
                     qj.V("SystemAddress", 6538272662);
-                    qj.Literal("\"StationGovernment\":\"$government_Prison;\", \"StationGovernment_Localised\":\"Detention Centre\", \"StationServices\":[ \"Dock\", \"Autodock\", \"Contacts\", \"Outfitting\", \"Rearm\", " +
-                    "\"Refuel\", \"Repair\", \"Shipyard\", \"Workshop\", \"FlightController\", \"StationOperations\", \"StationMenu\" ], \"StationEconomy\":\"$economy_Prison;\", " +
-                    "\"StationEconomy_Localised\":\"Prison\", \"StationEconomies\":[ { \"Name\":\"$economy_Prison;\", \"Name_Localised\":\"Prison\", \"Proportion\":1.000000 } ], " +
-                    "\"StarPos\":[-1456.81250,-84.81250,5306.93750], \"SystemAllegiance\":\"\", \"SystemEconomy\":\"$economy_None;\", \"SystemEconomy_Localised\":\"None\", " +
-                    "\"SystemSecondEconomy\":\"$economy_None;\", \"SystemSecondEconomy_Localised\":\"None\", \"SystemGovernment\":\"$government_None;\", \"SystemGovernment_Localised\":\"None\", \"SystemSecurity\":\"$GAlAXY_MAP_INFO_state_anarchy;\", \"SystemSecurity_Localised\":\"Anarchy\", " +
-                    "\"Population\":0, \"Body\":\"Rock of Isolation\", \"BodyID\":33, \"BodyType\":\"Station\", \"Factions\":[ { \"Name\":\"Independent Detention Foundation\", \"FactionState\":\"None\", \"Government\":\"Prison\", \"Influence\":0.000000, \"Allegiance\":\"Independent\", \"Happiness\":\"$Faction_HappinessBand2;\", \"Happiness_Localised\":\"Happy\", \"MyReputation\":0.000000 }, { \"Name\":\"Pilots Federation Local Branch\", \"FactionState\":\"None\", \"Government\":\"Democracy\", \"Influence\":0.000000, \"Allegiance\":\"PilotsFederation\", \"Happiness\":\"\", \"MyReputation\":0.000000 } ]"
-                    );
+                    //qj.Literal("\"StationGovernment\":\"$government_Prison;\", \"StationGovernment_Localised\":\"Detention Centre\", \"StationServices\":[ \"Dock\", \"Autodock\", \"Contacts\", \"Outfitting\", \"Rearm\", " +
+                    //"\"Refuel\", \"Repair\", \"Shipyard\", \"Workshop\", \"FlightController\", \"StationOperations\", \"StationMenu\" ], \"StationEconomy\":\"$economy_Prison;\", " +
+                    //"\"StationEconomy_Localised\":\"Prison\", \"StationEconomies\":[ { \"Name\":\"$economy_Prison;\", \"Name_Localised\":\"Prison\", \"Proportion\":1.000000 } ], " +
+                    //"\"StarPos\":[-1456.81250,-84.81250,5306.93750], \"SystemAllegiance\":\"\", \"SystemEconomy\":\"$economy_None;\", \"SystemEconomy_Localised\":\"None\", " +
+                    //"\"SystemSecondEconomy\":\"$economy_None;\", \"SystemSecondEconomy_Localised\":\"None\", \"SystemGovernment\":\"$government_None;\", \"SystemGovernment_Localised\":\"None\", \"SystemSecurity\":\"$GAlAXY_MAP_INFO_state_anarchy;\", \"SystemSecurity_Localised\":\"Anarchy\", " +
+                    //"\"Population\":0, \"Body\":\"Rock of Isolation\", \"BodyID\":33, \"BodyType\":\"Station\", \"Factions\":[ { \"Name\":\"Independent Detention Foundation\", \"FactionState\":\"None\", \"Government\":\"Prison\", \"Influence\":0.000000, \"Allegiance\":\"Independent\", \"Happiness\":\"$Faction_HappinessBand2;\", \"Happiness_Localised\":\"Happy\", \"MyReputation\":0.000000 }, { \"Name\":\"Pilots Federation Local Branch\", \"FactionState\":\"None\", \"Government\":\"Democracy\", \"Influence\":0.000000, \"Allegiance\":\"PilotsFederation\", \"Happiness\":\"\", \"MyReputation\":0.000000 } ]"
+                    //);
                 }
                 else if (eventtype.Equals("docked") && args.Left >= 3)
                 {
@@ -111,10 +111,10 @@ namespace EDDTest
                     qj.V("SystemAddress", 65135844912);
                     qj.V("MarketID", 12829282);
                     qj.Object("StationFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
-                    qj.Literal("\"StationGovernment\":\"$government_Prison;\", " +
-                        "\"StationGovernment_Localised\":\"Detention Centre\", \"StationServices\":[ \"Dock\", \"Autodock\", \"Contacts\", \"Outfitting\", \"Rearm\", \"Refuel\", \"Repair\", \"Shipyard\", " +
-                        "\"Workshop\", \"FlightController\", \"StationOperations\", \"StationMenu\" ], \"StationEconomy\":\"$economy_Prison;\", \"StationEconomy_Localised\":\"Prison\", " +
-                        "\"StationEconomies\":[ { \"Name\":\"$economy_Prison;\", \"Name_Localised\":\"Prison\", \"Proportion\":1.000000 } ], \"DistFromStarLS\":3919.440674 ");
+                    //qj.Literal("\"StationGovernment\":\"$government_Prison;\", " +
+                    //    "\"StationGovernment_Localised\":\"Detention Centre\", \"StationServices\":[ \"Dock\", \"Autodock\", \"Contacts\", \"Outfitting\", \"Rearm\", \"Refuel\", \"Repair\", \"Shipyard\", " +
+                    //    "\"Workshop\", \"FlightController\", \"StationOperations\", \"StationMenu\" ], \"StationEconomy\":\"$economy_Prison;\", \"StationEconomy_Localised\":\"Prison\", " +
+                    //    "\"StationEconomies\":[ { \"Name\":\"$economy_Prison;\", \"Name_Localised\":\"Prison\", \"Proportion\":1.000000 } ], \"DistFromStarLS\":3919.440674 ");
                     qj.Close();
                 }
                 else if (eventtype.Equals("undocked"))
@@ -245,21 +245,21 @@ namespace EDDTest
                 else if (eventtype.Equals("scanplanet") && args.Left >= 1)
                 {
                     string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                    qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":639.245483, \"TidalLock\":true, \"TerraformState\":\"\", \"PlanetClass\":\"Metal rich body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"None\", \"Volcanism\":\"rocky magma volcanism\", \"MassEM\":0.010663, \"Radius\":1163226.500000, \"SurfaceGravity\":3.140944, \"SurfaceTemperature\":1068.794067, \"SurfacePressure\":0.000000, \"Landable\":true, \"Materials\":[ { \"Name\":\"iron\", \"Percent\":36.824127 }, { \"Name\":\"nickel\", \"Percent\":27.852226 }, { \"Name\":\"chromium\", \"Percent\":16.561033 }, { \"Name\":\"zinc\", \"Percent\":10.007420 }, { \"Name\":\"selenium\", \"Percent\":2.584032 }, { \"Name\":\"tin\", \"Percent\":2.449526 }, { \"Name\":\"molybdenum\", \"Percent\":2.404594 }, { \"Name\":\"technetium\", \"Percent\":1.317050 } ], \"SemiMajorAxis\":1532780800.000000, \"Eccentricity\":0.000842, \"OrbitalInclination\":-1.609496, \"Periapsis\":179.381393, \"OrbitalPeriod\":162753.062500, \"RotationPeriod\":162754.531250, \"AxialTilt\":0.033219");
+                    //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":639.245483, \"TidalLock\":true, \"TerraformState\":\"\", \"PlanetClass\":\"Metal rich body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"None\", \"Volcanism\":\"rocky magma volcanism\", \"MassEM\":0.010663, \"Radius\":1163226.500000, \"SurfaceGravity\":3.140944, \"SurfaceTemperature\":1068.794067, \"SurfacePressure\":0.000000, \"Landable\":true, \"Materials\":[ { \"Name\":\"iron\", \"Percent\":36.824127 }, { \"Name\":\"nickel\", \"Percent\":27.852226 }, { \"Name\":\"chromium\", \"Percent\":16.561033 }, { \"Name\":\"zinc\", \"Percent\":10.007420 }, { \"Name\":\"selenium\", \"Percent\":2.584032 }, { \"Name\":\"tin\", \"Percent\":2.449526 }, { \"Name\":\"molybdenum\", \"Percent\":2.404594 }, { \"Name\":\"technetium\", \"Percent\":1.317050 } ], \"SemiMajorAxis\":1532780800.000000, \"Eccentricity\":0.000842, \"OrbitalInclination\":-1.609496, \"Periapsis\":179.381393, \"OrbitalPeriod\":162753.062500, \"RotationPeriod\":162754.531250, \"AxialTilt\":0.033219");
                 }
                 else if (eventtype.Equals("scanstar"))
                 {
                     string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                    qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":0.000000, \"StarType\":\"B\", \"StellarMass\":8.597656, \"Radius\":2854249728.000000, \"AbsoluteMagnitude\":1.023468, \"Age_MY\":182, \"SurfaceTemperature\":23810.000000, \"Luminosity\":\"IV\", \"SemiMajorAxis\":12404761034752.000000, \"Eccentricity\":0.160601, \"OrbitalInclination\":18.126791, \"Periapsis\":49.512009, \"OrbitalPeriod\":54231617536.000000, \"RotationPeriod\":110414.359375, \"AxialTilt\":0.000000");
+                    //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":0.000000, \"StarType\":\"B\", \"StellarMass\":8.597656, \"Radius\":2854249728.000000, \"AbsoluteMagnitude\":1.023468, \"Age_MY\":182, \"SurfaceTemperature\":23810.000000, \"Luminosity\":\"IV\", \"SemiMajorAxis\":12404761034752.000000, \"Eccentricity\":0.160601, \"OrbitalInclination\":18.126791, \"Periapsis\":49.512009, \"OrbitalPeriod\":54231617536.000000, \"RotationPeriod\":110414.359375, \"AxialTilt\":0.000000");
                 }
                 else if (eventtype.Equals("scanearth"))
                 {
                     string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                    qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":901.789856, \"TidalLock\":false, \"TerraformState\":\"Terraformed\", \"PlanetClass\":\"Earthlike body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"EarthLike\", \"AtmosphereComposition\":[ { \"Name\":\"Nitrogen\", \"Percent\":92.386833 }, { \"Name\":\"Oxygen\", \"Percent\":7.265749 }, { \"Name\":\"Water\", \"Percent\":0.312345 } ], \"Volcanism\":\"\", \"MassEM\":0.840000, \"Radius\":5821451.000000, \"SurfaceGravity\":9.879300, \"SurfaceTemperature\":316.457062, \"SurfacePressure\":209183.453125, \"Landable\":false, \"SemiMajorAxis\":264788426752.000000, \"Eccentricity\":0.021031, \"OrbitalInclination\":13.604733, \"Periapsis\":73.138206, \"OrbitalPeriod\":62498732.000000, \"RotationPeriod\":58967.023438, \"AxialTilt\":-0.175809");
+                    //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":901.789856, \"TidalLock\":false, \"TerraformState\":\"Terraformed\", \"PlanetClass\":\"Earthlike body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"EarthLike\", \"AtmosphereComposition\":[ { \"Name\":\"Nitrogen\", \"Percent\":92.386833 }, { \"Name\":\"Oxygen\", \"Percent\":7.265749 }, { \"Name\":\"Water\", \"Percent\":0.312345 } ], \"Volcanism\":\"\", \"MassEM\":0.840000, \"Radius\":5821451.000000, \"SurfaceGravity\":9.879300, \"SurfaceTemperature\":316.457062, \"SurfacePressure\":209183.453125, \"Landable\":false, \"SemiMajorAxis\":264788426752.000000, \"Eccentricity\":0.021031, \"OrbitalInclination\":13.604733, \"Periapsis\":73.138206, \"OrbitalPeriod\":62498732.000000, \"RotationPeriod\":58967.023438, \"AxialTilt\":-0.175809");
                 }
                 else if (eventtype.Equals("ring"))
                 {
-                    qj.Object().UTC("timestamp").Literal("\"event\": \"Scan\",  \"ScanType\": \"AutoScan\",  \"BodyName\": \"Merope 9 Ring\",  \"DistanceFromArrivalLS\": 1883.233643,  \"SemiMajorAxis\": 70415976.0,  \"Eccentricity\": 0.0,  \"OrbitalInclination\": 0.0,  \"Periapsis\": 0.0,  \"OrbitalPeriod\": 100994.445313}");
+                    //qj.Object().UTC("timestamp").Literal("\"event\": \"Scan\",  \"ScanType\": \"AutoScan\",  \"BodyName\": \"Merope 9 Ring\",  \"DistanceFromArrivalLS\": 1883.233643,  \"SemiMajorAxis\": 70415976.0,  \"Eccentricity\": 0.0,  \"OrbitalInclination\": 0.0,  \"Periapsis\": 0.0,  \"OrbitalPeriod\": 100994.445313}");
                 }
                 else if (eventtype.Equals("afmurepairs"))
                     qj.Object().UTC("timestamp").V("event", "AfmuRepairs").V("Module", "$modularcargobaydoor_name;").V("Module_Localised", "Cargo Hatch").V("FullyRepaired", true)
@@ -267,7 +267,7 @@ namespace EDDTest
 
                 else if (eventtype.Equals("sellshiponrebuy"))
                     qj.Object().UTC("timestamp").V("event", "SellShipOnRebuy").V("ShipType", "Dolphin").V("System", "Shinrarta Dezhra")
-                        .V("SellShipId", 4).V("ShipPrice",4110183);
+                        .V("SellShipId", 4).V("ShipPrice", 4110183);
 
                 else if (eventtype.Equals("searchandrescue") && args.Left == 2)
                 {
@@ -285,8 +285,9 @@ namespace EDDTest
                     qj.V("CorrosionRepaired", 0.2);
                 }
                 else if (eventtype.Equals("communitygoal"))
-                    qj.Object().UTC("timestamp").V("event", "CommunityGoal").Literal("\"CurrentGoals\":[ { \"CGID\":726, \"Title\":\"Alliance Research Initiative - Trade\", \"SystemName\":\"Kaushpoos\", \"MarketName\":\"Neville Horizons\", \"Expiry\":\"2017-08-17T14:58:14Z\", \"IsComplete\":false, \"CurrentTotal\":10062, \"PlayerContribution\":562, \"NumContributors\":101, \"TopRankSize\":10, \"PlayerInTopRank\":false, \"TierReached\":\"Tier 1\", \"PlayerPercentileBand\":50, \"Bonus\":200000 } ] }");
-
+                {
+                    //qj.Object().UTC("timestamp").V("event", "CommunityGoal").Literal("\"CurrentGoals\":[ { \"CGID\":726, \"Title\":\"Alliance Research Initiative - Trade\", \"SystemName\":\"Kaushpoos\", \"MarketName\":\"Neville Horizons\", \"Expiry\":\"2017-08-17T14:58:14Z\", \"IsComplete\":false, \"CurrentTotal\":10062, \"PlayerContribution\":562, \"NumContributors\":101, \"TopRankSize\":10, \"PlayerInTopRank\":false, \"TierReached\":\"Tier 1\", \"PlayerPercentileBand\":50, \"Bonus\":200000 } ] }");
+                }
                 else if (eventtype.Equals("musicnormal"))
                     qj.Object().UTC("timestamp").V("event", "Music").V("MusicTrack", "NoTrack");
                 else if (eventtype.Equals("musicsysmap"))
@@ -387,7 +388,7 @@ namespace EDDTest
                     qj.V("Region", "Region 18");
                     qj.V("IsNewEntry", true);
                     qj.V("NewTraitsDiscovered", true);
-                    qj.V("Traits", new string[] { "T1", "T2", "T3" });
+                    qj.Array().V("T1").V("T2").V("T3").Close();
                     qj.Close();
                 }
                 else if (eventtype.Equals("saascancomplete") && args.Left >= 1)
@@ -397,8 +398,8 @@ namespace EDDTest
                     qj.Object().UTC("timestamp").V("event", "SAAScanComplete");
                     qj.V("BodyName", name);
                     qj.V("BodyID", 10);
-                    qj.V("Discoverers", new string[] { "Fred", "Jim", "Sheila" });
-                    qj.V("Mappers", new string[] { "george", "Henry" });
+                    qj.Array("Discoverers").V("Fred").V("Jim").V("Sheila").Close();
+                    qj.Array("Mappers").V("george").V("henry").Close();
                     qj.V("ProbesUsed", 10);
                     qj.V("EfficiencyTarget", 12);
                     qj.Close();
@@ -656,9 +657,9 @@ namespace EDDTest
                         qj.Object().UTC("timestamp").V("event", "ScanOrganic");
                         qj.V("ScanType", st);
                         qj.V("Genus", genus);
-                        qj.V("Genus_Localised",  genus.Replace("$Codex_Ent_", "").Replace("_Genus_Name;", ""));
+                        qj.V("Genus_Localised", genus.Replace("$Codex_Ent_", "").Replace("_Genus_Name;", ""));
                         qj.V("Species", species);
-                        qj.V("Species_Localised", species.Replace("$Codex_Ent_","").Replace("_Name;",""));
+                        qj.V("Species_Localised", species.Replace("$Codex_Ent_", "").Replace("_Name;", ""));
                         qj.V("SystemAddress", 1416164883666);
                         qj.V("Body", body);
                         qj.Close();
@@ -730,7 +731,7 @@ namespace EDDTest
                 }
                 else if (eventtype.Equals("continued"))
                 {
-                    BaseUtils.QuickJSONFormatter qjc = new QuickJSONFormatter();
+                    QuickJSON.JSONFormatter qjc = new JSONFormatter();
                     qjc.Object().UTC("timestamp").V("event", "Continued").V("Part", 2);
                     WriteToLog(filename, cmdrname, qjc.Get(), checkjson);
                     filename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".part2" + Path.GetExtension(filename));
@@ -903,7 +904,7 @@ namespace EDDTest
 
         static string FSDJump(string starname, double x, double y, double z)
         { 
-            QuickJSONFormatter qj = new QuickJSONFormatter();
+            JSONFormatter qj = new JSONFormatter();
             qj.Object().UTC("timestamp").V("event", "FSDJump");
             qj.V("StarSystem", starname);
             if ( !double.IsNaN(x))
@@ -954,7 +955,7 @@ namespace EDDTest
 
         static string Market(string mpath, string opt)
         {
-            QuickJSONFormatter js = new QuickJSONFormatter();
+            JSONFormatter js = new JSONFormatter();
             js.UTC("timestamp").V("event", "Market").V("MarketID", 12345678).V("StationName", "Columbus").V("StarSystem", "Sol");
             string mline = js.ToString();
             string market1 = mline + ", " + EDDTest.Properties.Resources.Market;
@@ -975,7 +976,7 @@ namespace EDDTest
         {
             //{ "timestamp":"2018-01-28T23:45:39Z", "event":"Outfitting", "MarketID":3229009408, "StationName":"Mourelle Gateway", "StarSystem":"G 65-9",
 
-            QuickJSONFormatter js = new QuickJSONFormatter();
+            JSONFormatter js = new JSONFormatter();
             js.UTC("timestamp").V("event", "Outfitting").V("MarketID", 12345678).V("StationName", "Columbus").V("StarSystem", "Sol");
             string jline = js.ToString();
             string fline = jline + ", " + EDDTest.Properties.Resources.Outfitting;
@@ -996,7 +997,7 @@ namespace EDDTest
                 int countdel = int.Parse(args.Next());
                 int total = int.Parse(args.Next());
 
-                QuickJSONFormatter js = new QuickJSONFormatter();
+                JSONFormatter js = new JSONFormatter();
                 js.UTC("timestamp").V("event", "CargoDepot").V("MissionID", missid).V("UpdateType", type)
                                 .V("StartMarketID", 12) .V("EndMarketID", 13)
                                 .V("ItemsCollected", countcol)
@@ -1015,7 +1016,7 @@ namespace EDDTest
         static string Shipyard(string mpath, string opt)
         {
             // { "timestamp":"2018-01-26T03:47:33Z", "event":"Shipyard", "MarketID":128004608, "StationName":"Vonarburg Co-operative", "StarSystem":"Wyrd",
-            QuickJSONFormatter js = new QuickJSONFormatter();
+            JSONFormatter js = new JSONFormatter();
             js.UTC("timestamp").V("event", "Shipyard") .V("MarketID", 12345678) .V("StationName", "Columbus") .V("StarSystem", "Sol");
             string jline = js.ToString();
             string fline = jline + ", " + EDDTest.Properties.Resources.Shipyard;
@@ -1029,7 +1030,7 @@ namespace EDDTest
 
         static string ModuleInfo(string mpath, string opt)
         {
-            QuickJSONFormatter js = new QuickJSONFormatter();
+            JSONFormatter js = new JSONFormatter();
             js.UTC("timestamp").V("event", "ModuleInfo");
             string mline = js.ToString();
             string market = mline + ", " + EDDTest.Properties.Resources.ModulesInfo;
@@ -1040,14 +1041,14 @@ namespace EDDTest
             return mline ;
         }
 
-        public static void FMission(QuickJSONFormatter q, int id, string name, bool pas, int time)
+        public static void FMission(JSONFormatter q, int id, string name, bool pas, int time)
         {
             q.V("MissionID", id).V("Name", name).V("PassengerMission", pas).V("Expires", time);
         }
 
         public static string Squadron(string ev, string name, params string[] list)
         {
-            BaseUtils.QuickJSONFormatter qj = new QuickJSONFormatter();
+            QuickJSON.JSONFormatter qj = new JSONFormatter();
 
             qj.Object().UTC("timestamp").V("event", ev);
             qj.V("SquadronName", name);
@@ -1087,12 +1088,12 @@ namespace EDDTest
                         break;
                 }
 
-                QuickJSONFormatter js = new QuickJSONFormatter();
-                js.Object().UTC("timestamp").V("event","FSDJump").V("StarSystem", starname + "_" + number)
-                .Array("StarPos").V(null, x.ToStringInvariant("0.000000")).V(null, y.ToStringInvariant("0.000000")).V(null, z.ToStringInvariant("0.000000")).Close()
-                .Literal("\"Allegiance\":\"\", \"Economy\":\"$economy_None;\", \"Economy_Localised\":\"None\", \"Government\":\"$government_None;\"," +
-                "\"Government_Localised\":\"None\", \"Security\":\"$SYSTEM_SECURITY_low;\", \"Security_Localised\":\"Low Security\"," +
-                "\"JumpDist\":10.791, \"FuelUsed\":0.790330, \"FuelLevel\":6.893371");
+                JSONFormatter js = new JSONFormatter();
+                //js.Object().UTC("timestamp").V("event","FSDJump").V("StarSystem", starname + "_" + number)
+                //.Array("StarPos").V(null, x.ToStringInvariant("0.000000")).V(null, y.ToStringInvariant("0.000000")).V(null, z.ToStringInvariant("0.000000")).Close()
+                //.Literal("\"Allegiance\":\"\", \"Economy\":\"$economy_None;\", \"Economy_Localised\":\"None\", \"Government\":\"$government_None;\"," +
+                //"\"Government_Localised\":\"None\", \"Security\":\"$SYSTEM_SECURITY_low;\", \"Security_Localised\":\"Low Security\"," +
+                //"\"JumpDist\":10.791, \"FuelUsed\":0.790330, \"FuelLevel\":6.893371");
                 string lineout = js.ToString();
 
                 WriteToLog(filename, cmdrname, lineout, true);
@@ -1101,8 +1102,16 @@ namespace EDDTest
                 System.Threading.Thread.Sleep(200);
             }
         }
-
-
-
     }
+
+    public static class QuickAssist
+    {
+        public static QuickJSON.JSONFormatter UTC(this QuickJSON.JSONFormatter fmt, string name)
+        {
+            fmt.V(name, DateTime.UtcNow.ToStringZulu());
+            return fmt;
+        }
+    }
+
+
 }

@@ -15,7 +15,7 @@
  */
 
 using BaseUtils;
-using BaseUtils.JSON;
+using QuickJSON;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -52,6 +52,7 @@ namespace EDDTest
                                   "FrontierData rootfolder - process cvs file exports of frontier data\n" +
                                   "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
                                   "normalisetranslate- process language files and normalise, run to see options\n" +
+                                  "scanforenums enumssemicolonlist path wildcard\n" +
                                   "journalindented file - read lines from file in journal format and output indented\n" +
                                   "jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
                                   "json - read a json from file and output indented\n" +
@@ -205,28 +206,54 @@ namespace EDDTest
                 string primarylanguage = args.Next();
                 string language2 = args.Next();
                 string options = args.Next();
+                string renamefile = args.Next();
+                string enums = args.Next();
 
                 if (primarypath == null || primarylanguage == null)
                 {
                     Console.WriteLine("Usage:\n" +
-                                        "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare] [options]\n" +
+                                        "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none] [options] [renamefile] [semicolon-list-of-enum-files]\n" +
                                         "Read the language-to-use and write out it into the same files cleanly\n" +
-                                        "If secondary is present, read it, and use its definitions instead of the language-to-use\n" +
-                                        "Options: Use NS for don't report secondary\n" +
-                                        "Write back out the tlf and tlp files to the current directory\n" +
-                                        "Write out copy instructions to move those files back to their correct places\n" +
+                                        "If secondary is present, read it, and use its definitions instead of the language-to-use. Use its filename for output files\n" +
+                                        "Options: single string: Use NS for don't report secondary, NoOutput for no files written (excepting report.lst)\n" +
+                                        "Rename file: List of lines with orgID | RenamedID to note renaming of existing IDs (if does not exist won't stop)\n" +
+                                        "Unless NoOutput, Write back out the tlf and tlp files to the current directory, and \n" +
+                                        "write out copy.bat instructions to move those files back to their correct places\n" +
+                                        "semicolon-list-of-enums-files give list of enumerations to cross check against. Use stdenums for built in EDD list\n" +
+                                        "Always write report.txt\n" +
                                         "Example:\n" +
-                                        "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n" 
+                                        "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n"
                                         );
                 }
                 else
                 {
-                    string ret = NormaliseTranslationFiles.Process(primarylanguage, primarypath, primarysearchdepth, language2, options);
+                    string ret = NormaliseTranslationFiles.Process(primarylanguage, primarypath, primarysearchdepth, language2, options, renamefile, enums);
                     Console.WriteLine(ret);
                     System.Diagnostics.Debug.WriteLine(ret);
                 }
 
                 return;
+            }
+            else if (arg1.Equals("scanforenums"))
+            {
+                string enums = args.Next();
+                string primarypath = args.Next();
+                string primarysearch = args.Next();
+
+                if (enums == null || primarypath == null || primarysearch == null)
+                {
+                    Console.WriteLine("Usage:\n" +
+                                    "scanforenums enumfilelist path searchdepth \n" +
+                                    "semicolon-list-of-enums-files give list of enumerations to cross check against. Use stdenums for built in EDD list\n" +
+                                    "Write report.txt with results\n"
+                                    );
+                }
+                else
+                {
+                    FileInfo[] allFiles = Directory.EnumerateFiles(primarypath, primarysearch, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+                    Enums.ScanForEnums(enums, allFiles);
+                    return;
+                }
             }
             else if (arg1.Equals("journal"))
             {
@@ -287,7 +314,7 @@ namespace EDDTest
 
                             //                            Console.WriteLine("N: '" + name + "' Ref '" + reftext + "' loc '" + loc + "'");
 
-                            QuickJSONFormatter json = new QuickJSONFormatter();
+                            JSONFormatter json = new JSONFormatter();
                             json.Object().V("Name", name).V("Notes", "DW3305->WPX " + notes).Close();
 
                             Console.WriteLine(json.Get() + ",");
@@ -575,7 +602,7 @@ namespace EDDTest
                 "The Void", };
 
 
-                QuickJSONFormatter qjs = new QuickJSONFormatter();
+                JSONFormatter qjs = new JSONFormatter();
                 qjs.Array(null).LF();
 
                 XElement bindings = XElement.Load(filename);

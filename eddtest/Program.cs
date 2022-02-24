@@ -69,6 +69,7 @@ namespace EDDTest
                                   "csvtocs path - read csv and turn into a cs class\n"+
                                   "comments path\n" +
                                   "mddoc path wildcard [REMOVE]\n" +
+                                  "finddoclinks path wildcard [REMOVE]\n" +
                                   "finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
                                   "insertext path wildcard find insert\n" 
 
@@ -139,23 +140,23 @@ namespace EDDTest
                 string wildcard = args.Next();
                 string typename = args.Next();
                 string existingfile = args.Next();
-                string searchstr = args.Next();
+                string repname = args.Next();
 
                 if (path != null && wildcard != null && typename != null)
                 {
                     FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
-                    MDDoc.Process(allFiles, typename, existingfile, searchstr);
+                    MDDoc.FindDocLinks(allFiles, typename, existingfile, repname);
                 }
                 else
                 {
-                    Console.WriteLine("Usage:\n" + ""
+                    Console.WriteLine("Usage:\n" + "path wildcard typename defaultdoclinkfile replacementname\n" + "Find all doc links with typename, and add to defaultdoclink, with replacementname\n"
                              );
                 }
 
                 return;
             }
-            else if (arg1.Equals("mddoc"))
+            else if (arg1.Equals("mddoc"))      // processes MD DOC for wiki and makes it better
             {
                 string path = args.Next();
                 string wildcard = args.Next();
@@ -169,7 +170,7 @@ namespace EDDTest
                 }
                 else
                 {
-                    Console.WriteLine("Usage:\n" + ""
+                    Console.WriteLine("Usage:\n" + "Path wildcard [REMOVE]\n" + "Processes MDDocs from default documentation and makes formatting better\n"
                              );
                 }
 
@@ -178,7 +179,6 @@ namespace EDDTest
 
             else if (arg1.Equals("inserttext"))
             {
-                // find lext in string, if found, insert line
                 string path = args.Next();
                 string wildcard = args.Next();
                 string find = args.Next();
@@ -188,11 +188,11 @@ namespace EDDTest
                 {
                     FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
-                    MDDoc.ProcessInsert(allFiles, find, insert);
+                    InsertText.ProcessInsert(allFiles, find, insert);
                 }
                 else
                 {
-                    Console.WriteLine("Usage:\n" + ""
+                    Console.WriteLine("Usage:\n" + "path wildcard findstring insertbeforestring"
                              );
                 }
 
@@ -444,6 +444,30 @@ namespace EDDTest
                     JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
                     if (tk != null)
                         Console.WriteLine(tk.ToString(true));
+                    else
+                        Console.WriteLine($"{err}\r\nERROR in JSON");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed " + ex.Message);
+                }
+            }
+            else if (arg1.Equals("jsontofluent"))
+            {
+                string path = args.Next();
+                try
+                {
+                    string text = File.ReadAllText(path);
+
+                    JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
+                    if (tk != null)
+                    {
+                        Console.WriteLine(tk.ToString(true));
+                        string code = "";
+                        JSONToFluent(tk, ref code,true);
+                        System.Diagnostics.Debug.WriteLine(code);
+                        Console.WriteLine(code);
+                    }
                     else
                         Console.WriteLine($"{err}\r\nERROR in JSON");
                 }
@@ -751,5 +775,61 @@ namespace EDDTest
             }
 
         }
+
+        public static void JSONToFluent(JToken tk, ref string code, bool indent)
+        {
+            if (tk.IsObject)
+            {
+                if (indent)
+                    code = code.NewLine();
+
+                if (tk.IsProperty)
+                    code += ".Object(" + tk.Name.AlwaysQuoteString() + ")";
+                else
+                    code += ".Object()";
+
+                foreach (var kvp in tk.Object())
+                {
+                    JSONToFluent(kvp.Value, ref code, indent);
+                }
+
+                code += ".Close()";
+                if (indent)
+                    code = code.NewLine();
+            }
+            else if (tk.IsArray)
+            {
+                if (indent)
+                    code = code.NewLine();
+
+                if (tk.IsProperty)
+                    code += ".Array(" + tk.Name.AlwaysQuoteString() + ")";
+                else
+                    code += ".Array()";
+
+                foreach (var v in tk.Array())
+                {
+                    JSONToFluent(v, ref code, indent);
+                }
+
+                code += ".Close()";
+
+                if (indent)
+                    code = code.NewLine();
+            }
+            else
+            {
+                string vstring = tk.ToString();
+
+                if (tk.IsProperty)
+                {
+                    code += ".V(" + tk.Name.AlwaysQuoteString() + "," + vstring + ")";
+                }
+                else
+                    code += ".V(" + vstring + ")";
+            }
+        }
+
+
     }
 }

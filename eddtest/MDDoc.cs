@@ -25,7 +25,7 @@ namespace EDDTest
 {
     public static class MDDoc
     {
-        static public void Process(FileInfo[] files, string typename, string existingfile, string search)            // overall index of items
+        static public void FindDocLinks(FileInfo[] files, string typename, string existingfile, string repname)           
         {
             List<string> donetkalready = new List<string>();
 
@@ -73,10 +73,10 @@ namespace EDDTest
                             if ( !donetkalready.Contains(id))
                             {
                                 donetkalready.Add(id);
-                                if (search != null)
+                                if (repname != null)
                                 {
                                     int lastdot = id.LastIndexOf(".");
-                                    Console.WriteLine($"T:{id}|{search}+{id.Substring(lastdot + 1)}");
+                                    Console.WriteLine($"T:{id}|{repname}+{id.Substring(lastdot + 1)}");
                                 }
                                 else
                                     Console.WriteLine($"T:{id}|{id}");
@@ -84,51 +84,6 @@ namespace EDDTest
                         }
                     }
 
-                }
-            }
-
-        }
-
-        static public void ProcessInsert(FileInfo[] files, string finder, string insert)            // overall index of items
-        {
-            foreach (var fi in files)
-            {
-                var utc8nobom = new UTF8Encoding(true);        // give it the default UTF8 with BOM encoding, it will detect BOM or UCS-2 automatically
-
-                bool inserted = false;
-                List<string> lines = new List<string>();
-
-                Encoding fileenc;
-
-                using (StreamReader sr = new StreamReader(fi.FullName, utc8nobom))         // read directly from file.. presume UTF8 no bom
-                {
-                    fileenc = sr.CurrentEncoding;
-
-                    string line;
-                    while ((line = sr.ReadLine()) != null)
-                    {
-                        lines.Add(line);
-                        if (line.Contains(finder))
-                        {
-                            inserted = true;
-                            lines.Add(insert);
-                        }
-                    }
-                }
-
-                if (inserted)
-                {
-                    Console.WriteLine($"Update {fi.FullName}");
-                    using (StreamWriter sw = new StreamWriter(fi.FullName + ".ins", false, fileenc))         // read directly from file.. presume UTF8 no bom
-                    {
-                        foreach (var l in lines)
-                        {
-                            sw.WriteLine(l);
-                        }
-                    }
-
-                    File.Delete(fi.FullName);
-                    File.Move(fi.FullName + ".ins", fi.FullName);
                 }
             }
 

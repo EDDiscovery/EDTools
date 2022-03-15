@@ -26,6 +26,7 @@ namespace EDDTest
         public static void JournalEntry( CommandArgs argsentry)
         {
             int repeatdelay = 0;
+            int repeattimes = 0;
 
             while (true) // read optional args
             {
@@ -44,6 +45,15 @@ namespace EDDTest
                         if (!int.TryParse(argsentry.Next(), out repeatdelay))
                         {
                             Console.WriteLine("Bad repeat delay\n");
+                            return;
+                        }
+                    }
+                    else if (opt.Equals("-repeatfor", StringComparison.InvariantCultureIgnoreCase) && argsentry.Left >= 1)
+                    {
+                        argsentry.Remove();
+                        if (!int.TryParse(argsentry.Next(), out repeattimes))
+                        {
+                            Console.WriteLine("Bad repeat number\n");
                             return;
                         }
                     }
@@ -67,753 +77,15 @@ namespace EDDTest
 
             while (true)
             {
-                CommandArgs args = new CommandArgs(argsentry);
+                CommandArgs args = new CommandArgs(argsentry);          // remember the list at the repeat point
 
-                string eventtype = args.Next().ToLower();
-
-                Random rnd = new Random();
-
-                string lineout = null;      //quick writer
-                bool checkjson = true;  // check json before writing to file
-                QuickJSON.JSONFormatter qj = new QuickJSON.JSONFormatter();
-
-                if (eventtype.Equals("fsd"))
-                    lineout = FSDJump(args, repeatcount);
-                else if (eventtype.Equals("blamtest"))
-                    Blamtest(filename, cmdrname, args);
-                else if (eventtype.Equals("fsdtravel"))
-                    lineout = FSDTravel(args);
-                else if (eventtype.Equals("locdocked") && args.Left >= 4)
+                while (args.Left > 0)       // play thru all of the entries
                 {
-                    qj.Object().UTC("timestamp").V("event", "Location");
-                    qj.V("Docked", true);
-                    qj.V("StationName", args.Next());
-                    qj.V("StationType", "Orbis");
-                    qj.V("MarketID", 12829282);
-                    qj.Object("StationFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
-                    qj.Object("SystemFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
-                    qj.V("StarSystem", args.Next());
-                    qj.V("SystemAddress", 6538272662)
-                    .V("DistFromStarLS", 335.426033)
-                    .V("StationGovernment", "$government_Democracy;").V("StationGovernment_Localised", "Democracy").V("StationAllegiance", "PilotsFederation")
-                    .Array("StationServices").V("dock").V("autodock").V("commodities").V("contacts").V("exploration").V("missions").V("outfitting").V("crewlounge").V("rearm").V("refuel").V("repair").V("shipyard").V("tuning").V("engineer").V("missionsgenerated").V("flightcontroller").V("stationoperations").V("searchrescue").V("techBroker").V("stationMenu").V("shop").V("livery").V("socialspace").V("bartender").V("vistagenomics").V("pioneersupplies").V("apexinterstellar").V("frontlinesolutions").Close()
-                    .V("StationEconomy", "$economy_HighTech;").V("StationEconomy_Localised", "High Tech")
-                    .Array("StationEconomies")
-                        .Object().V("Name", "$economy_HighTech;").V("Name_Localised", "High Tech").V("Proportion", 0.67).Close()
-                        .Object().V("Name", "$economy_Industrial;").V("Name_Localised", "Industrial").V("Proportion", 0.33).Close()
-                    .Close()
-                    .V("Taxi", false).V("Multicrew", false).V("StarSystem", "Shinrarta Dezhra")
-                    .Array("StarPos").V(55.71875).V(17.59375).V(27.15625).Close()
-                    .V("SystemAllegiance", "PilotsFederation").V("SystemEconomy", "$economy_HighTech;").V("SystemEconomy_Localised", "High Tech").V("SystemSecondEconomy", "$economy_Industrial;")
-                    .V("SystemSecondEconomy_Localised", "Industrial").V("SystemGovernment", "$government_Democracy;").V("SystemGovernment_Localised", "Democracy")
-                    .V("SystemSecurity", "$SYSTEM_SECURITY_high;").V("SystemSecurity_Localised", "High Security")
-                    .V("Population", 85287324).V("Body", "Jameson Memorial")
-                    .V("BodyID", 69).V("BodyType", "Station")
-                    .Array("Factions")
-                        .Object().V("Name", "LTT 4487 Industry").V("FactionState", "None").V("Government", "Corporate").V("Influence", 0.260302).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 11.88).Close()
-                        .Object().V("Name", "Future of Arro Naga").V("FactionState", "CivilLiberty").V("Government", "Democracy").V("Influence", 0.232161).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Array("ActiveStates").Object().V("State", "CivilLiberty").Close().Close().Close()
-                        .Object().V("Name", "The Dark Wheel").V("FactionState", "Boom").V("Government", "Democracy").V("Influence", 0.309548).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", -1.5).Array("ActiveStates").Object().V("State", "Boom").Close().Object().V("State", "Drought").Close().Close().Close()
-                        .Object().V("Name", "Los Chupacabras").V("FactionState", "None").V("Government", "PrisonColony").V("Influence", 0.19799).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
-                    .Close()
-                    .Object("SystemFaction").V("Name", "Pilots' Federation Local Branch").Close()
-                    .Close();
+                    if (!createJournalEntry(cmdrname, args, repeatcount, filename))
+                        break;
+
+                    repeatcount++;
                 }
-                else if (eventtype.Equals("docked") && args.Left >= 3)
-                {
-                    qj.Object()
-                        .UTC("timestamp").V("event", "Docked")
-                        .V("StationName", args.Next()).V("StationType", "Orbis").V("Taxi", false).V("Multicrew", false).V("StarSystem", args.Next()).V("SystemAddress", 3932277478106).V("MarketID", 128666762)
-                        .Object("StationFaction").V("Name", args.Next()).Close()
-                        .V("StationGovernment", "$government_Democracy;").V("StationGovernment_Localised", "Democracy").V("StationAllegiance", "PilotsFederation")
-                        .Array("StationServices").V("dock").V("autodock").V("commodities").V("contacts").V("exploration").V("missions").V("outfitting").V("crewlounge").V("rearm").V("refuel").V("repair").V("shipyard").V("tuning").V("engineer").V("missionsgenerated").V("flightcontroller").V("stationoperations").V("searchrescue").V("techBroker").V("stationMenu").V("shop").V("livery").V("socialspace").V("bartender").V("vistagenomics").V("pioneersupplies").V("apexinterstellar").V("frontlinesolutions").Close()
-                        .V("StationEconomy", "$economy_HighTech;").V("StationEconomy_Localised", "High Tech")
-                        .Array("StationEconomies")
-                        .Object().V("Name", "$economy_HighTech;").V("Name_Localised", "High Tech").V("Proportion", 0.67).Close()
-                        .Object().V("Name", "$economy_Industrial;").V("Name_Localised", "Industrial").V("Proportion", 0.33).Close()
-                        .Close()
-                        .V("DistFromStarLS", 335.135112)
-                        .Object("LandingPads").V("Small", 17).V("Medium", 18).V("Large", 9).Close()
-                    .Close();
-                }
-                else if (eventtype.Equals("undocked"))
-                    qj.Object().UTC("timestamp").V("event", "Undocked").V("StationName", "Jameson Memorial").V("StationType", "Orbis");
-                else if (eventtype.Equals("liftoff"))
-                    qj.Object().UTC("timestamp").V("event", "Liftoff").V("Latitude", 7.141173).V("Longitude", 95.256424);
-                else if (eventtype.Equals("touchdown"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "Touchdown").V("Latitude", 7.141173).V("Longitude", 95.256424).V("PlayerControlled", true);
-                }
-                else if (eventtype.Equals("missionaccepted") && args.Left == 3)
-                {
-                    string f = args.Next();
-                    string vf = args.Next();
-                    int id = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "MissionAccepted").V("Faction", f)
-                            .V("Name", "Mission_Assassinate_Legal_Corporate").V("TargetType", "$MissionUtil_FactionTag_PirateLord;")
-                            .V("TargetType_Localised", "Pirate lord").V("TargetFaction", vf)
-                            .V("DestinationSystem", "Quapa").V("DestinationStation", "Grabe Dock").V("Target", "mamsey")
-                            .V("Expiry", DateTime.UtcNow.AddDays(1))
-                            .V("Influence", "Med")
-                            .V("Reputation", "Med").V("MissionID", id);
-                }
-                else if (eventtype.Equals("missioncompleted") && args.Left == 3)
-                {
-                    string f = args.Next();
-                    string vf = args.Next();
-                    int id = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "MissionCompleted").V("Faction", f)
-                        .V("Name", "Mission_Assassinate_Legal_Corporate").V("TargetType", "$MissionUtil_FactionTag_PirateLord;")
-                        .V("TargetType_Localised", "Pirate lord").V("TargetFaction", vf)
-                        .V("MissionID", id).V("Reward", "82272")
-                        .Array("CommodityReward").Object().V("Name", "CoolingHoses").V("Count", 4);
-                }
-                else if (eventtype.Equals("missionredirected") && args.Left == 3)
-                {
-                    string sysn = args.Next();
-                    string stationn = args.Next();
-                    int id = args.Int();
-                    qj.Object().UTC("timestamp").V("event", "MissionRedirected").V("MissionID", id).V("MissionName", "Mission_Assassinate_Legal_Corporate")
-                        .V("NewDestinationStation", stationn).V("OldDestinationStation", "Cuffey Orbital")
-                        .V("NewDestinationSystem", sysn).V("OldDestinationSystem", "Vequess");
-                }
-                else if (eventtype.Equals("missions") && args.Left == 1)
-                {
-                    int id = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "Missions");
-
-                    qj.Array("Active").Object();
-                    FMission(qj, id, "Mission_Assassinate_Legal_Corporate", false, 20000);
-                    qj.Close(2);
-
-                    qj.Array("Failed").Object();
-                    FMission(qj, id + 1000, "Mission_Assassinate_Legal_Corporate", false, 20000);
-                    qj.Close(2);
-
-                    qj.Array("Completed").Object();
-                    FMission(qj, id + 2000, "Mission_Assassinate_Legal_Corporate", false, 20000);
-                    qj.Close(2);
-                }
-                else if (eventtype.Equals("materials") && args.Left >= 2 )
-                {
-                    qj.Object()
-                        .UTC("timestamp").V("event", "Materials")
-                        .Array("Raw")
-                            .Object().V("Name", args.Next()).V("Count", args.Int()).Close()
-                            .Object().V("Name", "iron").V("Count", 261).Close()
-                            .Object().V("Name", "vanadium").V("Count", 39).Close()
-                        .Close()
-                    .Close();
-                }
-                else if (eventtype.Equals("cargo") && args.Left >= 2)
-                {
-                    qj.Object().UTC("timestamp").V("event", "Cargo").V("Vessel", "Ship").V("Count", 7)
-                        .Array("Inventory")
-                            .Object().V("Name", args.Next()).V("Count", args.Int()).V("Stolen", 0).Close()
-                            .Object().V("Name", "lithiumhydroxide").V("Name_Localised", "Lithium Hydroxide").V("Count", 1).V("Stolen", 0).Close()
-                            .Object().V("Name", "tritium").V("Count", 5).V("Stolen", 0).Close()
-                        .Close()
-                    .Close();
-                }
-                else if (eventtype.Equals("navroute") && args.Left>=1)
-                {
-                    DateTime t = DateTime.UtcNow;
-                    qj.Object().V("timestamp", t.ToStringZulu()).V("event", "NavRoute");
-
-                    JSONFormatter f = new JSONFormatter().Object().V("timestamp", t.ToStringZulu()).V("event", "NavRoute")
-                        .Array("Route")
-                            .Object().V("StarSystem", args.Next()).V("SystemAddress", 83785487050).Array("StarPos").V(-58.03125).V(59.5625).V(-58.78125).Close().V("StarClass", "K").Close()
-                            .Object().V("StarSystem", "LHS 2610").V("SystemAddress", 5068464268697).Array("StarPos").V(-41.3125).V(40.4375).V(-27.375).Close().V("StarClass", "M").Close()
-                            .Object().V("StarSystem", "44 chi Draconis").V("SystemAddress", 2278220106091).Array("StarPos").V(-22.5625).V(12.375).V(-5.40625).Close().V("StarClass", "F").Close()
-                            .Object().V("StarSystem", "Sol").V("SystemAddress", 10477373803).Array("StarPos").V(0.0).V(0.0).V(0.0).Close().V("StarClass", "G").Close();
-
-                    File.WriteAllText("navRoute.json", f.Get());
-                }
-                else if (eventtype.Equals("marketbuy") && args.Left == 3)
-                {
-                    string name = args.Next();
-                    int count = args.Int();
-                    int price = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "MarketBuy").V("MarketID", 29029292)
-                                .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("BuyPrice", price).V("TotalCost", price * count);
-                }
-                else if (eventtype.Equals("marketsell") && args.Left == 3)
-                {
-                    string name = args.Next();
-                    int count = args.Int();
-                    int price = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "MarketSell").V("MarketID", 29029292)
-                                .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("SellPrice", price).V("TotalSale", price * count)
-                                .V("IllegalGoods", false).V("StolenGoods", false).V("BlackMarket", false);
-                }
-                else if (eventtype.Equals("bounty"))
-                {
-                    string f = args.Next();
-                    int rw = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "Bounty").V("VictimFaction", f).V("VictimFaction_Localised", f + "_Loc")
-                        .V("TotalReward", rw);
-                }
-                else if (eventtype.Equals("factionkillbond"))
-                {
-                    string f = args.Next();
-                    string vf = args.Next();
-                    int rw = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "FactionKillBond").V("VictimFaction", vf).V("VictimFaction_Localised", vf + "_Loc")
-                        .V("AwardingFaction", f).V("AwardingFaction_Localised", f + "_Loc")
-                        .V("Reward", rw);
-                }
-                else if (eventtype.Equals("capshipbond"))
-                {
-                    string f = args.Next();
-                    string vf = args.Next();
-                    int rw = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "CapShipBond").V("VictimFaction", vf).V("VictimFaction_Localised", vf + "_Loc")
-                        .V("AwardingFaction", f).V("AwardingFaction_Localised", f + "_Loc")
-                        .V("Reward", rw);
-                }
-                else if (eventtype.Equals("resurrect"))
-                {
-                    int ct = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "Resurrect").V("Option", "Help me").V("Cost", ct).V("Bankrupt", false);
-                }
-                else if (eventtype.Equals("died"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "Died").V("KillerName", "Evil Jim McDuff").V("KillerName_Localised", "Evil Jim McDuff The great").V("KillerShip", "X-Wing").V("KillerRank", "Invincible");
-                }
-                else if (eventtype.Equals("miningrefined"))
-                    qj.Object().UTC("timestamp").V("event", "MiningRefined").V("Type", "Gold");
-                else if (eventtype.Equals("engineercraft"))
-                    qj.Object().UTC("timestamp").V("event", "EngineerCraft").V("Engineer", "Robert").V("Blueprint", "FSD_LongRange")
-                        .V("Level", "5").Object("Ingredients").V("magneticemittercoil", 1).V("arsenic", 1).V("chemicalmanipulators", 1).V("dataminedwake", 1);
-                else if (eventtype.Equals("navbeaconscan"))
-                    qj.Object().UTC("timestamp").V("event", "NavBeaconScan").V("NumBodies", "3");
-                else if (eventtype.Equals("scanplanet") && args.Left >= 1)
-                {
-                    string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                    //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":639.245483, \"TidalLock\":true, \"TerraformState\":\"\", \"PlanetClass\":\"Metal rich body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"None\", \"Volcanism\":\"rocky magma volcanism\", \"MassEM\":0.010663, \"Radius\":1163226.500000, \"SurfaceGravity\":3.140944, \"SurfaceTemperature\":1068.794067, \"SurfacePressure\":0.000000, \"Landable\":true, \"Materials\":[ { \"Name\":\"iron\", \"Percent\":36.824127 }, { \"Name\":\"nickel\", \"Percent\":27.852226 }, { \"Name\":\"chromium\", \"Percent\":16.561033 }, { \"Name\":\"zinc\", \"Percent\":10.007420 }, { \"Name\":\"selenium\", \"Percent\":2.584032 }, { \"Name\":\"tin\", \"Percent\":2.449526 }, { \"Name\":\"molybdenum\", \"Percent\":2.404594 }, { \"Name\":\"technetium\", \"Percent\":1.317050 } ], \"SemiMajorAxis\":1532780800.000000, \"Eccentricity\":0.000842, \"OrbitalInclination\":-1.609496, \"Periapsis\":179.381393, \"OrbitalPeriod\":162753.062500, \"RotationPeriod\":162754.531250, \"AxialTilt\":0.033219");
-                }
-                else if (eventtype.Equals("scanstar"))
-                {
-                    string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                    //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":0.000000, \"StarType\":\"B\", \"StellarMass\":8.597656, \"Radius\":2854249728.000000, \"AbsoluteMagnitude\":1.023468, \"Age_MY\":182, \"SurfaceTemperature\":23810.000000, \"Luminosity\":\"IV\", \"SemiMajorAxis\":12404761034752.000000, \"Eccentricity\":0.160601, \"OrbitalInclination\":18.126791, \"Periapsis\":49.512009, \"OrbitalPeriod\":54231617536.000000, \"RotationPeriod\":110414.359375, \"AxialTilt\":0.000000");
-                }
-                else if (eventtype.Equals("scanearth"))
-                {
-                    string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                    //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":901.789856, \"TidalLock\":false, \"TerraformState\":\"Terraformed\", \"PlanetClass\":\"Earthlike body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"EarthLike\", \"AtmosphereComposition\":[ { \"Name\":\"Nitrogen\", \"Percent\":92.386833 }, { \"Name\":\"Oxygen\", \"Percent\":7.265749 }, { \"Name\":\"Water\", \"Percent\":0.312345 } ], \"Volcanism\":\"\", \"MassEM\":0.840000, \"Radius\":5821451.000000, \"SurfaceGravity\":9.879300, \"SurfaceTemperature\":316.457062, \"SurfacePressure\":209183.453125, \"Landable\":false, \"SemiMajorAxis\":264788426752.000000, \"Eccentricity\":0.021031, \"OrbitalInclination\":13.604733, \"Periapsis\":73.138206, \"OrbitalPeriod\":62498732.000000, \"RotationPeriod\":58967.023438, \"AxialTilt\":-0.175809");
-                }
-                else if (eventtype.Equals("ring"))
-                {
-                    //qj.Object().UTC("timestamp").Literal("\"event\": \"Scan\",  \"ScanType\": \"AutoScan\",  \"BodyName\": \"Merope 9 Ring\",  \"DistanceFromArrivalLS\": 1883.233643,  \"SemiMajorAxis\": 70415976.0,  \"Eccentricity\": 0.0,  \"OrbitalInclination\": 0.0,  \"Periapsis\": 0.0,  \"OrbitalPeriod\": 100994.445313}");
-                }
-                else if (eventtype.Equals("afmurepairs"))
-                    qj.Object().UTC("timestamp").V("event", "AfmuRepairs").V("Module", "$modularcargobaydoor_name;").V("Module_Localised", "Cargo Hatch").V("FullyRepaired", true)
-                            .V("Health", 1.000000);
-
-                else if (eventtype.Equals("sellshiponrebuy"))
-                    qj.Object().UTC("timestamp").V("event", "SellShipOnRebuy").V("ShipType", "Dolphin").V("System", "Shinrarta Dezhra")
-                        .V("SellShipId", 4).V("ShipPrice", 4110183);
-
-                else if (eventtype.Equals("searchandrescue") && args.Left == 2)
-                {
-                    string name = args.Next();
-                    int count = args.Int();
-                    qj.Object().UTC("timestamp").V("event", "SearchAndRescue").V("MarketID", 29029292)
-                                .V("Name", name).V("Name_Localised", name + "loc").V("Count", count).V("Reward", 10234);
-
-                }
-                else if (eventtype.Equals("repairdrone"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "RepairDrone");
-                    qj.V("HullRepaired", repeatcount * 0.1);
-                    qj.V("CockpitRepaired", 0.1);
-                    qj.V("CorrosionRepaired", 0.2);
-                }
-                else if (eventtype.Equals("communitygoal"))
-                {
-                    //qj.Object().UTC("timestamp").V("event", "CommunityGoal").Literal("\"CurrentGoals\":[ { \"CGID\":726, \"Title\":\"Alliance Research Initiative - Trade\", \"SystemName\":\"Kaushpoos\", \"MarketName\":\"Neville Horizons\", \"Expiry\":\"2017-08-17T14:58:14Z\", \"IsComplete\":false, \"CurrentTotal\":10062, \"PlayerContribution\":562, \"NumContributors\":101, \"TopRankSize\":10, \"PlayerInTopRank\":false, \"TierReached\":\"Tier 1\", \"PlayerPercentileBand\":50, \"Bonus\":200000 } ] }");
-                }
-                else if (eventtype.Equals("musicnormal"))
-                    qj.Object().UTC("timestamp").V("event", "Music").V("MusicTrack", "NoTrack");
-                else if (eventtype.Equals("musicsysmap"))
-                    qj.Object().UTC("timestamp").V("event", "Music").V("MusicTrack", "SystemMap");
-                else if (eventtype.Equals("musicgalmap"))
-                    qj.Object().UTC("timestamp").V("event", "Music").V("MusicTrack", "GalaxyMap");
-                else if (eventtype.Equals("friends") && args.Left >= 1)
-                    qj.Object().UTC("timestamp").V("event", "Friends").V("Status", "Online").V("Name", args.Next());
-                else if (eventtype.Equals("fuelscoop") && args.Left >= 2)
-                {
-                    string scoop = args.Next();
-                    string total = args.Next();
-                    qj.Object().UTC("timestamp").V("event", "FuelScoop").V("Scooped", scoop).V("Total", total);
-                }
-                else if (eventtype.Equals("jetconeboost"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "JetConeBoost").V("BoostValue", 1.5);
-                }
-                else if (eventtype.Equals("fighterdestroyed"))
-                    qj.Object().UTC("timestamp").V("event", "FighterDestroyed");
-                else if (eventtype.Equals("fighterrebuilt"))
-                    qj.Object().UTC("timestamp").V("event", "FighterRebuilt").V("Loadout", "Fred");
-                else if (eventtype.Equals("npccrewpaidwage"))
-                    qj.Object().UTC("timestamp").V("event", "NpcCrewPaidWage").V("NpcCrewId", 1921).V("Amount", 10292);
-                else if (eventtype.Equals("npccrewrank"))
-                    qj.Object().UTC("timestamp").V("event", "NpcCrewRank").V("NpcCrewId", 1921).V("RankCombat", 4);
-                else if (eventtype.Equals("launchdrone"))
-                    qj.Object().UTC("timestamp").V("event", "LaunchDrone").V("Type", "FuelTransfer");
-                else if (eventtype.Equals("market"))
-                    lineout = Market(Path.GetDirectoryName(filename), args.Next());
-                else if (eventtype.Equals("moduleinfo"))
-                    lineout = ModuleInfo(Path.GetDirectoryName(filename), args.Next());
-                else if (eventtype.Equals("outfitting"))
-                    lineout = Outfitting(Path.GetDirectoryName(filename), args.Next());
-                else if (eventtype.Equals("shipyard"))
-                    lineout = Shipyard(Path.GetDirectoryName(filename), args.Next());
-                else if (eventtype.Equals("powerplay"))
-                    qj.Object().UTC("timestamp").V("event", "PowerPlay").V("Power", "Fred").V("Rank", 10).V("Merits", 10).V("Votes", 2).V("TimePledged", 433024);
-                else if (eventtype.Equals("underattack"))
-                    qj.Object().UTC("timestamp").V("event", "UnderAttack").V("Target", "Fighter");
-                else if (eventtype.Equals("promotion") && args.Left == 2)
-                    qj.Object().UTC("timestamp").V("event", "Promotion").V(args.Next(), args.Int());
-                else if (eventtype.Equals("cargodepot"))
-                    lineout = CargoDepot(args);
-                else if (eventtype.Equals("fsssignaldiscovered") && args.Left >= 1)
-                {
-                    string name = args.Next();
-
-                    qj.Object().UTC("timestamp").V("event", "FSSSignalDiscovered");
-                    qj.V("SignalName", name);
-
-                    if (args.Left >= 2)
-                    {
-                        string state = args.Next();
-                        qj.V("SpawingState", "$" + state);
-                        qj.V("SpawingState_Localised", state);
-                        string faction = args.Next();
-                        qj.V("SpawingFaction", "$" + faction);
-                        qj.V("SpawingFaction_Localised", faction);
-                        qj.V("TimeRemaining", 60);
-                        qj.V("USSThreat", 5);
-                        qj.V("USSType", "Jim");
-                        qj.V("USSType_Localised", "JimLoc");
-                        qj.V("IsStation", false);
-                    }
-
-                    qj.Close();
-                }
-                else if (eventtype.Equals("modulebuyandstore") && args.Left >= 2)
-                {
-                    string name = args.Next();
-                    int cost = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "ModuleBuyAndStore");
-                    qj.V("BuyItem", name);
-                    qj.V("BuyItem_Localised", name + "Loc");
-                    qj.V("MarketID", 292929222);
-                    qj.V("BuyPrice", 4144);
-                    qj.V("Ship", "ferdelance");
-                    qj.V("ShipID", 35);
-                    qj.Close();
-                }
-                else if (eventtype.Equals("codexentry") && args.Left >= 4)
-                {
-                    string name = args.Next();
-                    string subcat = args.Next();
-                    string cat = args.Next();
-                    string system = args.Next();
-
-                    qj.Object().UTC("timestamp").V("event", "CodexEntry");
-                    qj.V("Name", "$" + name);
-                    qj.V("Name_Localised", name);
-                    qj.V("SubCategory", "$" + subcat);
-                    qj.V("SubCategory_Localised", subcat);
-                    qj.V("Category", "$" + cat);
-                    qj.V("Category_Localised", cat);
-                    qj.V("System", system);
-                    qj.V("Region", "Region 18");
-                    qj.V("IsNewEntry", true);
-                    qj.V("NewTraitsDiscovered", true);
-                    qj.Array().V("T1").V("T2").V("T3").Close();
-                    qj.Close();
-                }
-                else if (eventtype.Equals("saascancomplete") && args.Left >= 1)
-                {
-                    string name = args.Next();
-
-                    qj.Object().UTC("timestamp").V("event", "SAAScanComplete");
-                    qj.V("BodyName", name);
-                    qj.V("BodyID", 10);
-                    qj.Array("Discoverers").V("Fred").V("Jim").V("Sheila").Close();
-                    qj.Array("Mappers").V("george").V("henry").Close();
-                    qj.V("ProbesUsed", 10);
-                    qj.V("EfficiencyTarget", 12);
-                    qj.Close();
-                }
-                else if (eventtype.Equals("asteroidcracked") && args.Left >= 1)
-                {
-                    string name = args.Next();
-
-                    qj.Object().UTC("timestamp").V("event", "AsteroidCracked");
-                    qj.V("Body", name);
-                    qj.Close();
-                }
-
-                else if (eventtype.Equals("multisellexplorationdata"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "MultiSellExplorationData");
-                    qj.Array("Discovered");
-                    for (int i = 0; i < 5; i++)
-                    {
-                        qj.Object();
-                        qj.V("SystemName", "Sys" + i);
-                        qj.V("NumBodies", i * 2 + 1);
-                        qj.Close();
-                    }
-
-                    qj.Close();
-                    qj.V("BaseValue", 100);
-                    qj.V("Bonus", 200);
-                    qj.V("TotalEarnings", 300);
-                    qj.Close();
-                }
-                else if (eventtype.Equals("startjump") && args.Left >= 1)
-                {
-                    string name = args.Next();
-
-                    qj.Object().UTC("timestamp").V("event", "StartJump");
-                    qj.V("JumpType", "Hyperspace");
-                    qj.V("StarSystem", name);
-                    qj.V("StarClass", "A");
-                    qj.V("SystemAddress", 10);
-                    qj.Close();
-                }
-                else if (eventtype.Equals("appliedtosquadron") && args.Left >= 1)
-                    lineout = Squadron("AppliedToSquadron", args.Next());
-
-                else if (eventtype.Equals("disbandedsquadron") && args.Left >= 1)
-                    lineout = Squadron("DisbandedSquadron", args.Next());
-
-                else if (eventtype.Equals("invitedtosquadron") && args.Left >= 1)
-                    lineout = Squadron("InvitedToSquadron", args.Next());
-
-                else if (eventtype.Equals("joinedsquadron") && args.Left >= 1)
-                    lineout = Squadron("JoinedSquadron", args.Next());
-
-                else if (eventtype.Equals("leftsquadron") && args.Left >= 1)
-                    lineout = Squadron("LeftSquadron", args.Next());
-
-                else if (eventtype.Equals("kickedfromsquadron") && args.Left >= 1)
-                    lineout = Squadron("KickedFromSquadron", args.Next());
-
-                else if (eventtype.Equals("sharedbookmarktosquadron") && args.Left >= 1)
-                    lineout = Squadron("SharedBookmarkToSquadron", args.Next());
-
-                else if (eventtype.Equals("squadroncreated") && args.Left >= 1)
-                    lineout = Squadron("SquadronCreated", args.Next());
-
-                else if (eventtype.Equals("wonatrophyforsquadron") && args.Left >= 1)
-                    lineout = Squadron("WonATrophyForSquadron", args.Next());
-
-                else if (eventtype.Equals("squadrondemotion") && args.Left >= 3)
-                    lineout = Squadron("SquadronDemotion", args.Next(), args.Next(), args.Next());
-
-                else if (eventtype.Equals("squadronpromotion") && args.Left >= 3)
-                    lineout = Squadron("SquadronPromotion", args.Next(), args.Next(), args.Next());
-
-                else if (eventtype.Equals("squadronstartup") && args.Left == 2)
-                    lineout = Squadron("SquadronStartup", args.Next(), args.Next());
-
-                else if (eventtype.Equals("fsdtarget") && args.Left >= 1)
-                {
-                    qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("SystemAddress", 20);
-                }
-                else if (eventtype.Equals("fssallbodiesfound") && args.Left >= 1)
-                {
-                    qj.Object().UTC("timestamp").V("event", "FSSAllBodiesFound").V("SystemName", args.Next()).V("SystemAddress", 20);
-                }
-                else if (eventtype.Equals("fssdiscoveryscan"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "FSSDiscoveryScan").V("Progress", 0.23).V("BodyCount", 20).V("NonBodyCount", 30);
-                }
-                else if (eventtype.Equals("commitcrime"))
-                {
-                    string f = args.Next();
-                    int id = args.Int();
-                    qj.Object().UTC("timestamp").V("event", "CommitCrime").V("CrimeType", "collidedAtSpeedInNoFireZone").V("Faction", f).V("Fine", id);
-                }
-                else if (eventtype.Equals("crimevictim"))
-                {
-                    string f = args.Next();
-                    int bounty = args.Int();
-                    qj.Object().UTC("timestamp").V("event", "CrimeVictim").V("CrimeType", "assault").V("Offender", f).V("Bounty", bounty);
-                }
-                else if (eventtype.Equals("launchsrv"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "LaunchSRV").V("Loadout", "Normal");
-                }
-                else if (eventtype.Equals("docksrv"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "DockSRV");
-                }
-                else if (eventtype.Equals("srvdestroyed"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "SRVDestroyed");
-                }
-                else if (eventtype.Equals("receivetext") && args.Left >= 3)
-                {
-                    string from = args.Next();
-                    string channel = args.Next();
-                    string msg = args.Next();
-                    qj.Object().UTC("timestamp").V("event", "ReceiveText").V("From", from).V("Message", msg).V("Channel", channel);
-                }
-                else if (eventtype.Equals("sendtext") && args.Left >= 2)
-                {
-                    string to = args.Next();
-                    string msg = args.Next();
-                    qj.Object().UTC("timestamp").V("event", "SendText").V("To", to).V("Message", msg);
-                }
-                else if (eventtype.Equals("prospectedasteroid"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "ProspectedAsteroid")
-                            .V("MotherlodeMaterial", "Serendibite")
-                            .V("Content", "$AsteroidMaterialContent_High;")
-                            .V("Content_Localised", "Material Content:High")
-                            .V("Remaining", 100.000000);
-                    string[] mats = new string[] { "Coltan", "Lepidolite", "Uraninite" };
-
-                    qj.Array("Materials");
-                    double p = 2;
-                    foreach (var m in mats)
-                    {
-                        qj.Object().V("Name", m).V("Proportion", p).Close();
-                        p *= 2.2;
-                    }
-
-                    qj.Close(99);
-                }
-                else if (eventtype.Equals("saasignalsfound") && args.Left >= 1)
-                {
-                    qj.Object().UTC("timestamp").V("event", "SAASignalsFound")
-                            .V("BodyName", args.Next())
-                            .V("SystemAddress", 101)
-                            .V("BodyID", 11)
-                            .Array("Signals")
-                            .Object().V("Type", "LowTemperatureDiamond").V("Type_Localised", "Low Temperature Diamonds").V("Count", 11).Close()
-                            .Object().V("Type", "FredThingies").V("Type_Localised", "Fred stuff").V("Count", 2).Close()
-                            .Object().V("Type", "Widgets").V("Type_Localised", "Widgities stuff").V("Count", 20).Close()
-                            .Close();
-                }
-                else if (eventtype.Equals("reservoirreplenished") && args.Left >= 2)
-                {
-                    double main = args.Double();
-                    double res = args.Double();
-
-                    qj.Object().UTC("timestamp").V("event", "ReservoirReplenished")
-                            .V("FuelMain", main)
-                            .V("FuelReservoir", res);
-                }
-                else if (eventtype.Equals("carrierdepositfuel") && args.Left >= 1)
-                {
-                    int amount = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "CarrierDepositFuel")
-                            .V("CarrierID", 1234)
-                            .V("Amount", amount)
-                            .V("Total", amount + 5000);
-                }
-                else if (eventtype.Equals("screenshot") && args.Left >= 2)
-                {
-                    string infile = args.Next();
-                    string outfolder = args.Next();
-                    bool nojr = args.Left >= 1 && args.Next().Equals("NOJR");
-
-                    if (File.Exists(infile))
-                    {
-                        int n = 100;
-                        string outfile;
-                        do
-                        {
-                            outfile = Path.Combine(outfolder, string.Format("Screenshot_{0}.bmp", n++));
-                        } while (File.Exists(outfile));
-
-                        File.Copy(infile, outfile);
-
-                        Console.WriteLine("{0} -> {1}", infile, outfile);
-
-                        if (!nojr)
-                        {
-                            qj.Object().UTC("timestamp").V("event", "Screenshot")
-                                .V("Filename", "\\\\ED_Pictures\\\\" + Path.GetFileName(outfile))
-                                .V("Width", 1920)
-                                .V("Height", 1200)
-                                .V("System", "Fredsys")
-                                .V("Body", "Jimbody");
-                        }
-                    }
-                    else
-                        Console.WriteLine("No such file {0}", infile);
-
-
-                }
-                else if (eventtype.Equals("carrierfinance") && args.Left >= 1)
-                {
-                    int amount = args.Int();
-
-                    qj.Object().UTC("timestamp").V("event", "CarrierFinance")
-                            .V("CarrierID", 1234)
-                            .V("TaxRate", 23)
-                            .V("CarrierBalance", amount)
-                            .V("ReserveBalance", amount + 2000)
-                            .V("AvailableBalance", amount + 4000)
-                            .V("ReservePercent", 42);
-                }
-                else if (eventtype.Equals("carriernamechanged"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "CarrierNameChanged")
-                            .V("CarrierID", 1234)
-                            .V("Callsign", "sixi-20")
-                            .V("Name", "Big Bertha");
-                }
-                else if (eventtype.Equals("cargotransfer") && args.Left >= 3)
-                {
-                    string type = args.Next();
-                    int count = args.Int();
-                    string dir = args.Next();
-                    qj.Object().UTC("timestamp").V("event", "CargoTransfer")
-                            .Array("Transfers")
-                            .Object()
-                            .V("Type", type)
-                            .V("Type_Localised", type + "_loc")
-                            .V("Count", count)
-                            .V("Direction", dir)
-                            .Close()
-                            .Close();
-
-                }
-                else if (eventtype.Equals("scanorganic") && args.Left >= 4)
-                {
-                    string st = args.Next();
-                    if (st == "Log" || st == "Sample" || st == "Analyse")
-                    {
-                        string genus = args.Next();
-                        string species = args.Next();
-                        int body = args.Int();
-
-                        qj.Object().UTC("timestamp").V("event", "ScanOrganic");
-                        qj.V("ScanType", st);
-                        qj.V("Genus", genus);
-                        qj.V("Genus_Localised", genus.Replace("$Codex_Ent_", "").Replace("_Genus_Name;", ""));
-                        qj.V("Species", species);
-                        qj.V("Species_Localised", species.Replace("$Codex_Ent_", "").Replace("_Name;", ""));
-                        qj.V("SystemAddress", 1416164883666);
-                        qj.V("Body", body);
-                        qj.Close();
-                    }
-                }
-                else if (eventtype.Equals("event") && args.Left >= 1)   // give it raw json from "event":"wwkwk" onwards, without } at end
-                {
-                    string file = args.Next();
-
-                    var textlines = File.ReadLines(file);
-
-                    lineout = "";
-                    checkjson = false;
-
-                    foreach (string line in textlines)
-                    {
-                        if (line.Length > 0)
-                        {
-                            JObject jo = JObject.Parse(line);
-                            if (jo != null)
-                            {
-                                jo["timestamp"] = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
-                                if (lineout.HasChars())
-                                    lineout += Environment.NewLine;
-                                lineout += jo.ToString();
-                            }
-                            else
-                            {
-                                Console.WriteLine("Bad journal line " + line);
-                                break;
-                            }
-                        }
-                    }
-                }
-                else if (eventtype.Equals("shiptargeted"))
-                {
-                    qj.Object().UTC("timestamp").V("event", "ShipTargeted").V("TargetLocked", args.Left > 0);
-
-                    if (args.Left > 0)
-                    {
-                        int stage = 0;
-                        string ship = args.Next();
-                        qj.V("Ship", ship).V("Ship_Localised", "L:" + ship);
-
-                        if (args.Left >= 2)
-                        {
-                            stage = 1;
-                            string pilot = args.Next();
-                            string rank = args.Next();
-                            qj.V("PilotName", pilot).V("PilotName_Localised", "L:" + pilot).V("PilotRank", rank);
-
-                            if (args.Left >= 1)
-                            {
-                                stage = 2;
-                                double health = args.Double();
-                                qj.V("ShieldHealth", health).V("HullHealth", health / 2);
-
-                                if (args.Left >= 1)
-                                {
-                                    stage = 3;
-                                    string faction = args.Next();
-                                    qj.V("Faction", faction).V("LegalStatus", "Clean");
-                                }
-                            }
-                        }
-
-                        qj.V("ScanStage", stage);
-                    }
-                }
-                else if (eventtype.Equals("continued"))
-                {
-                    QuickJSON.JSONFormatter qjc = new JSONFormatter();
-                    qjc.Object().UTC("timestamp").V("event", "Continued").V("Part", 2);
-                    WriteToLog(filename, cmdrname, qjc.Get(), checkjson);
-                    filename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".part2" + Path.GetExtension(filename));
-                    Console.WriteLine("Continued.. change to filename " + filename);
-                    WriteToLog(filename, cmdrname, null, false, 2);
-                }
-                else if (eventtype.Equals("buysuit") && args.Left >= 1)
-                {
-                    qj.Object().UTC("timestamp").V("event", "BuySuit")
-                            .V("Name", "TacticalSuit_Class1")
-                            .V("Name_Localised", "Tactical Suit")
-                            .V("SuitID", args.Int())
-                            .V("CommanderId", 23)
-                            .V("Price", 150000);
-                }
-
-                else
-                {
-                    Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry" + Environment.NewLine + Help(eventtype));
-                    break;
-                }
-
-                if (lineout == null && qj.Get().HasChars())
-                    lineout = qj.Get();
-
-                if (lineout != null)
-                    WriteToLog(filename, cmdrname, lineout, checkjson);
-                else
-                    break;
 
                 if (repeatdelay == -1)
                 {
@@ -831,11 +103,761 @@ namespace EDDTest
                     if (Console.KeyAvailable && Console.ReadKey().Key == ConsoleKey.Escape)
                         break;
                 }
+                else if (--repeattimes > 0)
+                {
+                }
                 else
                     break;
-
-                repeatcount++;
             }
+        }
+
+        public static bool createJournalEntry(string cmdrname, CommandArgs args, int repeatcount, string filename)
+        {
+            string eventtype = args.Next().ToLower();
+            string lineout = null;      //quick writer
+            bool checkjson = true;  // check json before writing to file
+            QuickJSON.JSONFormatter qj = new QuickJSON.JSONFormatter();
+
+            if (eventtype.Equals("fsd"))
+                lineout = FSDJump(args, repeatcount);
+            else if (eventtype.Equals("blamtest"))
+                Blamtest(filename, cmdrname, args);
+            else if (eventtype.Equals("fsdtravel"))
+                lineout = FSDTravel(args);
+            else if (eventtype.Equals("locdocked") && args.Left >= 4)
+            {
+                qj.Object().UTC("timestamp").V("event", "Location");
+                qj.V("Docked", true);
+                qj.V("StationName", args.Next());
+                qj.V("StationType", "Orbis");
+                qj.V("MarketID", 12829282);
+                qj.Object("StationFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
+                qj.Object("SystemFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
+                qj.V("StarSystem", args.Next());
+                qj.V("SystemAddress", 6538272662)
+                .V("DistFromStarLS", 335.426033)
+                .V("StationGovernment", "$government_Democracy;").V("StationGovernment_Localised", "Democracy").V("StationAllegiance", "PilotsFederation")
+                .Array("StationServices").V("dock").V("autodock").V("commodities").V("contacts").V("exploration").V("missions").V("outfitting").V("crewlounge").V("rearm").V("refuel").V("repair").V("shipyard").V("tuning").V("engineer").V("missionsgenerated").V("flightcontroller").V("stationoperations").V("searchrescue").V("techBroker").V("stationMenu").V("shop").V("livery").V("socialspace").V("bartender").V("vistagenomics").V("pioneersupplies").V("apexinterstellar").V("frontlinesolutions").Close()
+                .V("StationEconomy", "$economy_HighTech;").V("StationEconomy_Localised", "High Tech")
+                .Array("StationEconomies")
+                    .Object().V("Name", "$economy_HighTech;").V("Name_Localised", "High Tech").V("Proportion", 0.67).Close()
+                    .Object().V("Name", "$economy_Industrial;").V("Name_Localised", "Industrial").V("Proportion", 0.33).Close()
+                .Close()
+                .V("Taxi", false).V("Multicrew", false).V("StarSystem", "Shinrarta Dezhra")
+                .Array("StarPos").V(55.71875).V(17.59375).V(27.15625).Close()
+                .V("SystemAllegiance", "PilotsFederation").V("SystemEconomy", "$economy_HighTech;").V("SystemEconomy_Localised", "High Tech").V("SystemSecondEconomy", "$economy_Industrial;")
+                .V("SystemSecondEconomy_Localised", "Industrial").V("SystemGovernment", "$government_Democracy;").V("SystemGovernment_Localised", "Democracy")
+                .V("SystemSecurity", "$SYSTEM_SECURITY_high;").V("SystemSecurity_Localised", "High Security")
+                .V("Population", 85287324).V("Body", "Jameson Memorial")
+                .V("BodyID", 69).V("BodyType", "Station")
+                .Array("Factions")
+                    .Object().V("Name", "LTT 4487 Industry").V("FactionState", "None").V("Government", "Corporate").V("Influence", 0.260302).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 11.88).Close()
+                    .Object().V("Name", "Future of Arro Naga").V("FactionState", "CivilLiberty").V("Government", "Democracy").V("Influence", 0.232161).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Array("ActiveStates").Object().V("State", "CivilLiberty").Close().Close().Close()
+                    .Object().V("Name", "The Dark Wheel").V("FactionState", "Boom").V("Government", "Democracy").V("Influence", 0.309548).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", -1.5).Array("ActiveStates").Object().V("State", "Boom").Close().Object().V("State", "Drought").Close().Close().Close()
+                    .Object().V("Name", "Los Chupacabras").V("FactionState", "None").V("Government", "PrisonColony").V("Influence", 0.19799).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
+                .Close()
+                .Object("SystemFaction").V("Name", "Pilots' Federation Local Branch").Close()
+                .Close();
+            }
+            else if (eventtype.Equals("docked") && args.Left >= 3)
+            {
+                qj.Object()
+                    .UTC("timestamp").V("event", "Docked")
+                    .V("StationName", args.Next()).V("StationType", "Orbis").V("Taxi", false).V("Multicrew", false).V("StarSystem", args.Next()).V("SystemAddress", 3932277478106).V("MarketID", 128666762)
+                    .Object("StationFaction").V("Name", args.Next()).Close()
+                    .V("StationGovernment", "$government_Democracy;").V("StationGovernment_Localised", "Democracy").V("StationAllegiance", "PilotsFederation")
+                    .Array("StationServices").V("dock").V("autodock").V("commodities").V("contacts").V("exploration").V("missions").V("outfitting").V("crewlounge").V("rearm").V("refuel").V("repair").V("shipyard").V("tuning").V("engineer").V("missionsgenerated").V("flightcontroller").V("stationoperations").V("searchrescue").V("techBroker").V("stationMenu").V("shop").V("livery").V("socialspace").V("bartender").V("vistagenomics").V("pioneersupplies").V("apexinterstellar").V("frontlinesolutions").Close()
+                    .V("StationEconomy", "$economy_HighTech;").V("StationEconomy_Localised", "High Tech")
+                    .Array("StationEconomies")
+                    .Object().V("Name", "$economy_HighTech;").V("Name_Localised", "High Tech").V("Proportion", 0.67).Close()
+                    .Object().V("Name", "$economy_Industrial;").V("Name_Localised", "Industrial").V("Proportion", 0.33).Close()
+                    .Close()
+                    .V("DistFromStarLS", 335.135112)
+                    .Object("LandingPads").V("Small", 17).V("Medium", 18).V("Large", 9).Close()
+                .Close();
+            }
+            else if (eventtype.Equals("undocked"))
+                qj.Object().UTC("timestamp").V("event", "Undocked").V("StationName", "Jameson Memorial").V("StationType", "Orbis");
+            else if (eventtype.Equals("liftoff"))
+                qj.Object().UTC("timestamp").V("event", "Liftoff").V("Latitude", 7.141173).V("Longitude", 95.256424);
+            else if (eventtype.Equals("touchdown"))
+            {
+                qj.Object().UTC("timestamp").V("event", "Touchdown").V("Latitude", 7.141173).V("Longitude", 95.256424).V("PlayerControlled", true);
+            }
+            else if (eventtype.Equals("missionaccepted") && args.Left == 3)
+            {
+                string f = args.Next();
+                string vf = args.Next();
+                int id = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "MissionAccepted").V("Faction", f)
+                        .V("Name", "Mission_Assassinate_Legal_Corporate").V("TargetType", "$MissionUtil_FactionTag_PirateLord;")
+                        .V("TargetType_Localised", "Pirate lord").V("TargetFaction", vf)
+                        .V("DestinationSystem", "Quapa").V("DestinationStation", "Grabe Dock").V("Target", "mamsey")
+                        .V("Expiry", DateTime.UtcNow.AddDays(1))
+                        .V("Influence", "Med")
+                        .V("Reputation", "Med").V("MissionID", id);
+            }
+            else if (eventtype.Equals("missioncompleted") && args.Left == 3)
+            {
+                string f = args.Next();
+                string vf = args.Next();
+                int id = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "MissionCompleted").V("Faction", f)
+                    .V("Name", "Mission_Assassinate_Legal_Corporate").V("TargetType", "$MissionUtil_FactionTag_PirateLord;")
+                    .V("TargetType_Localised", "Pirate lord").V("TargetFaction", vf)
+                    .V("MissionID", id).V("Reward", "82272")
+                    .Array("CommodityReward").Object().V("Name", "CoolingHoses").V("Count", 4);
+            }
+            else if (eventtype.Equals("missionredirected") && args.Left == 3)
+            {
+                string sysn = args.Next();
+                string stationn = args.Next();
+                int id = args.Int();
+                qj.Object().UTC("timestamp").V("event", "MissionRedirected").V("MissionID", id).V("MissionName", "Mission_Assassinate_Legal_Corporate")
+                    .V("NewDestinationStation", stationn).V("OldDestinationStation", "Cuffey Orbital")
+                    .V("NewDestinationSystem", sysn).V("OldDestinationSystem", "Vequess");
+            }
+            else if (eventtype.Equals("missions") && args.Left == 1)
+            {
+                int id = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "Missions");
+
+                qj.Array("Active").Object();
+                FMission(qj, id, "Mission_Assassinate_Legal_Corporate", false, 20000);
+                qj.Close(2);
+
+                qj.Array("Failed").Object();
+                FMission(qj, id + 1000, "Mission_Assassinate_Legal_Corporate", false, 20000);
+                qj.Close(2);
+
+                qj.Array("Completed").Object();
+                FMission(qj, id + 2000, "Mission_Assassinate_Legal_Corporate", false, 20000);
+                qj.Close(2);
+            }
+            else if (eventtype.Equals("materials") && args.Left >= 2)
+            {
+                qj.Object()
+                    .UTC("timestamp").V("event", "Materials")
+                    .Array("Raw")
+                        .Object().V("Name", args.Next()).V("Count", args.Int()).Close()
+                        .Object().V("Name", "iron").V("Count", 261).Close()
+                        .Object().V("Name", "vanadium").V("Count", 39).Close()
+                    .Close()
+                .Close();
+            }
+            else if (eventtype.Equals("cargo") && args.Left >= 2)
+            {
+                qj.Object().UTC("timestamp").V("event", "Cargo").V("Vessel", "Ship").V("Count", 7)
+                    .Array("Inventory")
+                        .Object().V("Name", args.Next()).V("Count", args.Int()).V("Stolen", 0).Close()
+                        .Object().V("Name", "lithiumhydroxide").V("Name_Localised", "Lithium Hydroxide").V("Count", 1).V("Stolen", 0).Close()
+                        .Object().V("Name", "tritium").V("Count", 5).V("Stolen", 0).Close()
+                    .Close()
+                .Close();
+            }
+            else if (eventtype.Equals("navroute") && args.Left >= 1)
+            {
+                DateTime t = DateTime.UtcNow;
+                qj.Object().V("timestamp", t.ToStringZulu()).V("event", "NavRoute");
+
+                JSONFormatter f = new JSONFormatter().Object().V("timestamp", t.ToStringZulu()).V("event", "NavRoute")
+                    .Array("Route")
+                        .Object().V("StarSystem", args.Next()).V("SystemAddress", 83785487050).Array("StarPos").V(-58.03125).V(59.5625).V(-58.78125).Close().V("StarClass", "K").Close()
+                        .Object().V("StarSystem", "LHS 2610").V("SystemAddress", 5068464268697).Array("StarPos").V(-41.3125).V(40.4375).V(-27.375).Close().V("StarClass", "M").Close()
+                        .Object().V("StarSystem", "44 chi Draconis").V("SystemAddress", 2278220106091).Array("StarPos").V(-22.5625).V(12.375).V(-5.40625).Close().V("StarClass", "F").Close()
+                        .Object().V("StarSystem", "Sol").V("SystemAddress", 10477373803).Array("StarPos").V(0.0).V(0.0).V(0.0).Close().V("StarClass", "G").Close();
+
+                File.WriteAllText("navRoute.json", f.Get());
+            }
+            else if (eventtype.Equals("marketbuy") && args.Left == 3)
+            {
+                string name = args.Next();
+                int count = args.Int();
+                int price = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "MarketBuy").V("MarketID", 29029292)
+                            .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("BuyPrice", price).V("TotalCost", price * count);
+            }
+            else if (eventtype.Equals("marketsell") && args.Left == 3)
+            {
+                string name = args.Next();
+                int count = args.Int();
+                int price = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "MarketSell").V("MarketID", 29029292)
+                            .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("SellPrice", price).V("TotalSale", price * count)
+                            .V("IllegalGoods", false).V("StolenGoods", false).V("BlackMarket", false);
+            }
+            else if (eventtype.Equals("bounty"))
+            {
+                string f = args.Next();
+                int rw = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "Bounty").V("VictimFaction", f).V("VictimFaction_Localised", f + "_Loc")
+                    .V("TotalReward", rw);
+            }
+            else if (eventtype.Equals("factionkillbond"))
+            {
+                string f = args.Next();
+                string vf = args.Next();
+                int rw = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "FactionKillBond").V("VictimFaction", vf).V("VictimFaction_Localised", vf + "_Loc")
+                    .V("AwardingFaction", f).V("AwardingFaction_Localised", f + "_Loc")
+                    .V("Reward", rw);
+            }
+            else if (eventtype.Equals("capshipbond"))
+            {
+                string f = args.Next();
+                string vf = args.Next();
+                int rw = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "CapShipBond").V("VictimFaction", vf).V("VictimFaction_Localised", vf + "_Loc")
+                    .V("AwardingFaction", f).V("AwardingFaction_Localised", f + "_Loc")
+                    .V("Reward", rw);
+            }
+            else if (eventtype.Equals("resurrect"))
+            {
+                int ct = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "Resurrect").V("Option", "Help me").V("Cost", ct).V("Bankrupt", false);
+            }
+            else if (eventtype.Equals("died"))
+            {
+                qj.Object().UTC("timestamp").V("event", "Died").V("KillerName", "Evil Jim McDuff").V("KillerName_Localised", "Evil Jim McDuff The great").V("KillerShip", "X-Wing").V("KillerRank", "Invincible");
+            }
+            else if (eventtype.Equals("miningrefined"))
+                qj.Object().UTC("timestamp").V("event", "MiningRefined").V("Type", "Gold");
+            else if (eventtype.Equals("engineercraft"))
+                qj.Object().UTC("timestamp").V("event", "EngineerCraft").V("Engineer", "Robert").V("Blueprint", "FSD_LongRange")
+                    .V("Level", "5").Object("Ingredients").V("magneticemittercoil", 1).V("arsenic", 1).V("chemicalmanipulators", 1).V("dataminedwake", 1);
+            else if (eventtype.Equals("navbeaconscan"))
+                qj.Object().UTC("timestamp").V("event", "NavBeaconScan").V("NumBodies", "3");
+            else if (eventtype.Equals("scanplanet") && args.Left >= 1)
+            {
+                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
+                //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":639.245483, \"TidalLock\":true, \"TerraformState\":\"\", \"PlanetClass\":\"Metal rich body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"None\", \"Volcanism\":\"rocky magma volcanism\", \"MassEM\":0.010663, \"Radius\":1163226.500000, \"SurfaceGravity\":3.140944, \"SurfaceTemperature\":1068.794067, \"SurfacePressure\":0.000000, \"Landable\":true, \"Materials\":[ { \"Name\":\"iron\", \"Percent\":36.824127 }, { \"Name\":\"nickel\", \"Percent\":27.852226 }, { \"Name\":\"chromium\", \"Percent\":16.561033 }, { \"Name\":\"zinc\", \"Percent\":10.007420 }, { \"Name\":\"selenium\", \"Percent\":2.584032 }, { \"Name\":\"tin\", \"Percent\":2.449526 }, { \"Name\":\"molybdenum\", \"Percent\":2.404594 }, { \"Name\":\"technetium\", \"Percent\":1.317050 } ], \"SemiMajorAxis\":1532780800.000000, \"Eccentricity\":0.000842, \"OrbitalInclination\":-1.609496, \"Periapsis\":179.381393, \"OrbitalPeriod\":162753.062500, \"RotationPeriod\":162754.531250, \"AxialTilt\":0.033219");
+            }
+            else if (eventtype.Equals("scanstar"))
+            {
+                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
+                //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":0.000000, \"StarType\":\"B\", \"StellarMass\":8.597656, \"Radius\":2854249728.000000, \"AbsoluteMagnitude\":1.023468, \"Age_MY\":182, \"SurfaceTemperature\":23810.000000, \"Luminosity\":\"IV\", \"SemiMajorAxis\":12404761034752.000000, \"Eccentricity\":0.160601, \"OrbitalInclination\":18.126791, \"Periapsis\":49.512009, \"OrbitalPeriod\":54231617536.000000, \"RotationPeriod\":110414.359375, \"AxialTilt\":0.000000");
+            }
+            else if (eventtype.Equals("scanearth"))
+            {
+                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
+                //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":901.789856, \"TidalLock\":false, \"TerraformState\":\"Terraformed\", \"PlanetClass\":\"Earthlike body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"EarthLike\", \"AtmosphereComposition\":[ { \"Name\":\"Nitrogen\", \"Percent\":92.386833 }, { \"Name\":\"Oxygen\", \"Percent\":7.265749 }, { \"Name\":\"Water\", \"Percent\":0.312345 } ], \"Volcanism\":\"\", \"MassEM\":0.840000, \"Radius\":5821451.000000, \"SurfaceGravity\":9.879300, \"SurfaceTemperature\":316.457062, \"SurfacePressure\":209183.453125, \"Landable\":false, \"SemiMajorAxis\":264788426752.000000, \"Eccentricity\":0.021031, \"OrbitalInclination\":13.604733, \"Periapsis\":73.138206, \"OrbitalPeriod\":62498732.000000, \"RotationPeriod\":58967.023438, \"AxialTilt\":-0.175809");
+            }
+            else if (eventtype.Equals("ring"))
+            {
+                //qj.Object().UTC("timestamp").Literal("\"event\": \"Scan\",  \"ScanType\": \"AutoScan\",  \"BodyName\": \"Merope 9 Ring\",  \"DistanceFromArrivalLS\": 1883.233643,  \"SemiMajorAxis\": 70415976.0,  \"Eccentricity\": 0.0,  \"OrbitalInclination\": 0.0,  \"Periapsis\": 0.0,  \"OrbitalPeriod\": 100994.445313}");
+            }
+            else if (eventtype.Equals("afmurepairs"))
+                qj.Object().UTC("timestamp").V("event", "AfmuRepairs").V("Module", "$modularcargobaydoor_name;").V("Module_Localised", "Cargo Hatch").V("FullyRepaired", true)
+                        .V("Health", 1.000000);
+
+            else if (eventtype.Equals("sellshiponrebuy"))
+                qj.Object().UTC("timestamp").V("event", "SellShipOnRebuy").V("ShipType", "Dolphin").V("System", "Shinrarta Dezhra")
+                    .V("SellShipId", 4).V("ShipPrice", 4110183);
+
+            else if (eventtype.Equals("searchandrescue") && args.Left == 2)
+            {
+                string name = args.Next();
+                int count = args.Int();
+                qj.Object().UTC("timestamp").V("event", "SearchAndRescue").V("MarketID", 29029292)
+                            .V("Name", name).V("Name_Localised", name + "loc").V("Count", count).V("Reward", 10234);
+
+            }
+            else if (eventtype.Equals("repairdrone"))
+            {
+                qj.Object().UTC("timestamp").V("event", "RepairDrone");
+                qj.V("HullRepaired", repeatcount * 0.1);
+                qj.V("CockpitRepaired", 0.1);
+                qj.V("CorrosionRepaired", 0.2);
+            }
+            else if (eventtype.Equals("communitygoal"))
+            {
+                //qj.Object().UTC("timestamp").V("event", "CommunityGoal").Literal("\"CurrentGoals\":[ { \"CGID\":726, \"Title\":\"Alliance Research Initiative - Trade\", \"SystemName\":\"Kaushpoos\", \"MarketName\":\"Neville Horizons\", \"Expiry\":\"2017-08-17T14:58:14Z\", \"IsComplete\":false, \"CurrentTotal\":10062, \"PlayerContribution\":562, \"NumContributors\":101, \"TopRankSize\":10, \"PlayerInTopRank\":false, \"TierReached\":\"Tier 1\", \"PlayerPercentileBand\":50, \"Bonus\":200000 } ] }");
+            }
+            else if (eventtype.Equals("musicnormal"))
+                qj.Object().UTC("timestamp").V("event", "Music").V("MusicTrack", "NoTrack");
+            else if (eventtype.Equals("musicsysmap"))
+                qj.Object().UTC("timestamp").V("event", "Music").V("MusicTrack", "SystemMap");
+            else if (eventtype.Equals("musicgalmap"))
+                qj.Object().UTC("timestamp").V("event", "Music").V("MusicTrack", "GalaxyMap");
+            else if (eventtype.Equals("friends") && args.Left >= 1)
+                qj.Object().UTC("timestamp").V("event", "Friends").V("Status", "Online").V("Name", args.Next());
+            else if (eventtype.Equals("fuelscoop") && args.Left >= 2)
+            {
+                string scoop = args.Next();
+                string total = args.Next();
+                qj.Object().UTC("timestamp").V("event", "FuelScoop").V("Scooped", scoop).V("Total", total);
+            }
+            else if (eventtype.Equals("jetconeboost"))
+            {
+                qj.Object().UTC("timestamp").V("event", "JetConeBoost").V("BoostValue", 1.5);
+            }
+            else if (eventtype.Equals("fighterdestroyed"))
+                qj.Object().UTC("timestamp").V("event", "FighterDestroyed");
+            else if (eventtype.Equals("fighterrebuilt"))
+                qj.Object().UTC("timestamp").V("event", "FighterRebuilt").V("Loadout", "Fred");
+            else if (eventtype.Equals("npccrewpaidwage"))
+                qj.Object().UTC("timestamp").V("event", "NpcCrewPaidWage").V("NpcCrewId", 1921).V("Amount", 10292);
+            else if (eventtype.Equals("npccrewrank"))
+                qj.Object().UTC("timestamp").V("event", "NpcCrewRank").V("NpcCrewId", 1921).V("RankCombat", 4);
+            else if (eventtype.Equals("launchdrone"))
+                qj.Object().UTC("timestamp").V("event", "LaunchDrone").V("Type", "FuelTransfer");
+            else if (eventtype.Equals("market"))
+                lineout = Market(Path.GetDirectoryName(filename), args.Next());
+            else if (eventtype.Equals("moduleinfo"))
+                lineout = ModuleInfo(Path.GetDirectoryName(filename), args.Next());
+            else if (eventtype.Equals("outfitting"))
+                lineout = Outfitting(Path.GetDirectoryName(filename), args.Next());
+            else if (eventtype.Equals("shipyard"))
+                lineout = Shipyard(Path.GetDirectoryName(filename), args.Next());
+            else if (eventtype.Equals("powerplay"))
+                qj.Object().UTC("timestamp").V("event", "PowerPlay").V("Power", "Fred").V("Rank", 10).V("Merits", 10).V("Votes", 2).V("TimePledged", 433024);
+            else if (eventtype.Equals("underattack"))
+                qj.Object().UTC("timestamp").V("event", "UnderAttack").V("Target", "Fighter");
+            else if (eventtype.Equals("promotion") && args.Left == 2)
+                qj.Object().UTC("timestamp").V("event", "Promotion").V(args.Next(), args.Int());
+            else if (eventtype.Equals("cargodepot"))
+                lineout = CargoDepot(args);
+            else if (eventtype.Equals("fsssignaldiscovered") && args.Left >= 1)
+            {
+                string name = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "FSSSignalDiscovered");
+                qj.V("SignalName", name);
+
+                if (args.Left >= 2)
+                {
+                    string state = args.Next();
+                    qj.V("SpawingState", "$" + state);
+                    qj.V("SpawingState_Localised", state);
+                    string faction = args.Next();
+                    qj.V("SpawingFaction", "$" + faction);
+                    qj.V("SpawingFaction_Localised", faction);
+                    qj.V("TimeRemaining", 60);
+                    qj.V("USSThreat", 5);
+                    qj.V("USSType", "Jim");
+                    qj.V("USSType_Localised", "JimLoc");
+                    qj.V("IsStation", false);
+                }
+
+                qj.Close();
+            }
+            else if (eventtype.Equals("modulebuyandstore") && args.Left >= 2)
+            {
+                string name = args.Next();
+                int cost = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "ModuleBuyAndStore");
+                qj.V("BuyItem", name);
+                qj.V("BuyItem_Localised", name + "Loc");
+                qj.V("MarketID", 292929222);
+                qj.V("BuyPrice", 4144);
+                qj.V("Ship", "ferdelance");
+                qj.V("ShipID", 35);
+                qj.Close();
+            }
+            else if (eventtype.Equals("codexentry") && args.Left >= 4)
+            {
+                string name = args.Next();
+                string subcat = args.Next();
+                string cat = args.Next();
+                string system = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "CodexEntry");
+                qj.V("Name", "$" + name);
+                qj.V("Name_Localised", name);
+                qj.V("SubCategory", "$" + subcat);
+                qj.V("SubCategory_Localised", subcat);
+                qj.V("Category", "$" + cat);
+                qj.V("Category_Localised", cat);
+                qj.V("System", system);
+                qj.V("Region", "Region 18");
+                qj.V("IsNewEntry", true);
+                qj.V("NewTraitsDiscovered", true);
+                qj.Array().V("T1").V("T2").V("T3").Close();
+                qj.Close();
+            }
+            else if (eventtype.Equals("saascancomplete") && args.Left >= 1)
+            {
+                string name = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "SAAScanComplete");
+                qj.V("BodyName", name);
+                qj.V("BodyID", 10);
+                qj.Array("Discoverers").V("Fred").V("Jim").V("Sheila").Close();
+                qj.Array("Mappers").V("george").V("henry").Close();
+                qj.V("ProbesUsed", 10);
+                qj.V("EfficiencyTarget", 12);
+                qj.Close();
+            }
+            else if (eventtype.Equals("asteroidcracked") && args.Left >= 1)
+            {
+                string name = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "AsteroidCracked");
+                qj.V("Body", name);
+                qj.Close();
+            }
+
+            else if (eventtype.Equals("multisellexplorationdata"))
+            {
+                qj.Object().UTC("timestamp").V("event", "MultiSellExplorationData");
+                qj.Array("Discovered");
+                for (int i = 0; i < 5; i++)
+                {
+                    qj.Object();
+                    qj.V("SystemName", "Sys" + i);
+                    qj.V("NumBodies", i * 2 + 1);
+                    qj.Close();
+                }
+
+                qj.Close();
+                qj.V("BaseValue", 100);
+                qj.V("Bonus", 200);
+                qj.V("TotalEarnings", 300);
+                qj.Close();
+            }
+            else if (eventtype.Equals("startjump") && args.Left >= 1)
+            {
+                string name = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "StartJump");
+                qj.V("JumpType", "Hyperspace");
+                qj.V("StarSystem", name);
+                qj.V("StarClass", "A");
+                qj.V("SystemAddress", 10);
+                qj.Close();
+            }
+            else if (eventtype.Equals("appliedtosquadron") && args.Left >= 1)
+                lineout = Squadron("AppliedToSquadron", args.Next());
+
+            else if (eventtype.Equals("disbandedsquadron") && args.Left >= 1)
+                lineout = Squadron("DisbandedSquadron", args.Next());
+
+            else if (eventtype.Equals("invitedtosquadron") && args.Left >= 1)
+                lineout = Squadron("InvitedToSquadron", args.Next());
+
+            else if (eventtype.Equals("joinedsquadron") && args.Left >= 1)
+                lineout = Squadron("JoinedSquadron", args.Next());
+
+            else if (eventtype.Equals("leftsquadron") && args.Left >= 1)
+                lineout = Squadron("LeftSquadron", args.Next());
+
+            else if (eventtype.Equals("kickedfromsquadron") && args.Left >= 1)
+                lineout = Squadron("KickedFromSquadron", args.Next());
+
+            else if (eventtype.Equals("sharedbookmarktosquadron") && args.Left >= 1)
+                lineout = Squadron("SharedBookmarkToSquadron", args.Next());
+
+            else if (eventtype.Equals("squadroncreated") && args.Left >= 1)
+                lineout = Squadron("SquadronCreated", args.Next());
+
+            else if (eventtype.Equals("wonatrophyforsquadron") && args.Left >= 1)
+                lineout = Squadron("WonATrophyForSquadron", args.Next());
+
+            else if (eventtype.Equals("squadrondemotion") && args.Left >= 3)
+                lineout = Squadron("SquadronDemotion", args.Next(), args.Next(), args.Next());
+
+            else if (eventtype.Equals("squadronpromotion") && args.Left >= 3)
+                lineout = Squadron("SquadronPromotion", args.Next(), args.Next(), args.Next());
+
+            else if (eventtype.Equals("squadronstartup") && args.Left == 2)
+                lineout = Squadron("SquadronStartup", args.Next(), args.Next());
+
+            else if (eventtype.Equals("fsdtarget") && args.Left >= 1)
+            {
+                qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("SystemAddress", 20);
+            }
+            else if (eventtype.Equals("fssallbodiesfound") && args.Left >= 1)
+            {
+                qj.Object().UTC("timestamp").V("event", "FSSAllBodiesFound").V("SystemName", args.Next()).V("SystemAddress", 20);
+            }
+            else if (eventtype.Equals("fssdiscoveryscan"))
+            {
+                qj.Object().UTC("timestamp").V("event", "FSSDiscoveryScan").V("Progress", 0.23).V("BodyCount", 20).V("NonBodyCount", 30);
+            }
+            else if (eventtype.Equals("commitcrime"))
+            {
+                string f = args.Next();
+                int id = args.Int();
+                qj.Object().UTC("timestamp").V("event", "CommitCrime").V("CrimeType", "collidedAtSpeedInNoFireZone").V("Faction", f).V("Fine", id);
+            }
+            else if (eventtype.Equals("crimevictim"))
+            {
+                string f = args.Next();
+                int bounty = args.Int();
+                qj.Object().UTC("timestamp").V("event", "CrimeVictim").V("CrimeType", "assault").V("Offender", f).V("Bounty", bounty);
+            }
+            else if (eventtype.Equals("launchsrv"))
+            {
+                qj.Object().UTC("timestamp").V("event", "LaunchSRV").V("Loadout", "Normal");
+            }
+            else if (eventtype.Equals("docksrv"))
+            {
+                qj.Object().UTC("timestamp").V("event", "DockSRV");
+            }
+            else if (eventtype.Equals("srvdestroyed"))
+            {
+                qj.Object().UTC("timestamp").V("event", "SRVDestroyed");
+            }
+            else if (eventtype.Equals("receivetext") && args.Left >= 3)
+            {
+                string from = args.Next();
+                string channel = args.Next();
+                string msg = args.Next();
+                qj.Object().UTC("timestamp").V("event", "ReceiveText").V("From", from).V("Message", msg).V("Channel", channel);
+            }
+            else if (eventtype.Equals("sendtext") && args.Left >= 2)
+            {
+                string to = args.Next();
+                string msg = args.Next();
+                qj.Object().UTC("timestamp").V("event", "SendText").V("To", to).V("Message", msg);
+            }
+            else if (eventtype.Equals("prospectedasteroid"))
+            {
+                qj.Object().UTC("timestamp").V("event", "ProspectedAsteroid")
+                        .V("MotherlodeMaterial", "Serendibite")
+                        .V("Content", "$AsteroidMaterialContent_High;")
+                        .V("Content_Localised", "Material Content:High")
+                        .V("Remaining", 100.000000);
+                string[] mats = new string[] { "Coltan", "Lepidolite", "Uraninite" };
+
+                qj.Array("Materials");
+                double p = 2;
+                foreach (var m in mats)
+                {
+                    qj.Object().V("Name", m).V("Proportion", p).Close();
+                    p *= 2.2;
+                }
+
+                qj.Close(99);
+            }
+            else if (eventtype.Equals("saasignalsfound") && args.Left >= 1)
+            {
+                qj.Object().UTC("timestamp").V("event", "SAASignalsFound")
+                        .V("BodyName", args.Next())
+                        .V("SystemAddress", 101)
+                        .V("BodyID", 11)
+                        .Array("Signals")
+                        .Object().V("Type", "LowTemperatureDiamond").V("Type_Localised", "Low Temperature Diamonds").V("Count", 11).Close()
+                        .Object().V("Type", "FredThingies").V("Type_Localised", "Fred stuff").V("Count", 2).Close()
+                        .Object().V("Type", "Widgets").V("Type_Localised", "Widgities stuff").V("Count", 20).Close()
+                        .Close();
+            }
+            else if (eventtype.Equals("reservoirreplenished") && args.Left >= 2)
+            {
+                double main = args.Double();
+                double res = args.Double();
+
+                qj.Object().UTC("timestamp").V("event", "ReservoirReplenished")
+                        .V("FuelMain", main)
+                        .V("FuelReservoir", res);
+            }
+            else if (eventtype.Equals("carrierdepositfuel") && args.Left >= 1)
+            {
+                int amount = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "CarrierDepositFuel")
+                        .V("CarrierID", 1234)
+                        .V("Amount", amount)
+                        .V("Total", amount + 5000);
+            }
+            else if (eventtype.Equals("screenshot") && args.Left >= 2)
+            {
+                string infile = args.Next();
+                string outfolder = args.Next();
+                bool nojr = args.Left >= 1 && args.Next().Equals("NOJR");
+
+                if (File.Exists(infile))
+                {
+                    int n = 100;
+                    string outfile;
+                    do
+                    {
+                        outfile = Path.Combine(outfolder, string.Format("Screenshot_{0}.bmp", n++));
+                    } while (File.Exists(outfile));
+
+                    File.Copy(infile, outfile);
+
+                    Console.WriteLine("{0} -> {1}", infile, outfile);
+
+                    if (!nojr)
+                    {
+                        qj.Object().UTC("timestamp").V("event", "Screenshot")
+                            .V("Filename", "\\\\ED_Pictures\\\\" + Path.GetFileName(outfile))
+                            .V("Width", 1920)
+                            .V("Height", 1200)
+                            .V("System", "Fredsys")
+                            .V("Body", "Jimbody");
+                    }
+                }
+                else
+                    Console.WriteLine("No such file {0}", infile);
+
+
+            }
+            else if (eventtype.Equals("carrierfinance") && args.Left >= 1)
+            {
+                int amount = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "CarrierFinance")
+                        .V("CarrierID", 1234)
+                        .V("TaxRate", 23)
+                        .V("CarrierBalance", amount)
+                        .V("ReserveBalance", amount + 2000)
+                        .V("AvailableBalance", amount + 4000)
+                        .V("ReservePercent", 42);
+            }
+            else if (eventtype.Equals("carriernamechanged"))
+            {
+                qj.Object().UTC("timestamp").V("event", "CarrierNameChanged")
+                        .V("CarrierID", 1234)
+                        .V("Callsign", "sixi-20")
+                        .V("Name", "Big Bertha");
+            }
+            else if (eventtype.Equals("cargotransfer") && args.Left >= 3)
+            {
+                string type = args.Next();
+                int count = args.Int();
+                string dir = args.Next();
+                qj.Object().UTC("timestamp").V("event", "CargoTransfer")
+                        .Array("Transfers")
+                        .Object()
+                        .V("Type", type)
+                        .V("Type_Localised", type + "_loc")
+                        .V("Count", count)
+                        .V("Direction", dir)
+                        .Close()
+                        .Close();
+
+            }
+            else if (eventtype.Equals("scanorganic") && args.Left >= 4)
+            {
+                string st = args.Next();
+                if (st == "Log" || st == "Sample" || st == "Analyse")
+                {
+                    string genus = args.Next();
+                    string species = args.Next();
+                    int body = args.Int();
+
+                    qj.Object().UTC("timestamp").V("event", "ScanOrganic");
+                    qj.V("ScanType", st);
+                    qj.V("Genus", genus);
+                    qj.V("Genus_Localised", genus.Replace("$Codex_Ent_", "").Replace("_Genus_Name;", ""));
+                    qj.V("Species", species);
+                    qj.V("Species_Localised", species.Replace("$Codex_Ent_", "").Replace("_Name;", ""));
+                    qj.V("SystemAddress", 1416164883666);
+                    qj.V("Body", body);
+                    qj.Close();
+                }
+            }
+            else if (eventtype.Equals("event") && args.Left >= 1)   // give it raw json from "event":"wwkwk" onwards, without } at end
+            {
+                string file = args.Next();
+
+                var textlines = File.ReadLines(file);
+
+                lineout = "";
+                checkjson = false;
+
+                foreach (string line in textlines)
+                {
+                    if (line.Length > 0)
+                    {
+                        JObject jo = JObject.Parse(line);
+                        if (jo != null)
+                        {
+                            jo["timestamp"] = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
+                            if (lineout.HasChars())
+                                lineout += Environment.NewLine;
+                            lineout += jo.ToString();
+                        }
+                        else
+                        {
+                            Console.WriteLine("Bad journal line " + line);
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (eventtype.Equals("shiptargeted"))
+            {
+                qj.Object().UTC("timestamp").V("event", "ShipTargeted").V("TargetLocked", args.Left > 0);
+
+                if (args.Left > 0)
+                {
+                    int stage = 0;
+                    string ship = args.Next();
+                    qj.V("Ship", ship).V("Ship_Localised", "L:" + ship);
+
+                    if (args.Left >= 2)
+                    {
+                        stage = 1;
+                        string pilot = args.Next();
+                        string rank = args.Next();
+                        qj.V("PilotName", pilot).V("PilotName_Localised", "L:" + pilot).V("PilotRank", rank);
+
+                        if (args.Left >= 1)
+                        {
+                            stage = 2;
+                            double health = args.Double();
+                            qj.V("ShieldHealth", health).V("HullHealth", health / 2);
+
+                            if (args.Left >= 1)
+                            {
+                                stage = 3;
+                                string faction = args.Next();
+                                qj.V("Faction", faction).V("LegalStatus", "Clean");
+                            }
+                        }
+                    }
+
+                    qj.V("ScanStage", stage);
+                }
+            }
+            else if (eventtype.Equals("continued"))
+            {
+                QuickJSON.JSONFormatter qjc = new JSONFormatter();
+                qjc.Object().UTC("timestamp").V("event", "Continued").V("Part", 2);
+                WriteToLog(filename, cmdrname, qjc.Get(), checkjson);
+                filename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".part2" + Path.GetExtension(filename));
+                Console.WriteLine("Continued.. change to filename " + filename);
+                WriteToLog(filename, cmdrname, null, false, 2);
+            }
+            else if (eventtype.Equals("buysuit") && args.Left >= 1)
+            {
+                qj.Object().UTC("timestamp").V("event", "BuySuit")
+                        .V("Name", "TacticalSuit_Class1")
+                        .V("Name_Localised", "Tactical Suit")
+                        .V("SuitID", args.Int())
+                        .V("CommanderId", 23)
+                        .V("Price", 150000);
+            }
+
+            else
+            {
+                Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry" + Environment.NewLine + Help(eventtype));
+                return false;
+            }
+
+            if (lineout == null && qj.Get().HasChars())
+                lineout = qj.Get();
+
+            if (lineout != null)
+            {
+                WriteToLog(filename, cmdrname, lineout, checkjson);
+                return true;
+            }
+            else
+                return false;
         }
 
 
@@ -843,7 +865,7 @@ namespace EDDTest
 
         public static string Help(string eventtype)
         {
-            string s = "Usage:    Journal [-keyrepeat]|[-repeat ms] pathtologfile CMDRname eventname..\n";
+            string s = "Usage:    Journal [-keyrepeat]|[-repeat ms][-repeatfor N] pathtologfile CMDRname [eventname [<paras>] ]..\n";
 
             s+=he("File", "event filename - read filename with json and store in file", eventtype);
             s+=he("Travel", "FSD name x y z (x y z is position as double)", eventtype);

@@ -841,6 +841,28 @@ namespace EDDTest
                         .V("CommanderId", 23)
                         .V("Price", 150000);
             }
+            else if (eventtype.Equals("crewassign") && args.Left >= 1)
+            {
+                qj.Object().UTC("timestamp").V("event", "CrewAssign")
+                        .V("Name", args.Next())
+                        .V("Role", args.Next())
+                        .V("CrewID", 20);
+            }
+            else if (eventtype.Equals("crewlaunchfighter") && args.Left >= 1)
+            {
+                qj.Object().UTC("timestamp").V("event", "CrewLaunchFighter")
+                        .V("Crew", args.Next())
+                        .V("Telepresence", args.Int() != 0)
+                        .V("CrewID", 20);
+            }
+
+            else if (eventtype.Equals("kickcrewmember") && args.Left >= 1)
+            {
+                qj.Object().UTC("timestamp").V("event", "KickCrewMember")
+                        .V("Crew", args.Next())
+                        .V("OnCrime", args.Int() != 0)
+                        .V("Telepresence", args.Int() != 0);
+            }
 
             else
             {
@@ -923,6 +945,9 @@ namespace EDDTest
             s+=he("", "*Squadrons* name", eventtype);
             s += he("", "screenshot inputfile outputfolder [NOJR]", eventtype);
             s += he("", "navroute system", eventtype);
+            s += he("", "crewassign crew role", eventtype);
+            s += he("", "crewlaunchfighter crew telepresence(1/0)", eventtype);
+            s += he("", "kickcrewmember crew oncrime(1/0) telepresence(1/0)", eventtype);
             return s;
         }
 

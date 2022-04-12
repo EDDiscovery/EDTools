@@ -184,7 +184,7 @@ namespace EDDTest
             {
                 qj.Object().UTC("timestamp").V("event", "Touchdown").V("Latitude", 7.141173).V("Longitude", 95.256424).V("PlayerControlled", true);
             }
-            else if (eventtype.Equals("missionaccepted") && args.Left == 3)
+            else if (eventtype.Equals("missionaccepted") && args.Left >= 3)
             {
                 string f = args.Next();
                 string vf = args.Next();
@@ -198,7 +198,7 @@ namespace EDDTest
                         .V("Influence", "Med")
                         .V("Reputation", "Med").V("MissionID", id);
             }
-            else if (eventtype.Equals("missioncompleted") && args.Left == 3)
+            else if (eventtype.Equals("missioncompleted") && args.Left >= 3)
             {
                 string f = args.Next();
                 string vf = args.Next();
@@ -210,7 +210,7 @@ namespace EDDTest
                     .V("MissionID", id).V("Reward", "82272")
                     .Array("CommodityReward").Object().V("Name", "CoolingHoses").V("Count", 4);
             }
-            else if (eventtype.Equals("missionredirected") && args.Left == 3)
+            else if (eventtype.Equals("missionredirected") && args.Left >= 3)
             {
                 string sysn = args.Next();
                 string stationn = args.Next();
@@ -219,7 +219,7 @@ namespace EDDTest
                     .V("NewDestinationStation", stationn).V("OldDestinationStation", "Cuffey Orbital")
                     .V("NewDestinationSystem", sysn).V("OldDestinationSystem", "Vequess");
             }
-            else if (eventtype.Equals("missions") && args.Left == 1)
+            else if (eventtype.Equals("missions") && args.Left >= 1)
             {
                 int id = args.Int();
 
@@ -272,7 +272,7 @@ namespace EDDTest
 
                 File.WriteAllText("navRoute.json", f.Get());
             }
-            else if (eventtype.Equals("marketbuy") && args.Left == 3)
+            else if (eventtype.Equals("marketbuy") && args.Left >= 3)
             {
                 string name = args.Next();
                 int count = args.Int();
@@ -281,7 +281,7 @@ namespace EDDTest
                 qj.Object().UTC("timestamp").V("event", "MarketBuy").V("MarketID", 29029292)
                             .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("BuyPrice", price).V("TotalCost", price * count);
             }
-            else if (eventtype.Equals("marketsell") && args.Left == 3)
+            else if (eventtype.Equals("marketsell") && args.Left >= 3)
             {
                 string name = args.Next();
                 int count = args.Int();
@@ -290,6 +290,46 @@ namespace EDDTest
                 qj.Object().UTC("timestamp").V("event", "MarketSell").V("MarketID", 29029292)
                             .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("SellPrice", price).V("TotalSale", price * count)
                             .V("IllegalGoods", false).V("StolenGoods", false).V("BlackMarket", false);
+            }
+            else if (eventtype.Equals("buymicroresources") && args.Left >= 4)
+            {
+                string name = args.Next();
+                string cat = args.Next();
+                int count = args.Int();
+                int price = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "BuyMicroResources")
+                            .V("Name", name).V("Name_Localised", name + "loc").V("Category", cat).V("Count", count).V("Price", price).V("MarketID", 29029292);
+            }
+            else if (eventtype.Equals("buymicroresources2") && args.Left >= 4)
+            {
+                string name = args.Next();
+                string cat = args.Next();
+                int count = args.Int();
+                int price = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "BuyMicroResources").V("TotalCount", count + (count + 1) + (count + 2))
+                            .Array("MicroResources")
+                                .Object().V("Name", name).V("Name_Localised", name + "loc").V("Category", cat).V("Count", count).Close()
+                                .Object().V("Name", name + "2").V("Name_Localised", name + "loc2").V("Category", cat).V("Count", count + 1).Close()
+                                .Object().V("Name", name + "3").V("Name_Localised", name + "loc3").V("Category", cat).V("Count", count + 2).Close()
+                            .Close()
+                            .V("Price", price).V("MarketID", 29029292);
+            }
+            else if (eventtype.Equals("sellmicroresources") && args.Left >= 4)
+            {
+                string name = args.Next();
+                string cat = args.Next();
+                int count = args.Int();
+                int price = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "SellMicroResources").V("TotalCount", count + (count + 1) + (count + 2))
+                            .Array("MicroResources")
+                                .Object().V("Name", name).V("Name_Localised", name + "loc").V("Category", cat).V("Count", count).Close()
+                                .Object().V("Name", name + "2").V("Name_Localised", name + "loc2").V("Category", cat).V("Count", count + 1).Close()
+                                .Object().V("Name", name + "3").V("Name_Localised", name + "loc3").V("Category", cat).V("Count", count + 2).Close()
+                            .Close()
+                            .V("Price", price).V("MarketID", 29029292);
             }
             else if (eventtype.Equals("bounty"))
             {
@@ -363,7 +403,7 @@ namespace EDDTest
                 qj.Object().UTC("timestamp").V("event", "SellShipOnRebuy").V("ShipType", "Dolphin").V("System", "Shinrarta Dezhra")
                     .V("SellShipId", 4).V("ShipPrice", 4110183);
 
-            else if (eventtype.Equals("searchandrescue") && args.Left == 2)
+            else if (eventtype.Equals("searchandrescue") && args.Left >= 2)
             {
                 string name = args.Next();
                 int count = args.Int();
@@ -422,7 +462,7 @@ namespace EDDTest
                 qj.Object().UTC("timestamp").V("event", "PowerPlay").V("Power", "Fred").V("Rank", 10).V("Merits", 10).V("Votes", 2).V("TimePledged", 433024);
             else if (eventtype.Equals("underattack"))
                 qj.Object().UTC("timestamp").V("event", "UnderAttack").V("Target", "Fighter");
-            else if (eventtype.Equals("promotion") && args.Left == 2)
+            else if (eventtype.Equals("promotion") && args.Left >= 2)
                 qj.Object().UTC("timestamp").V("event", "Promotion").V(args.Next(), args.Int());
             else if (eventtype.Equals("cargodepot"))
                 lineout = CargoDepot(args);
@@ -569,7 +609,7 @@ namespace EDDTest
             else if (eventtype.Equals("squadronpromotion") && args.Left >= 3)
                 lineout = Squadron("SquadronPromotion", args.Next(), args.Next(), args.Next());
 
-            else if (eventtype.Equals("squadronstartup") && args.Left == 2)
+            else if (eventtype.Equals("squadronstartup") && args.Left >= 2)
                 lineout = Squadron("SquadronStartup", args.Next(), args.Next());
 
             else if (eventtype.Equals("fsdtarget") && args.Left >= 1)

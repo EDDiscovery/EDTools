@@ -27,13 +27,13 @@ namespace EDDTest
 
     public static class JournalReader
     {
-        public static void ReadJournals( string path)
+        public static void ReadJournals(string path)
         {
             FileInfo[] allFiles = Directory.EnumerateFiles(path, "*.log", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
             Dictionary<string, string> dict = new Dictionary<string, string>();
 
-            foreach ( var fi in allFiles)
+            foreach (var fi in allFiles)
             {
                 using (StreamReader sr = new StreamReader(fi.FullName))         // read directly from file.. presume UTF8 no bom
                 {
@@ -41,7 +41,7 @@ namespace EDDTest
                     string line;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if ( line != "")
+                        if (line != "")
                         {
                             JObject jr = JObject.Parse(line, out string error, JToken.ParseOptions.CheckEOL);
 
@@ -49,7 +49,7 @@ namespace EDDTest
                             {
                                 string ln = jr["timestamp"].Str() + ":" + jr["event"].Str();
 
-                                if ( jr["event"].Str() == "Scan")
+                                if (jr["event"].Str() == "Scan")
                                 {
                                     string ts = jr["TerraformState"].Str();
                                     if (ts.HasChars())
@@ -61,7 +61,7 @@ namespace EDDTest
                                         }
 
                                     }
-                                        
+
                                 }
 
                             }
@@ -75,5 +75,66 @@ namespace EDDTest
             }
 
         }
+        public static void ReadFile(string path)
+        {
+            using (StreamReader sr = new StreamReader(path))         // read directly from file.. presume UTF8 no bom
+            {
+                Dictionary<string, int> stype = new Dictionary<string, int>();
+
+                int lineno = 1;
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line != "" && line.IndexOf("{")>=0)
+                    {
+                        line = line.Substring(line.IndexOf("{"));
+
+                        JObject jr = JObject.Parse(line, out string error, JToken.ParseOptions.CheckEOL);
+
+                        if (jr != null)
+                        {
+                            JArray services = jr["StationServices"].Array();
+
+                            if ( services!=null)
+                            {
+                                foreach (string je in services)
+                                {
+                                    string x = (string)je;
+                                    x = x.ToLower();
+                                    if (stype.ContainsKey(x))
+                                        stype[x] = stype[x] + 1;
+                                    else
+                                        stype[x] = 1;
+
+                                    if ( x == "initiatives")
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"{line}");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    lineno++;
+                }
+
+                List<string> stypes = new List<string>();
+                foreach (var st in stype)
+                {
+                    stypes.Add(st.Key);
+                    Console.WriteLine($"Service {st.Key} = {st.Value} ");
+                }
+
+                stypes.Sort();
+                foreach (var st in stypes)
+                {
+                    Console.WriteLine($"Service {st} ");
+                }
+
+            }
+
+
+        }
     }
 }
+

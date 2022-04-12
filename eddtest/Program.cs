@@ -379,6 +379,10 @@ namespace EDDTest
             {
                 JournalReader.ReadJournals(args.Next());
             }
+            else if (arg1.Equals("readjournalfile"))
+            {
+                JournalReader.ReadFile(args.Next());
+            }
             else if (arg1.Equals("journalindented"))
             {
                 string path = args.Next();

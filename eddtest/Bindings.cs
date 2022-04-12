@@ -98,7 +98,8 @@ namespace EDDTest
                 foreach (XElement x in bindings.Elements())
                 {
                     string ctrltype = x.Name.LocalName;
-                    List<Tuple<int, int>> pv = new List<Tuple<int, int>>();
+
+                    Dictionary<Tuple<int, int>, string> pv = new Dictionary<Tuple<int, int>, string>();
 
                     int pid = 0;
                     int vid = 0;
@@ -106,7 +107,8 @@ namespace EDDTest
                     int.TryParse(x.Element("PID").Value, System.Globalization.NumberStyles.AllowHexSpecifier, System.Globalization.CultureInfo.InvariantCulture, out pid);
                     int.TryParse(x.Element("VID").Value, System.Globalization.NumberStyles.AllowHexSpecifier, System.Globalization.CultureInfo.InvariantCulture, out vid);
 
-                    pv.Add(new Tuple<int, int>(pid, vid));
+                    var key = new Tuple<int, int>(pid, vid);        // does not seem to find duplicates, no idea, but beware!
+                    pv.Add(key,"Map");
 
                     foreach (XElement y in x.Elements())
                     {
@@ -115,18 +117,17 @@ namespace EDDTest
                             int.TryParse(y.Element("PID").Value, System.Globalization.NumberStyles.AllowHexSpecifier, System.Globalization.CultureInfo.InvariantCulture, out pid);
                             int.TryParse(y.Element("VID").Value, System.Globalization.NumberStyles.AllowHexSpecifier, System.Globalization.CultureInfo.InvariantCulture, out vid);
 
-                            pv.Add(new Tuple<int, int>(pid, vid));
+                            pv.Add(new Tuple<int, int>(pid, vid),"Map");
                         }
                     }
 
                     System.Diagnostics.Debug.WriteLine("Ctrl " + ctrltype);
-                    foreach (Tuple<int, int> v in pv)
-                        System.Diagnostics.Debug.WriteLine("  " + v.Item1.ToString("x") + " " + v.Item2.ToString("x"));
+                    foreach (var pk in pv)
+                        System.Diagnostics.Debug.WriteLine("  " + pk.Key.Item1.ToString("x") + " " + pk.Key.Item2.ToString("x"));
 
-                    foreach (Tuple<int, int> v in pv)
+                    foreach (var pk in pv)
                     {
-                        System.Diagnostics.Debug.WriteLine("  " + v.Item1.ToString("x") + " " + v.Item2.ToString("x"));
-                        Console.WriteLine("     {  new Tuple<int,int>(0x" + v.Item1.ToString("X") + ", 0x" + v.Item2.ToString("X") + "), \"" + ctrltype + "\" },");
+                        Console.WriteLine("        {  new Tuple<int,int>(0x" + pk.Key.Item1.ToString("X") + ", 0x" + pk.Key.Item2.ToString("X") + "), \"" + ctrltype + "\" },");
                     }
                 }
 

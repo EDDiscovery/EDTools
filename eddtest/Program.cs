@@ -234,6 +234,26 @@ namespace EDDTest
 
                 return;
             }
+            else if (arg1.Equals("translationrepeats"))
+            {
+                string primarypath = args.Next();
+                int primarysearchdepth = args.Int();
+
+                if (primarypath == null )
+                {
+                    Console.WriteLine("Usage:\n" +
+                                        "translaterepeats ..\n"
+                                        );
+                }
+                else
+                {
+                    string ret = TranslationFileRepeats.Process(primarypath, primarysearchdepth);
+                    Console.WriteLine(ret);
+                    System.Diagnostics.Debug.WriteLine(ret);
+                }
+
+                return;
+            }
             else if (arg1.Equals("scanforenums"))
             {
                 string enums = args.Next();

@@ -376,10 +376,23 @@ namespace EDDTest
                     .V("Level", "5").Object("Ingredients").V("magneticemittercoil", 1).V("arsenic", 1).V("chemicalmanipulators", 1).V("dataminedwake", 1);
             else if (eventtype.Equals("navbeaconscan"))
                 qj.Object().UTC("timestamp").V("event", "NavBeaconScan").V("NumBodies", "3");
-            else if (eventtype.Equals("scanplanet") && args.Left >= 1)
+            else if (eventtype.Equals("scanplanet") && args.Left >= 2)
             {
-                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":639.245483, \"TidalLock\":true, \"TerraformState\":\"\", \"PlanetClass\":\"Metal rich body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"None\", \"Volcanism\":\"rocky magma volcanism\", \"MassEM\":0.010663, \"Radius\":1163226.500000, \"SurfaceGravity\":3.140944, \"SurfaceTemperature\":1068.794067, \"SurfacePressure\":0.000000, \"Landable\":true, \"Materials\":[ { \"Name\":\"iron\", \"Percent\":36.824127 }, { \"Name\":\"nickel\", \"Percent\":27.852226 }, { \"Name\":\"chromium\", \"Percent\":16.561033 }, { \"Name\":\"zinc\", \"Percent\":10.007420 }, { \"Name\":\"selenium\", \"Percent\":2.584032 }, { \"Name\":\"tin\", \"Percent\":2.449526 }, { \"Name\":\"molybdenum\", \"Percent\":2.404594 }, { \"Name\":\"technetium\", \"Percent\":1.317050 } ], \"SemiMajorAxis\":1532780800.000000, \"Eccentricity\":0.000842, \"OrbitalInclination\":-1.609496, \"Periapsis\":179.381393, \"OrbitalPeriod\":162753.062500, \"RotationPeriod\":162754.531250, \"AxialTilt\":0.033219");
+                string name = args.Next();
+                int bodyid = args.Int();
+                qj.Object().UTC("timestamp").V("event", "Scan").V("ScanType", "Detailed").V("BodyName", name).V("BodyID", bodyid)
+                .Array("Parents")
+                .Object().V("Star", 0).Close()
+                .Close()
+                .V("StarSystem", "Hypua Prao FN-K b54-0").V("SystemAddress", 1060721544657).V("DistanceFromArrivalLS", 2577.332838).V("TidalLock", false).V("TerraformState", "").V("PlanetClass", "Icy body").V("Atmosphere", "helium atmosphere").V("AtmosphereType", "Helium")
+                .Array("AtmosphereComposition")
+                .Object().V("Name", "Helium").V("Percent", 91.379318).Close()
+                .Object().V("Name", "Hydrogen").V("Percent", 8.620689).Close()
+                .Close()
+                .V("Volcanism", "major water geysers volcanism").V("MassEM", 2.148147).V("Radius", 9745602.0).V("SurfaceGravity", 9.014798).V("SurfaceTemperature", 24.18594).V("SurfacePressure", 43238.789063).V("Landable", false)
+                .Object("Composition").V("Ice", 0.683679).V("Rock", 0.210949).V("Metal", 0.105372).Close()
+                .V("SemiMajorAxis", 773089993000.03052).V("Eccentricity", 0.000988).V("OrbitalInclination", 0.002952).V("Periapsis", 280.393599).V("OrbitalPeriod", 792438870.668411).V("AscendingNode", -34.748208).V("MeanAnomaly", 303.857509).V("RotationPeriod", 45822.369767).V("AxialTilt", 0.380244)
+                .V("WasDiscovered", false).V("WasMapped", false);
             }
             else if (eventtype.Equals("scanstar"))
             {
@@ -690,6 +703,11 @@ namespace EDDTest
                         .Object().V("Type", "LowTemperatureDiamond").V("Type_Localised", "Low Temperature Diamonds").V("Count", 11).Close()
                         .Object().V("Type", "FredThingies").V("Type_Localised", "Fred stuff").V("Count", 2).Close()
                         .Object().V("Type", "Widgets").V("Type_Localised", "Widgities stuff").V("Count", 20).Close()
+                        .Close()
+                        .Array("Genus")
+                        .Object().V("Genus", "$Codex_Ent_Bacterial_Genus_Name;").V("Genus_Localised", "Bacteria").Close()
+                        .Object().V("Genus", "$Codex_Ent_Stratum_Genus_Name;").V("Genus_Localised", "Stratus").Close()
+                        .Object().V("Genus", "$Codex_Ent_Stratum_Missing_Loc_Name;").Close()
                         .Close();
             }
             else if (eventtype.Equals("reservoirreplenished") && args.Left >= 2)
@@ -881,7 +899,7 @@ namespace EDDTest
                         .V("CommanderId", 23)
                         .V("Price", 150000);
             }
-            else if (eventtype.Equals("crewassign") && args.Left >= 1)
+            else if (eventtype.Equals("crewassign") && args.Left >= 2)
             {
                 qj.Object().UTC("timestamp").V("event", "CrewAssign")
                         .V("Name", args.Next())
@@ -902,6 +920,10 @@ namespace EDDTest
                         .V("Crew", args.Next())
                         .V("OnCrime", args.Int() != 0)
                         .V("Telepresence", args.Int() != 0);
+            }
+            else if (eventtype.Equals("navrouteclear"))
+            {
+                qj.Object().UTC("timestamp").V("event", "NavRouteClear");
             }
 
             else
@@ -952,7 +974,7 @@ namespace EDDTest
             s += he("", "marketsell fdname count price", eventtype);
             s += he("", "materials name count ", eventtype);
             s += he("", "cargo name count ", eventtype);
-            s += he("", "ScanPlanet, ScanStar, ScanEarth name", eventtype);
+            s += he("", "ScanPlanet, ScanStar, ScanEarth name bodyid", eventtype);
             s+=he("", "NavBeaconScan", eventtype);
             s+=he("", "Ring", eventtype);
             s+=he("Ships", "SellShipOnRebuy", eventtype);

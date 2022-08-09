@@ -211,6 +211,7 @@
     <Compile Include="FrontierData.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="InsertText.cs" />
+    <Compile Include="TranslationRepeats.cs" />
     <Compile Include="ReadJournals.cs" />
     <Compile Include="Journal.cs" />
     <Compile Include="Journalhelperfuncs.cs" />

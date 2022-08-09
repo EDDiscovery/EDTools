@@ -40,9 +40,19 @@ namespace EDDTest
                     List<string> update = new List<string>();
                     foreach( var kvp in elist)
                     {
-                        if ( l.Contains(kvp.Key))
+                        int pos = 0;
+                        int indexof = 0;
+
+                        while( (indexof = l.IndexOf(kvp.Key,pos)) >= 0) // may be shorter aliases to it before we reach the identifier
                         {
-                            update.Add(kvp.Key);
+                            int endindex = indexof + kvp.Key.Length;
+                            if (endindex == l.Length || l[endindex].IsLetterOrDigitOrUnderscore() == false)
+                            {
+                                update.Add(kvp.Key);
+                                break;
+                            }
+
+                            pos = endindex;
                         }
                     }
 

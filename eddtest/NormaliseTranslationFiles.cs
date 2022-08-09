@@ -29,6 +29,8 @@ namespace EDDTest
         // report on example state: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex - "NS NoOutput" c:\code\renames.lst stdenums
         // normalise normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex francais-fr "NS"
 
+        // you can scan for enums scanforenums  stdenums . *.cs to check if enums are in use
+
         static public string Process(string language, string txpath, int searchdepth,
                                     string language2, string options, 
                                     string renamefile,
@@ -279,7 +281,7 @@ namespace EDDTest
                 foreach (var kvp in enumerations)
                 {
                     if (kvp.Value.Item2 == 0)
-                        reporttext += $"Enum symbol {kvp.Key} unused" + Environment.NewLine;
+                        reporttext += $"Enum symbol {kvp.Key} is not present in translation file" + Environment.NewLine;
                 }
             }
 

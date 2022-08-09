@@ -51,27 +51,53 @@ namespace EDDTest
 
                                 if (jr["event"].Str() == "Scan")
                                 {
-                                    string ts = jr["TerraformState"].Str();
-                                    if (ts.HasChars())
+                                    string body = jr["BodyName"].Str();
+
+                                    //string ts = jr["TerraformState"].Str();
+                                    //if (ts.HasChars())
+                                    //{
+                                    //    if (!dict.TryGetValue(ts, out string v))
+                                    //    {
+                                    //        Console.WriteLine("TS " + ts);
+                                    //        dict[ts] = "1";
+                                    //    }
+
+                                    //}
+
+                                    //JArray jrings = jr["Rings"].Array();
+                                    //if ( jrings != null )
+                                    //{
+                                    //    foreach( var e in jrings)
+                                    //    {
+                                    //        string cls = e["RingClass"].Str();
+                                    //        if (cls != null)
+                                    //            dict[cls] = "1";
+                                    //    }
+
+                                    //}
+
+                                    double? absmag = jr["AbsoluteMagnitude"].DoubleNull();
+
+                                    if ( absmag != null && body == "Sirius")
                                     {
-                                        if (!dict.TryGetValue(ts, out string v))
-                                        {
-                                            Console.WriteLine("TS " + ts);
-                                            dict[ts] = "1";
-                                        }
-
+                                        Console.WriteLine($"{body} = {absmag}");
+                                        Console.WriteLine($"{jr.ToString()}");
                                     }
-
                                 }
 
                             }
-                            else
-                                Console.WriteLine("Bad Journal line" + error);
+                         //   else
+                           //     Console.WriteLine("Bad Journal line" + error);
                         }
 
                         lineno++;
                     }
                 }
+            }
+
+            foreach( var x in dict)
+            {
+                Console.WriteLine($"{x.Key} == {x.Value}");
             }
 
         }

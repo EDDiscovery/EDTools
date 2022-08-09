@@ -1,6 +1,6 @@
-﻿using BaseUtils.JSON;
-using NetMQ;
+﻿using NetMQ;
 using NetMQ.Sockets;
+using QuickJSON;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -8,6 +8,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+
 
 namespace EDDNRecorder
 {
@@ -129,6 +130,8 @@ namespace EDDNRecorder
 
                                     object[] rowt = { header["gatewayTimestamp"].Str(), schema, header["softwareName"].Str(), header["softwareVersion"].Str()
                                                             , header["uploaderID"].Str(), JToken.ToString(message,"", " ","",false) };
+
+                                    System.Diagnostics.Debug.WriteLine(myStr);
 
                                     BeginInvoke((MethodInvoker)delegate
                                     {

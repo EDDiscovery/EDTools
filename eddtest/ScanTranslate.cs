@@ -23,6 +23,9 @@ using System.Text;
 
 namespace EDDTest
 {
+    // this code scans thru string in c# to build up translation tables by looking for .T or or .TCond after the string
+    // now out of date by the forced use of enums thoughout the code.
+
     public static class ScanTranslate
     {
         public class Definition

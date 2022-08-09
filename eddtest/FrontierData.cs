@@ -436,8 +436,9 @@ namespace EDDTest
                         }
                         else
                         {
-                            Console.WriteLine($"Tech Broker {fdname},{find.engineersstring}");
+                         //   Console.WriteLine($"Tech Broker {fdname},{find.engineersstring}");
                         }
+                        Console.WriteLine("        new EngineeringRecipe(\"" + nicename + "\",\"" +fdname.ToLower() + "\",\"" + type + "\",\"?\",\"" + ilist + "\")," );
                     }
                 }
                 else
@@ -518,9 +519,12 @@ namespace EDDTest
                     {
                         Console.WriteLine("******************** Check Recipes");
 
+                        string prevmod = "";
+
                         foreach (CSVFile.Row line in filerecipes.Rows)
                         {
-                            string fdname = line["A"];
+                            string fdfilename = line["A"];
+                            string fdname = line["B"];
                             string ukname = line["C"];
                             string descr = line["D"];
                             int? level = line.GetInt("P");
@@ -536,31 +540,42 @@ namespace EDDTest
 
                             if (level != null)
                             {
-                                fdname = fdname.Substring(0, fdname.LastIndexOf('_'));      //examples, AFM_Shielded, Armour_Heavy Duty
-                                string fdfront = fdname.Substring(0, fdname.IndexOf('_'));
-                                string fdback = fdname.Substring(fdname.IndexOf('_') + 1).Replace(" ", "");
+                                fdfilename = fdfilename.Substring(0, fdfilename.LastIndexOf('_'));      //examples, AFM_Shielded, Armour_Heavy Duty
+                                string fdfront = fdfilename.Substring(0, fdfilename.IndexOf('_'));
+                                string fdback = fdfilename.Substring(fdfilename.IndexOf('_') + 1).Replace(" ", "");
 
                                 string ing = MatName(matid1, matid1count, filemats);
                                 ing = ing.AppendPrePad(MatName(matid2, matid2count, filemats), ",");
                                 ing = ing.AppendPrePad(MatName(matid3, matid3count, filemats), ",");
 
-                                string cat = fdname.Word(new char[] { '_' }, 1).SplitCapsWordFull();
-                                if (cat == "FS Dinterdictor")
-                                    cat = "FSD Interdictor";
+                                string modulename = fdfilename.Word(new char[] { '_' }, 1).SplitCapsWordFull();
+                                if (modulename == "FS Dinterdictor")
+                                    modulename = "FSD Interdictor";
 
                                 string engnames = "Not Known";
 
-                                EngineeringRecipe er = Recipes.EngineeringRecipes.Find((x) => x.Name == ukname && x.level == level.Value.ToString());
+
+                                EngineeringRecipe er = Recipes.EngineeringRecipes.Find((x) => x.Name == ukname && x.level == level.Value.ToString() && x.modulesstring == modulename );
 
                                 if (er != null)
                                 {
                                     if (er.IngredientsString.Replace(" ", "") != ing)
                                         Console.WriteLine("Engineering disagree on " + ukname + " F: " + ing + " Data: " + er.IngredientsString);
 
-                                    Console.WriteLine($"RecipeData: {fdname},{level},{er.engineersstring}");
+                                    if (prevmod != modulename)
+                                    {
+                                        Console.WriteLine("");
+                                        prevmod = modulename;
+                                    }
+
+                                   // Console.WriteLine("        new EngineeringRecipe(\"" + ukname + "\", \"" + fdname.ToLower() + "\", \"" + ing + "\", \"" + modulename + "\", \"" + level.Value.ToString() + "\", \"" + string.Join(",", er.engineers) + "\" ),");
+
+                                    //Console.WriteLine($"RecipeData: {fdname},{level},{er.engineersstring}");
                                 }
                                 else
-                                    Console.WriteLine("Engineering missing new EngineeringRecipe(\"" + ukname + "\", \"" + ing + "\", \"" + cat + "\", \"" + level.Value.ToString() + "\", \"" + engnames + "\" ),");
+                                    Console.WriteLine("Engineering missing new EngineeringRecipe(\"" + ukname + "\", \"" + ing + "\", \"" + modulename + "\", \"" + level.Value.ToString() + "\", \"" + engnames + "\" ),");
+
+
                             }
                         }
                     }
@@ -649,7 +664,7 @@ namespace EDDTest
                         }
                         else
                         {
-                            Console.WriteLine($"Special Data: {fdname},{find.engineersstring}");
+                            Console.WriteLine($"Special Data: {fdname},{string.Join(",", find.engineers)}");
                         }
                     }
 
@@ -916,7 +931,7 @@ namespace EDDTest
                                 else
                                 {
                                     Console.WriteLine("        new EngineeringRecipe(\"" + type + "\",\"" + fdname.ToLower() + "\",\"" + manu + "\",\"" + modtext + "\"," +
-                                                cost.Replace(",", "") + ",\"" + ilist + "\",\"" + find.engineersstring + "\"),");
+                                                cost.Replace(",", "") + ",\"" + ilist + "\",\"" + string.Join(",", find.engineers) + "\"),");
 
                                 }
                             }

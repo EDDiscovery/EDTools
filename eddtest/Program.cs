@@ -56,6 +56,7 @@ namespace EDDTest
                                   "journalindented file - read lines from file in journal format and output indented\n" +
                                   "jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
                                   "json - read a json from file and output indented\n" +
+                                  "jsontofluent file - read a json from file and output fluent code\n" +
                                   "escapestring - read a json from file and output text with quotes escaped for c# source files\n" +
                                   "@string - read a json from file and output text for @ strings\n" +
                                   "cutdownfile file lines -reduce a file size down to this number of lines\n" +

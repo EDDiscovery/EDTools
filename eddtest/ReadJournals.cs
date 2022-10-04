@@ -35,8 +35,14 @@ namespace EDDTest
 
             foreach (var fi in allFiles)
             {
+                List<JToken> exits = new List<JToken>();
+                List<JToken> cache = new List<JToken>();
+
                 using (StreamReader sr = new StreamReader(fi.FullName))         // read directly from file.. presume UTF8 no bom
                 {
+                    bool action = false;
+                    string accum = "";
+
                     int lineno = 1;
                     string line;
                     while ((line = sr.ReadLine()) != null)
@@ -47,55 +53,178 @@ namespace EDDTest
 
                             if (jr != null)
                             {
-                                string ln = jr["timestamp"].Str() + ":" + jr["event"].Str();
+                                string eventname = jr["event"].Str();
+                                string ln = jr["timestamp"].Str() + ": " + lineno + ": " + jr["event"].Str();
+                                string text = ln + jr.ToString();
 
-                                if (jr["event"].Str() == "Scan")
+                                if (eventname.Equals("StartJump") && jr["JumpType"].Str().Equals("Hyperspace"))
                                 {
-                                    string body = jr["BodyName"].Str();
+                                    System.Diagnostics.Debug.WriteLine($"\n{text}");
+                                    action = true;
+                                    accum = "";     // reset 
+                                }
+                                else if (eventname.Equals("FSDJump"))
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"{text}");
+                                    action = false;
 
-                                    //string ts = jr["TerraformState"].Str();
-                                    //if (ts.HasChars())
-                                    //{
-                                    //    if (!dict.TryGetValue(ts, out string v))
-                                    //    {
-                                    //        Console.WriteLine("TS " + ts);
-                                    //        dict[ts] = "1";
-                                    //    }
-
-                                    //}
-
-                                    //JArray jrings = jr["Rings"].Array();
-                                    //if ( jrings != null )
-                                    //{
-                                    //    foreach( var e in jrings)
-                                    //    {
-                                    //        string cls = e["RingClass"].Str();
-                                    //        if (cls != null)
-                                    //            dict[cls] = "1";
-                                    //    }
-
-                                    //}
-
-                                    double? absmag = jr["AbsoluteMagnitude"].DoubleNull();
-
-                                    if ( absmag != null && body == "Sirius")
+                                    foreach (var s in accum.Split(','))
                                     {
-                                        Console.WriteLine($"{body} = {absmag}");
-                                        Console.WriteLine($"{jr.ToString()}");
+                                        if (dict.ContainsKey(s))
+                                            dict[s] += ".";
+                                        else
+                                            dict[s] = "1";
+                                    }
+
+                                    accum = "";
+                                }
+                                else if (action)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"{text}");
+                                    if (eventname.Equals("LoadGame") || eventname.Equals("Location"))
+                                    {
+
+                                        action = false;
+
+                                    }
+                                    else
+                                    {
+                                        accum = accum.AppendPrePad(eventname, ",");
                                     }
                                 }
 
+
+                                //if (jr.Contains("BodyID"))
+                                //{
+                                //    if (eventname == "SupercruiseExit")
+                                //    {
+                                //        string bt = jr["BodyType"].Str();
+                                //        if (bt == "Null")
+                                //        {
+                                //            exits.Add(jr);
+                                //        }
+                                //    }
+                                //    if (eventname == "Scan")
+                                //    {
+                                //        cache.Add(jr);
+                                //    }
+                                //}
+
+
+                                //if (jr["event"].Str() == "FSDJump")
+                                //{
+                                //    string sys = jr["StarSystem"].Str();
+                                //    JObject jsf = jr["SystemFaction"].Object();
+                                //    if (jsf != null)
+                                //    {
+                                //        bool name = jsf.Contains("Name");
+                                //        bool state = jsf.Contains("FactionState");
+                                //        if (!name)
+                                //            Console.WriteLine($"{ln} - {sys} - SystemFaction no Name {Environment.NewLine} {jr.ToString(true)}");
+                                //        if (!state)
+                                //            Console.WriteLine($"{ln}  - {sys} - SystemFaction no Faction State {Environment.NewLine} {jr.ToString(true)}");
+                                //        if ( name && state)
+                                //            Console.WriteLine($"{ln}  - {sys} - Has both {Environment.NewLine} {jr.ToString(true)}");
+                                //    }
+                                //    else
+                                //    {
+                                //        Console.WriteLine($"{ln} - {sys} - no SystemFaction");
+                                //    }
+
+                                //}
+
+                                //if (jr["event"].Str() == "Scan")
+                                //{
+                                //    string body = jr["BodyName"].Str();
+
+                                //    //string ts = jr["TerraformState"].Str();
+                                //    //if (ts.HasChars())
+                                //    //{
+                                //    //    if (!dict.TryGetValue(ts, out string v))
+                                //    //    {
+                                //    //        Console.WriteLine("TS " + ts);
+                                //    //        dict[ts] = "1";
+                                //    //    }
+
+                                //    //}
+
+                                //    //JArray jrings = jr["Rings"].Array();
+                                //    //if ( jrings != null )
+                                //    //{
+                                //    //    foreach( var e in jrings)
+                                //    //    {
+                                //    //        string cls = e["RingClass"].Str();
+                                //    //        if (cls != null)
+                                //    //            dict[cls] = "1";
+                                //    //    }
+
+                                //    //}
+
+                                //    double? absmag = jr["AbsoluteMagnitude"].DoubleNull();
+
+                                //    if ( absmag != null && body == "Sirius")
+                                //    {
+                                //        Console.WriteLine($"{body} = {absmag}");
+                                //        Console.WriteLine($"{jr.ToString()}");
+                                //    }
+                                //}
+
                             }
-                         //   else
-                           //     Console.WriteLine("Bad Journal line" + error);
+                            //   else
+                            //     Console.WriteLine("Bad Journal line" + error);
                         }
 
                         lineno++;
                     }
                 }
+
+                foreach(var e in exits)
+                {
+                    int bodyid = e["BodyID"].Int(-1);
+                    string starsys = e["StarSystem"].Str("x");
+                    bool found = false;
+
+                    Console.WriteLine(e.ToString());
+
+                    foreach (JToken j in cache)
+                    {
+                        if (!found && j["BodyName"].Str().StartsWith(starsys))
+                        {
+                            JArray p = j["Parents"].Array();
+                            if (p != null)
+                            {
+                                foreach (JToken o in p)
+                                {
+                                    JObject oo = o.Object();
+                                    int nullid = oo["Null"].Int(-1);
+                                    if (nullid == bodyid)
+                                    {
+                                        Console.WriteLine($">> Found null scan with bodyid {j.ToString()}");
+                                        found = true;
+                                    }
+                                    int starid = oo["Star"].Int(-1);
+                                    if (starid == bodyid)
+                                    {
+                                        Console.WriteLine($">> ERROR! scan with bodyid {j.ToString()}");
+                                        found = true;
+                                    }
+                                    int planetid = oo["Planet"].Int(-1);
+                                    if (planetid == bodyid)
+                                    {
+                                        Console.WriteLine($">> ERROR! scan with bodyid {j.ToString()}");
+                                        found = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if ( !found)
+                        Console.WriteLine(" No scan");
+                }
             }
 
-            foreach( var x in dict)
+            foreach ( var x in dict)
             {
                 Console.WriteLine($"{x.Key} == {x.Value}");
             }

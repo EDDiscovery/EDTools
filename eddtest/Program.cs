@@ -57,6 +57,7 @@ namespace EDDTest
                                   "jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
                                   "json - read a json from file and output indented\n" +
                                   "jsontofluent file - read a json from file and output fluent code\n" +
+                                  "journaltofluent file - read a journal file and output fluent code\n" +
                                   "escapestring - read a json from file and output text with quotes escaped for c# source files\n" +
                                   "@string - read a json from file and output text for @ strings\n" +
                                   "cutdownfile file lines -reduce a file size down to this number of lines\n" +
@@ -482,6 +483,7 @@ namespace EDDTest
                 string path = args.Next();
                 try
                 {
+
                     string text = File.ReadAllText(path);
 
                     JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
@@ -489,12 +491,39 @@ namespace EDDTest
                     {
                         Console.WriteLine(tk.ToString(true));
                         string code = "";
-                        JSONToFluent(tk, ref code,true);
+                        JSONToFluent(tk, ref code, true,true);
                         System.Diagnostics.Debug.WriteLine(code);
-                        Console.WriteLine(code);
+                        Console.WriteLine("qj" + code);
                     }
                     else
                         Console.WriteLine($"{err}\r\nERROR in JSON");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed " + ex.Message);
+                }
+            }
+            else if (arg1.Equals("journaltofluent"))
+            {
+                string path = args.Next();
+                try
+                {
+                    string[] text = File.ReadAllLines(path);
+
+                    foreach (var l in text)
+                    {
+                        JToken tk = JToken.Parse(l, out string err, JToken.ParseOptions.CheckEOL);
+                        if (tk != null)
+                        {
+                            Console.WriteLine(tk.ToString(true));
+                            string code = "";
+                            JSONToFluent(tk, ref code, true, true);
+                            System.Diagnostics.Debug.WriteLine(code);
+                            Console.WriteLine("qj" + code);
+                        }
+                        else
+                            Console.WriteLine($"{err}\r\nERROR in JSON");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -801,7 +830,7 @@ namespace EDDTest
 
         }
 
-        public static void JSONToFluent(JToken tk, ref string code, bool indent)
+        public static void JSONToFluent(JToken tk, ref string code, bool indent, bool converttimestamp)
         {
             if (tk.IsObject)
             {
@@ -815,7 +844,7 @@ namespace EDDTest
 
                 foreach (var kvp in tk.Object())
                 {
-                    JSONToFluent(kvp.Value, ref code, indent);
+                    JSONToFluent(kvp.Value, ref code, indent,converttimestamp);
                 }
 
                 code += ".Close()";
@@ -834,7 +863,7 @@ namespace EDDTest
 
                 foreach (var v in tk.Array())
                 {
-                    JSONToFluent(v, ref code, indent);
+                    JSONToFluent(v, ref code, indent,converttimestamp);
                 }
 
                 code += ".Close()";
@@ -848,7 +877,12 @@ namespace EDDTest
 
                 if (tk.IsProperty)
                 {
-                    code += ".V(" + tk.Name.AlwaysQuoteString() + "," + vstring + ")";
+                    if ( converttimestamp && tk.Name.Equals("timestamp"))
+                    {
+                        code += ".UTC(" + tk.Name.AlwaysQuoteString() + ")";
+                    }
+                    else
+                        code += ".V(" + tk.Name.AlwaysQuoteString() + "," + vstring + ")";
                 }
                 else
                     code += ".V(" + vstring + ")";

@@ -23,6 +23,8 @@ namespace EDDTest
 {
     public static partial class Journal
     {
+        #region Journal Entry
+
         public static void JournalEntry( CommandArgs argsentry)
         {
             int repeatdelay = 0;
@@ -111,6 +113,8 @@ namespace EDDTest
             }
         }
 
+        #endregion
+
         public static bool createJournalEntry(string cmdrname, CommandArgs args, int repeatcount, string filename)
         {
             string eventtype = args.Next().ToLower();
@@ -159,9 +163,52 @@ namespace EDDTest
                 .Object("SystemFaction").V("Name", "Pilots' Federation Local Branch").Close()
                 .Close();
             }
-            else if (eventtype.Equals("docked") && args.Left >= 3)
+            else if (eventtype.Equals("onfootfc") && args.Left >= 1)
             {
-                qj.Object()
+                string starsystem = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "Location").V("DistFromStarLS", 12.705612)
+                .V("Docked", false).V("OnFoot", true).V("StarSystem", starsystem).V("SystemAddress", 35855326520745)
+                .Array("StarPos").V(8.0).V(-11.1875).V(-2.65625).Close()
+                .V("SystemAllegiance", "Independent").V("SystemEconomy", "$economy_HighTech;").V("SystemEconomy_Localised", "High Tech").V("SystemSecondEconomy", "$economy_Refinery;").V("SystemSecondEconomy_Localised", "Refinery").V("SystemGovernment", "$government_Corporate;").V("SystemGovernment_Localised", "Corporate").V("SystemSecurity", "$SYSTEM_SECURITY_high;").V("SystemSecurity_Localised", "High Security").V("Population", 49769105).V("Body", "Toolfa A 1").V("BodyID", 7).V("BodyType", "Planet")
+                .Array("Factions")
+                .Object().V("Name", "Union of Toolfa Progressive Party").V("FactionState", "CivilWar").V("Government", "Democracy").V("Influence", 0.07485).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0)
+                .Array("ActiveStates")
+                .Object().V("State", "CivilWar").Close()
+                .Close()
+                .Close()
+                .Object().V("Name", "Toolfa Network").V("FactionState", "None").V("Government", "Corporate").V("Influence", 0.113772).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0)
+                .Array("RecoveringStates")
+                .Object().V("State", "PublicHoliday").V("Trend", 0).Close()
+                .Close()
+                .Close()
+                .Object().V("Name", "Crimson Legal & Co").V("FactionState", "None").V("Government", "Corporate").V("Influence", 0.156687).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
+                .Object().V("Name", "Natural Toolfa Nationalists").V("FactionState", "None").V("Government", "Dictatorship").V("Influence", 0.053892).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
+                .Object().V("Name", "Toolfa Electronics Incorporated").V("FactionState", "CivilWar").V("Government", "Corporate").V("Influence", 0.07485).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0)
+                .Array("ActiveStates")
+                .Object().V("State", "CivilWar").Close()
+                .Close()
+                .Close()
+                .Object().V("Name", "Traditional Toolfa Movement").V("FactionState", "None").V("Government", "Dictatorship").V("Influence", 0.051896).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
+                .Object().V("Name", "Alliance of Chinese Elite").V("FactionState", "Boom").V("Government", "Corporate").V("Influence", 0.474052).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0)
+                .Array("ActiveStates")
+                .Object().V("State", "Boom").Close()
+                .Close()
+                .Close()
+                .Close()
+                .Object("SystemFaction").V("Name", "Alliance of Chinese Elite").V("FactionState", "Boom").Close()
+                .Array("Conflicts")
+                .Object().V("WarType", "civilwar").V("Status", "active")
+                .Object("Faction1").V("Name", "Union of Toolfa Progressive Party").V("Stake", "Beauregard Industrial Facility").V("WonDays", 0).Close()
+                .Object("Faction2").V("Name", "Toolfa Electronics Incorporated").V("Stake", "Henriquez Engineering Depot").V("WonDays", 0).Close()
+                .Close()
+                .Close()
+                .Close();
+
+            }
+            else if (eventtype.Equals("docked") && args.Left >= 3)
+            { 
+                    qj.Object()
                     .UTC("timestamp").V("event", "Docked")
                     .V("StationName", args.Next()).V("StationType", "Orbis").V("Taxi", false).V("Multicrew", false).V("StarSystem", args.Next()).V("SystemAddress", 3932277478106).V("MarketID", 128666762)
                     .Object("StationFaction").V("Name", args.Next()).Close()
@@ -174,6 +221,23 @@ namespace EDDTest
                     .Close()
                     .V("DistFromStarLS", 335.135112)
                     .Object("LandingPads").V("Small", 17).V("Medium", 18).V("Large", 9).Close()
+                .Close();
+            }
+            else if (eventtype.Equals("dockedfc") && args.Left >= 0)
+            {
+                string starsystem = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "Docked").V("StationName", "V6B-W6T").V("StationType", "FleetCarrier").V("Taxi", false).V("Multicrew", false)
+                    .V("StarSystem", starsystem).V("SystemAddress", 3932277478114).V("MarketID", 3709149696)
+                .Object("StationFaction").V("Name", "FleetCarrier").Close()
+                .V("StationGovernment", "$government_Carrier;").V("StationGovernment_Localised", "Private Ownership")
+                .Array("StationServices").V("dock").V("autodock").V("blackmarket").V("commodities").V("contacts").V("exploration").V("outfitting").V("crewlounge").V("rearm").V("refuel").V("repair").V("shipyard").V("engineer").V("flightcontroller").V("stationoperations").V("stationMenu").V("carriermanagement").V("carrierfuel").V("livery").V("voucherredemption").V("socialspace").V("bartender").V("pioneersupplies").Close()
+                .V("StationEconomy", "$economy_Carrier;").V("StationEconomy_Localised", "Private Enterprise")
+                .Array("StationEconomies")
+                .Object().V("Name", "$economy_Carrier;").V("Name_Localised", "Private Enterprise").V("Proportion", 1.0).Close()
+                .Close()
+                .V("DistFromStarLS", 17.30867)
+                .Object("LandingPads").V("Small", 4).V("Medium", 4).V("Large", 8).Close()
                 .Close();
             }
             else if (eventtype.Equals("undocked"))
@@ -788,6 +852,14 @@ namespace EDDTest
             #endregion
             #region  Carrier
 
+            else if (eventtype.Equals("carrierbuy") && args.Left >= 2)
+            {
+                string starsystem = args.Next();
+                int price = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "CarrierBuy").V("CarrierID", 3709149696).V("BoughtAtMarket", 3228884736)
+                            .V("Location", starsystem).V("SystemAddress", 13864825529769).V("Price", price).V("Variant", "CarrierDockB").V("Callsign", "V6B-W6T").Close();
+            }
             else if (eventtype.Equals("carrierdepositfuel") && args.Left >= 2)
             {
                 int amount = args.Int();
@@ -819,14 +891,74 @@ namespace EDDTest
             }
             else if (eventtype.Equals("carrierjumprequest") && args.Left >= 3)
             {
+                string starsystem = args.Next();
+                string body = args.Next();
+                int bodyid = args.Int();
+
                 qj.Object().UTC("timestamp").V("event", "CarrierJumpRequest")
                         .V("CarrierID", 3709149696)
-                        .V("SystemName", args.Next()).V("Body", args.Next()).V("SystemAddress", 3657399571170).V("BodyID", args.Next()).Close();
+                        .V("SystemName", starsystem).V("Body", body).V("SystemAddress", 3657399571170).V("BodyID", bodyid).Close();
             }
             else if (eventtype.Equals("carrierjumpcancelled") && args.Left >= 0)
             {
                 qj.Object().UTC("timestamp").V("event", "CarrierJumpCancelled")
                         .V("CarrierID", 3709149696);
+            }
+            else if ((eventtype.Equals("carrierjump") || eventtype.Equals("carrierlocation")) && args.Left >= 2)
+            {
+                string starsystem = args.Next();
+                string body = args.Next();
+                int bodyid = args.Int();
+
+                bool loc = eventtype.Equals("carrierlocation");
+
+                qj.Object().UTC("timestamp").V("event", loc ? "Location" : "CarrierJump")
+                    .V("DistFromStarLS", 3111.491466).V("Docked", false).V("OnFoot", true)
+                    .V("StarSystem", starsystem).V("SystemAddress", 3932277478114)
+                .Array("StarPos").V(72.75).V(48.75).V(68.25).Close()
+                .V("SystemAllegiance", "Alliance").V("SystemEconomy", "$economy_HighTech;").V("SystemEconomy_Localised", "High Tech").V("SystemSecondEconomy", "$economy_Industrial;")
+                .V("SystemSecondEconomy_Localised", "Industrial")
+                .V("SystemGovernment", "$government_Cooperative;").V("SystemGovernment_Localised", "Cooperative").V("SystemSecurity", "$SYSTEM_SECURITY_high;")
+                .V("SystemSecurity_Localised", "High Security").V("Population", 5000017277).V("Body", body).V("BodyID", bodyid).V("BodyType", "Planet")
+
+                .Array("Factions")
+                    .Object().V("Name", "Sirius Corporation").V("FactionState", "None").V("Government", "Corporate").V("Influence", 0.066933).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 100.0).Close()
+                    .Object().V("Name", "Independent Leesti for Equality").V("FactionState", "Boom").V("Government", "Democracy").V("Influence", 0.125874).V("Allegiance", "Alliance").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0)
+                .Array("ActiveStates")
+                    .Object().V("State", "Boom").Close()
+                .Close()
+                .Close()
+                    .Object().V("Name", "Leesti United Steelworks").V("FactionState", "None").V("Government", "Corporate").V("Influence", 0.051948).V("Allegiance", "Alliance").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
+                    .Object().V("Name", "Orrere Energy Company").V("FactionState", "War").V("Government", "Corporate").V("Influence", 0.087912).V("Allegiance", "Federation").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0)
+                .Array("ActiveStates")
+                    .Object().V("State", "War").Close()
+                .Close()
+                .Close()
+                .Object().V("Name", "Leesti Alliance Union").V("FactionState", "War").V("Government", "Patronage").V("Influence", 0.087912).V("Allegiance", "Alliance").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0)
+                .Array("ActiveStates")
+                    .Object().V("State", "War").Close()
+                .Close()
+                .Close()
+                    .Object().V("Name", "Reynhardt IntelliSys").V("FactionState", "None").V("Government", "Corporate").V("Influence", 0.093906).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
+                    .Object().V("Name", "Justice Party of Leesti").V("FactionState", "None").V("Government", "Dictatorship").V("Influence", 0.038961).V("Allegiance", "Independent").V("Happiness", "$Faction_HappinessBand2;").V("Happiness_Localised", "Happy").V("MyReputation", 0.0).Close()
+                    .Object().V("Name", "Alliance Rapid-reaction Corps").V("FactionState", "Boom").V("Government", "Cooperative").V("Influence", 0.446553).V("Allegiance", "Alliance").V("Happiness", "$Faction_HappinessBand1;").V("Happiness_Localised", "Elated").V("MyReputation", 0.0)
+                .Array("PendingStates")
+                .Object().V("State", "Expansion").V("Trend", 0).Close()
+                .Close()
+                .Array("ActiveStates")
+                    .Object().V("State", "CivilLiberty").Close()
+                    .Object().V("State", "Boom").Close()
+                .Close()
+                .Close()
+                .Close()
+                .Object("SystemFaction").V("Name", "Alliance Rapid-reaction Corps").V("FactionState", "Boom").Close()
+                .Array("Conflicts")
+                    .Object().V("WarType", "war").V("Status", "active")
+                    .Object("Faction1").V("Name", "Orrere Energy Company").V("Stake", "").V("WonDays", 0).Close()
+                    .Object("Faction2").V("Name", "Leesti Alliance Union").V("Stake", "Cotton Engineering Foundry").V("WonDays", 1).Close()
+                .Close()
+                .Close()
+                .Close();
             }
             else if (eventtype.Equals("carrierstats") && args.Left >= 1)
             {
@@ -834,7 +966,7 @@ namespace EDDTest
                 qj.Object().UTC("timestamp").V("event", "CarrierStats").V("CarrierID", 3709149696).V("Callsign", "V6B-W6T").V("Name", "STANHELM007")
                 .V("DockingAccess", "squadronfriends").V("AllowNotorious", true).V("FuelLevel", 463).V("JumpRangeCurr", 500.0).V("JumpRangeMax", 500.0).V("PendingDecommission", false)
                 .Object("SpaceUsage").V("TotalCapacity", 25000).V("Crew", 6500).V("Cargo", 24).V("CargoSpaceReserved", 80).V("ShipPacks", 1850).V("ModulePacks", 710).V("FreeSpace", 15836).Close()
-                .Object("Finance").V("CarrierBalance", balance).V("ReserveBalance", 0).V("AvailableBalance", 974045846).V("ReservePercent", 0)
+                .Object("Finance").V("CarrierBalance", balance).V("ReserveBalance", 0).V("AvailableBalance", balance).V("ReservePercent", 0)
                         .V("TaxRate_pioneersupplies", 25).V("TaxRate_shipyard", 100).V("TaxRate_rearm", 88).V("TaxRate_outfitting", 91).V("TaxRate_refuel", 90).V("TaxRate_repair", 73)
                         .Close()
                 .Array("Crew")
@@ -1071,7 +1203,7 @@ namespace EDDTest
             #endregion
 
 
-
+            #region Output
             else
             {
                 Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry" + Environment.NewLine + Help(eventtype));
@@ -1088,8 +1220,9 @@ namespace EDDTest
             }
             else
                 return false;
-        }
+            #endregion
 
+        }
 
         #region Help!
 
@@ -1099,9 +1232,11 @@ namespace EDDTest
 
             s+=he("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
             s+=he("", "FSDTravel name x y z destx desty destz percentint ", eventtype);
-            s+=he("", "Locdocked station stationfaction systemfaction systemname", eventtype);
-            s+=he("", "Docked station starsystem faction", eventtype);
-            s+=he("", "Undocked, Touchdown, Liftoff", eventtype);
+            s += he("", "Locdocked station stationfaction systemfaction systemname", eventtype);
+            s += he("", "Docked station starsystem faction", eventtype);
+            s += he("", "dockedfc starsystem - on fleet carrier", eventtype);
+            s += he("", "onfootfc - on fleet carrier on foot", eventtype);
+            s += he("", "Undocked, Touchdown, Liftoff", eventtype);
             s+=he("", "FuelScoop amount total", eventtype);
             s+=he("", "JetConeBoost", eventtype);
             s += he("", "navroute system", eventtype);
@@ -1166,11 +1301,15 @@ namespace EDDTest
             s += he("", "ModuleInfo filename.json (use NOFILE after to say don't write the file)", eventtype);
             s += he("", "Outfitting filename.json (use NOFILE after to say don't write the file)", eventtype);
 
-            s += he("Carrier", "CarrierDepositFuel amount total", eventtype);
+            s += he("Carrier", "CarrierBuy starsystem price", eventtype);
+            s += he("", "CarrierDepositFuel amount total", eventtype);
             s += he("", "CarrierFinance balance", eventtype);
             s += he("", "CarrierNameChanged name", eventtype);
             s += he("", "CarrierJumpRequest system body bodyid", eventtype);
             s += he("", "CarrierJumpCancelled", eventtype);
+            s += he("", "CarrierJump system body bodyid", eventtype);
+            s += he("", "CarrierLocation system body bodyid (used for odyssey - it does not write up to v13 carrierjump)", eventtype);
+
             s += he("", "CarrierStats balance", eventtype);
 
             s += he("Crew", "crewassign name role", eventtype);
@@ -1219,8 +1358,8 @@ namespace EDDTest
         #endregion
 
 
+        #region Implementation
 
-   
         static string FSDJump(CommandArgs args, int repeatcount)
         {
             if (args.Left < 1)
@@ -1451,24 +1590,8 @@ namespace EDDTest
                 System.Threading.Thread.Sleep(200);
             }
         }
+
+        #endregion
     }
-
-    public static class QuickAssist
-    {
-        public static QuickJSON.JSONFormatter UTC(this QuickJSON.JSONFormatter fmt, string name)
-        {
-            fmt.V(name, DateTime.UtcNow.ToStringZulu());
-            return fmt;
-        }
-
-        public static string NewLine(this string s)
-        {
-            if (s.Length > 0 && !s.EndsWith(Environment.NewLine))
-                s += Environment.NewLine;
-            return s;
-
-        }
-    }
-
 
 }

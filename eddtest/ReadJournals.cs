@@ -51,125 +51,132 @@ namespace EDDTest
                         {
                             JObject jr = JObject.Parse(line, out string error, JToken.ParseOptions.CheckEOL);
 
-                            if (jr != null)
+                            if (jr != null)     
                             {
                                 string eventname = jr["event"].Str();
                                 string ln = jr["timestamp"].Str() + ": " + lineno + ": " + jr["event"].Str();
                                 string text = ln + jr.ToString();
 
-                                if (eventname.Equals("StartJump") && jr["JumpType"].Str().Equals("Hyperspace"))
+                                if (eventname.Equals("") )
                                 {
-                                    System.Diagnostics.Debug.WriteLine($"\n{text}");
-                                    action = true;
-                                    accum = "";     // reset 
-                                }
-                                else if (eventname.Equals("FSDJump"))
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"{text}");
-                                    action = false;
 
-                                    foreach (var s in accum.Split(','))
-                                    {
-                                        if (dict.ContainsKey(s))
-                                            dict[s] += ".";
-                                        else
-                                            dict[s] = "1";
-                                    }
-
-                                    accum = "";
-                                }
-                                else if (action)
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"{text}");
-                                    if (eventname.Equals("LoadGame") || eventname.Equals("Location"))
-                                    {
-
-                                        action = false;
-
-                                    }
-                                    else
-                                    {
-                                        accum = accum.AppendPrePad(eventname, ",");
-                                    }
                                 }
 
 
-                                //if (jr.Contains("BodyID"))
+                                // looks at jumps
+                                //if (eventname.Equals("StartJump") && jr["JumpType"].Str().Equals("Hyperspace"))
                                 //{
-                                //    if (eventname == "SupercruiseExit")
-                                //    {
-                                //        string bt = jr["BodyType"].Str();
-                                //        if (bt == "Null")
-                                //        {
-                                //            exits.Add(jr);
-                                //        }
-                                //    }
-                                //    if (eventname == "Scan")
-                                //    {
-                                //        cache.Add(jr);
-                                //    }
+                                //    System.Diagnostics.Debug.WriteLine($"\n{text}");
+                                //    action = true;
+                                //    accum = "";     // reset 
                                 //}
-
-
-                                //if (jr["event"].Str() == "FSDJump")
+                                //else if (eventname.Equals("FSDJump"))
                                 //{
-                                //    string sys = jr["StarSystem"].Str();
-                                //    JObject jsf = jr["SystemFaction"].Object();
-                                //    if (jsf != null)
+                                //    System.Diagnostics.Debug.WriteLine($"{text}");
+                                //    action = false;
+
+                                //    foreach (var s in accum.Split(','))
                                 //    {
-                                //        bool name = jsf.Contains("Name");
-                                //        bool state = jsf.Contains("FactionState");
-                                //        if (!name)
-                                //            Console.WriteLine($"{ln} - {sys} - SystemFaction no Name {Environment.NewLine} {jr.ToString(true)}");
-                                //        if (!state)
-                                //            Console.WriteLine($"{ln}  - {sys} - SystemFaction no Faction State {Environment.NewLine} {jr.ToString(true)}");
-                                //        if ( name && state)
-                                //            Console.WriteLine($"{ln}  - {sys} - Has both {Environment.NewLine} {jr.ToString(true)}");
+                                //        if (dict.ContainsKey(s))
+                                //            dict[s] += ".";
+                                //        else
+                                //            dict[s] = "1";
+                                //    }
+
+                                //    accum = "";
+                                //}
+                                //else if (action)
+                                //{
+                                //    System.Diagnostics.Debug.WriteLine($"{text}");
+                                //    if (eventname.Equals("LoadGame") || eventname.Equals("Location"))
+                                //    {
+
+                                //        action = false;
+
                                 //    }
                                 //    else
                                 //    {
-                                //        Console.WriteLine($"{ln} - {sys} - no SystemFaction");
+                                //        accum = accum.AppendPrePad(eventname, ",");
                                 //    }
-
-                                //}
-
-                                //if (jr["event"].Str() == "Scan")
-                                //{
-                                //    string body = jr["BodyName"].Str();
-
-                                //    //string ts = jr["TerraformState"].Str();
-                                //    //if (ts.HasChars())
-                                //    //{
-                                //    //    if (!dict.TryGetValue(ts, out string v))
-                                //    //    {
-                                //    //        Console.WriteLine("TS " + ts);
-                                //    //        dict[ts] = "1";
-                                //    //    }
-
-                                //    //}
-
-                                //    //JArray jrings = jr["Rings"].Array();
-                                //    //if ( jrings != null )
-                                //    //{
-                                //    //    foreach( var e in jrings)
-                                //    //    {
-                                //    //        string cls = e["RingClass"].Str();
-                                //    //        if (cls != null)
-                                //    //            dict[cls] = "1";
-                                //    //    }
-
-                                //    //}
-
-                                //    double? absmag = jr["AbsoluteMagnitude"].DoubleNull();
-
-                                //    if ( absmag != null && body == "Sirius")
-                                //    {
-                                //        Console.WriteLine($"{body} = {absmag}");
-                                //        Console.WriteLine($"{jr.ToString()}");
-                                //    }
-                                //}
-
                             }
+
+
+                            //if (jr.Contains("BodyID"))
+                            //{
+                            //    if (eventname == "SupercruiseExit")
+                            //    {
+                            //        string bt = jr["BodyType"].Str();
+                            //        if (bt == "Null")
+                            //        {
+                            //            exits.Add(jr);
+                            //        }
+                            //    }
+                            //    if (eventname == "Scan")
+                            //    {
+                            //        cache.Add(jr);
+                            //    }
+                            //}
+
+
+                            //if (jr["event"].Str() == "FSDJump")
+                            //{
+                            //    string sys = jr["StarSystem"].Str();
+                            //    JObject jsf = jr["SystemFaction"].Object();
+                            //    if (jsf != null)
+                            //    {
+                            //        bool name = jsf.Contains("Name");
+                            //        bool state = jsf.Contains("FactionState");
+                            //        if (!name)
+                            //            Console.WriteLine($"{ln} - {sys} - SystemFaction no Name {Environment.NewLine} {jr.ToString(true)}");
+                            //        if (!state)
+                            //            Console.WriteLine($"{ln}  - {sys} - SystemFaction no Faction State {Environment.NewLine} {jr.ToString(true)}");
+                            //        if ( name && state)
+                            //            Console.WriteLine($"{ln}  - {sys} - Has both {Environment.NewLine} {jr.ToString(true)}");
+                            //    }
+                            //    else
+                            //    {
+                            //        Console.WriteLine($"{ln} - {sys} - no SystemFaction");
+                            //    }
+
+                            //}
+
+                            //if (jr["event"].Str() == "Scan")
+                            //{
+                            //    string body = jr["BodyName"].Str();
+
+                            //    //string ts = jr["TerraformState"].Str();
+                            //    //if (ts.HasChars())
+                            //    //{
+                            //    //    if (!dict.TryGetValue(ts, out string v))
+                            //    //    {
+                            //    //        Console.WriteLine("TS " + ts);
+                            //    //        dict[ts] = "1";
+                            //    //    }
+
+                            //    //}
+
+                            //    //JArray jrings = jr["Rings"].Array();
+                            //    //if ( jrings != null )
+                            //    //{
+                            //    //    foreach( var e in jrings)
+                            //    //    {
+                            //    //        string cls = e["RingClass"].Str();
+                            //    //        if (cls != null)
+                            //    //            dict[cls] = "1";
+                            //    //    }
+
+                            //    //}
+
+                            //    double? absmag = jr["AbsoluteMagnitude"].DoubleNull();
+
+                            //    if ( absmag != null && body == "Sirius")
+                            //    {
+                            //        Console.WriteLine($"{body} = {absmag}");
+                            //        Console.WriteLine($"{jr.ToString()}");
+                            //    }
+                            //}
+
+                        }
                             //   else
                             //     Console.WriteLine("Bad Journal line" + error);
                         }

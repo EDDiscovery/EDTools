@@ -23,9 +23,9 @@ namespace EDDTest
 {
     public static partial class Journal
     {
-        static void WriteToLog(string filename, string cmdrname, string lineout, bool checkjson ,int part = 1 )
+        static void WriteToLog(string filename, string cmdrname, string lineout, string gameversion, string build, bool nogameversiononloadgame, bool odyssey, int part, bool checkjson  )
         {
-            if (checkjson)
+            if (lineout != null && checkjson)
             {
                 JToken jk = JToken.Parse(lineout, out string error, JToken.ParseOptions.CheckEOL);
                 if ( jk == null )
@@ -41,19 +41,34 @@ namespace EDDTest
                 {
                     using (StreamWriter sr = new StreamWriter(fs))
                     {
-                        JSONFormatter l1 = new JSONFormatter();
-                        l1.Object().UTC("timestamp").V("event", "Fileheader").V("part", 1).V("language", "English\\\\UK").V("gameversion", "2.2 (Beta 2)").V("build", "r121783/r0");
-                        JSONFormatter l2 = new JSONFormatter();
-                        l2.Object().UTC("timestamp").V("event", "LoadGame").V("FID","F1962222").V("Commander", cmdrname)
-                                .V("Horizons", true).V("Ship", "Anaconda").V("Ship_Localised", "Anaconda")
-                                .V("ShipID",5).V("ShipName","CAT MINER").V("ShipIdent","BUD-2")
-                                .V("FuelLevel",32.000000).V("FuelCapacity",32.000000)
+                        JSONFormatter fileheader = new JSONFormatter();
+                        fileheader.Object().UTC("timestamp").V("event", "Fileheader").V("language", "English\\\\UK").V("part",part);
+
+                        fileheader.V("gameversion", gameversion).V("build", build);
+
+                        JSONFormatter loadgame = new JSONFormatter();
+
+                        loadgame.Object().UTC("timestamp").V("event", "LoadGame").V("FID", "F1962222").V("Commander", cmdrname)
+                                .V("Horizons", true);
+
+                        if (odyssey)
+                            loadgame.V("Odyssey", odyssey);
+
+                        loadgame.V("Ship", "Anaconda").V("Ship_Localised", "Anaconda")
+                                .V("ShipID", 5).V("ShipName", "CAT MINER").V("ShipIdent", "BUD-2")
+                                .V("FuelLevel", 32.000000).V("FuelCapacity", 32.000000)
                                 .V("GameMode", "Group").V("Group", "FleetComm").V("Credits", 3815287).V("Loan", 0);
 
-                        Console.WriteLine(l1.Get());
-                        Console.WriteLine(l2.Get());
-                        sr.WriteLine(l1.Get());
-                        sr.WriteLine(l2.Get());
+
+                        if ( !nogameversiononloadgame)
+                        {
+                            loadgame.V("gameversion", gameversion).V("build", build);
+                        }
+
+                        Console.WriteLine(fileheader.Get());
+                        Console.WriteLine(loadgame.Get());
+                        sr.WriteLine(fileheader.Get());
+                        sr.WriteLine(loadgame.Get());
                     }
                 }
             }

@@ -67,7 +67,7 @@ namespace EDDTest
                                   "readlog file - read a continuous log or journal file out to stdout\n" +
                                   "githubrelease - read the releases list and stat it\n" +
                                   "logs wildcard - read files for json lines and process\n" +
-                                  "readjournals path - read all .log journal files and check\n" +
+                                  "readjournals path - read all .log journal files and check - need code changes\n" +
                                   "csvtocs path - read csv and turn into a cs class\n"+
                                   "comments path\n" +
                                   "mddoc path wildcard [REMOVE]\n" +
@@ -400,10 +400,6 @@ namespace EDDTest
             else if (arg1.Equals("readjournals"))
             {
                 JournalReader.ReadJournals(args.Next());
-            }
-            else if (arg1.Equals("readjournalfile"))
-            {
-                JournalReader.ReadFile(args.Next());
             }
             else if (arg1.Equals("journalindented"))
             {

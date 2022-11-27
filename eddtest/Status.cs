@@ -113,6 +113,8 @@ namespace EDDTest
             double altitude = -999;
             double planetradius = -999;
             string bodyname = "";
+            string destinationname = "";
+            int destinationbody = 0;
             int[] pips = new int[] { 2, 8, 2 };
 
             string legalstate = "Clean";
@@ -121,6 +123,7 @@ namespace EDDTest
             {
                 Console.WriteLine("Status [C:cargo] [F:fuel] [FG:Firegroup] [G:Gui] [L:Legalstate] [0x:flag dec int]\n" +
                                   "       [GV:gravity] [H:health] [O:oxygen] [T:Temp] [S:selectedweapon] [B:bodyname] [P:W,E,S]\n" +
+                                  "       [D:Bodyname,number]\n" +
                                   "       [normalspace | supercruise | dockedstarport | dockedinstallation | fight | fighter |\n" +
                                   "        landed | SRV | TaxiNormalSpace | TaxiSupercruise | Off\n" +
                                   "        onfootininstallation | onfootplanet |\n" +
@@ -334,6 +337,15 @@ namespace EDDTest
                     SelectedWeapon = v.Mid(2);
                     SelectedWeaponLoc = SelectedWeapon + "_loc";
                 }
+                else if (v.StartsWith("D:"))
+                {
+                    int comma = v.IndexOf(",");
+                    if ( comma >= 0)
+                    {
+                        destinationname = v.Substring(2, comma - 2).Trim();
+                        destinationbody = v.Substring(comma + 1).InvariantParseInt(0);
+                    }
+                }
                 else if (Enum.TryParse<StatusFlagsShip>(v, true, out StatusFlagsShip s))
                 {
                     flags |= 1L << (int)s;
@@ -415,6 +427,10 @@ namespace EDDTest
 
                 if (planetradius >= 0)
                     qj.V("PlanetRadius", planetradius);
+                if ( destinationname.HasChars())
+                {
+                    qj.Object("Destination").V("System", 2928282).V("Body", destinationbody).V("Name", destinationname).Close();
+                }
             }
 
             qj.Close();

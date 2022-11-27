@@ -8,9 +8,12 @@ namespace EDDTest
 {
     public static class QuickAssist
     {
+        static public TimeSpan DateTimeOffset = new TimeSpan(0);
+
         public static QuickJSON.JSONFormatter UTC(this QuickJSON.JSONFormatter fmt, string name)
         {
-            fmt.V(name, DateTime.UtcNow.ToStringZulu());
+            DateTime utc = DateTime.UtcNow.Add(DateTimeOffset);
+            fmt.V(name, utc.ToStringZulu());
             return fmt;
         }
 

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2015 - 2021 robbyxp @ github.com
+ * Copyright © 2015 - 2022 robbyxp @ github.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -10,8 +10,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
  * ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
- * 
- * EDDiscovery is not affiliated with Frontier Developments plc.
  */
 
 using BaseUtils;
@@ -29,6 +27,10 @@ namespace EDDTest
         {
             int repeatdelay = 0;
             int repeattimes = 0;
+            string gameversion = "4.0.0.1050";
+            string build = "r123456/r0 ";
+            bool odyssey = true;
+            bool nogameversiononloadgame = false;
 
             while (true) // read optional args
             {
@@ -59,6 +61,44 @@ namespace EDDTest
                             return;
                         }
                     }
+                    else if (opt.Equals("-gameversion", StringComparison.InvariantCultureIgnoreCase) && argsentry.Left >= 1)
+                    {
+                        argsentry.Remove();
+                        gameversion = argsentry.Next();
+                    }
+                    else if (opt.Equals("-build", StringComparison.InvariantCultureIgnoreCase) && argsentry.Left >= 1)
+                    {
+                        argsentry.Remove();
+                        build = argsentry.Next();
+                    }
+                    else if (opt.Equals("-nogameversiononloadgame", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        argsentry.Remove();
+                        nogameversiononloadgame = true;
+                    }
+                    else if (opt.Equals("-horizons", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        argsentry.Remove();
+                        odyssey = false;
+                    }
+                    else if (opt.Equals("-dayoffset", StringComparison.InvariantCultureIgnoreCase) && argsentry.Left >= 1)
+                    {
+                        argsentry.Remove();
+                        int days = argsentry.Int();
+                        QuickAssist.DateTimeOffset = new TimeSpan(days, 0, 0, 0);
+                    }
+                    else if (opt.Equals("-3.8", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        argsentry.Remove();
+                        gameversion = "3.8.1.2";
+                        odyssey = false;
+                        nogameversiononloadgame = true;
+                    }
+                    else if (opt.Equals("-beta", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        argsentry.Remove();
+                        gameversion = "2.2 (Beta 2)";
+                    }
                     else
                         break;
                 }
@@ -83,7 +123,7 @@ namespace EDDTest
 
                 while (args.Left > 0)       // play thru all of the entries
                 {
-                    if (!createJournalEntry(cmdrname, args, repeatcount, filename))
+                    if (!createJournalEntry(cmdrname, args, repeatcount, gameversion, build, nogameversiononloadgame, odyssey ,filename))
                         break;
 
                     repeatcount++;
@@ -115,11 +155,14 @@ namespace EDDTest
 
         #endregion
 
-        public static bool createJournalEntry(string cmdrname, CommandArgs args, int repeatcount, string filename)
+        public static bool createJournalEntry(string cmdrname, CommandArgs args, int repeatcount, 
+                                                string gameversion, string build, bool nogameversiononloadgame, bool odyssey, string filename)
         {
             string eventtype = args.Next().ToLower();
             string lineout = null;      //quick writer
             bool checkjson = true;  // check json before writing to file
+            int filepart = 1;
+
             QuickJSON.JSONFormatter qj = new QuickJSON.JSONFormatter();
 
             #region  Travel
@@ -290,9 +333,9 @@ namespace EDDTest
                 qj.Close();
             }
 
-            else if (eventtype.Equals("fsdtarget") && args.Left >= 1)
+            else if (eventtype.Equals("fsdtarget") && args.Left >= 3)
             {
-                qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("SystemAddress", 20);
+                qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("StarClass",args.Next()).V("SystemAddress", 2232220).V("RemainingJumpsInRoute",args.Int());
             }
             else if (eventtype.Equals("reservoirreplenished") && args.Left >= 2)
             {
@@ -1159,17 +1202,6 @@ namespace EDDTest
 
 
             }
-            else if (eventtype.Equals("continued"))
-            {
-                QuickJSON.JSONFormatter qjc = new JSONFormatter();
-                qjc.Object().UTC("timestamp").V("event", "Continued").V("Part", 2);
-                WriteToLog(filename, cmdrname, qjc.Get(), checkjson);
-                filename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".part2" + Path.GetExtension(filename));
-                Console.WriteLine("Continued.. change to filename " + filename);
-                WriteToLog(filename, cmdrname, null, false, 2);
-            }
-            else if (eventtype.Equals("blamtest"))          // not documented - test only
-                Blamtest(filename, cmdrname, args);
             else if (eventtype.Equals("event") && args.Left >= 1)   // give it a line from the journal {"timestamp" ... }
             {
                 string file = args.Next();
@@ -1199,6 +1231,16 @@ namespace EDDTest
                     }
                 }
             }
+            else if (eventtype.Equals("continued"))
+            {
+                QuickJSON.JSONFormatter qjc = new JSONFormatter();
+                qjc.Object().UTC("timestamp").V("event", "Continued").V("Part", 2);
+                WriteToLog(filename, cmdrname, qjc.Get(), gameversion, build, nogameversiononloadgame, odyssey, filepart, checkjson);
+                filename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".part2" + Path.GetExtension(filename));
+                Console.WriteLine("Continued.. change to filename " + filename);
+                filepart++;
+                WriteToLog(filename, cmdrname, null, gameversion, build, nogameversiononloadgame, odyssey , filepart, checkjson);
+            }
 
             #endregion
 
@@ -1215,7 +1257,7 @@ namespace EDDTest
 
             if (lineout != null)
             {
-                WriteToLog(filename, cmdrname, lineout, checkjson);
+                WriteToLog(filename, cmdrname, lineout, gameversion, build, nogameversiononloadgame, odyssey, filepart, checkjson);
                 return true;
             }
             else
@@ -1228,7 +1270,9 @@ namespace EDDTest
 
         public static string Help(string eventtype)
         {
-            string s = "Usage:    Journal [-keyrepeat]|[-repeat ms][-repeatfor N] pathtologfile CMDRname [eventname [<paras>] ]..\n";
+            string s = "Usage:    Journal [options] pathtologfile CMDRname [eventname [<paras>] ]..\n";
+            s += "Options:  [-keyrepeat]|[-repeat ms] [-repeatfor N] [-nogameversiononloadgame]\n";
+            s += "          [-gameversion ver] [-build ver] [-horizons] [-dayoffset N] [-beta] [-3.8]\n";
 
             s+=he("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
             s+=he("", "FSDTravel name x y z destx desty destz percentint ", eventtype);
@@ -1243,7 +1287,7 @@ namespace EDDTest
             s += he("", "navrouteclear", eventtype);
             s += he("", "NavBeaconScan", eventtype);
             s += he("", "Startjump system", eventtype);
-            s += he("", "fsdtarget system", eventtype);
+            s += he("", "fsdtarget system starclass jumpsremaining", eventtype);
             s += he("", "reservoirreplenished main reserve", eventtype);
 
             s += he("Missions", "MissionAccepted/MissionCompleted faction victimfaction id", eventtype);
@@ -1552,43 +1596,6 @@ namespace EDDTest
 
             return qj.Get();
 
-        }
-
-
-        static void Blamtest(string filename, string cmdrname, CommandArgs args)
-        {
-            string starname = args.Next();
-            int number = 0;
-
-            double x = double.NaN, y = 0, z = 0;
-
-            if (!double.TryParse(args.Next(), out x) || !double.TryParse(args.Next(), out y) || !double.TryParse(args.Next(), out z))
-            {
-                Console.WriteLine("** X,Y,Z must be numbers");
-                return;
-            }
-
-            while (true)
-            {
-                if (Console.KeyAvailable)
-                {
-                    if (Console.ReadKey().Key == ConsoleKey.Escape)
-                        break;
-                }
-
-                JSONFormatter js = new JSONFormatter();
-                //js.Object().UTC("timestamp").V("event","FSDJump").V("StarSystem", starname + "_" + number)
-                //.Array("StarPos").V(null, x.ToStringInvariant("0.000000")).V(null, y.ToStringInvariant("0.000000")).V(null, z.ToStringInvariant("0.000000")).Close()
-                //.Literal("\"Allegiance\":\"\", \"Economy\":\"$economy_None;\", \"Economy_Localised\":\"None\", \"Government\":\"$government_None;\"," +
-                //"\"Government_Localised\":\"None\", \"Security\":\"$SYSTEM_SECURITY_low;\", \"Security_Localised\":\"Low Security\"," +
-                //"\"JumpDist\":10.791, \"FuelUsed\":0.790330, \"FuelLevel\":6.893371");
-                string lineout = js.ToString();
-
-                WriteToLog(filename, cmdrname, lineout, true);
-                number++;
-                x += 0.5;
-                System.Threading.Thread.Sleep(200);
-            }
         }
 
         #endregion

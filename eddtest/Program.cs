@@ -487,7 +487,7 @@ namespace EDDTest
                     {
                         Console.WriteLine(tk.ToString(true));
                         string code = "";
-                        JSONToFluent(tk, ref code, true,true);
+                        JSONToFluent(tk, ref code, true, true);
                         System.Diagnostics.Debug.WriteLine(code);
                         Console.WriteLine("qj" + code);
                     }
@@ -770,12 +770,12 @@ namespace EDDTest
                 string precode = args.Next();
                 CSVFile reader = new CSVFile();
 
-                if ( reader.Read(filename,FileShare.Read,true))
+                if (reader.Read(filename, FileShare.Read, true))
                 {
-                    foreach( var row in reader.Rows)
+                    foreach (var row in reader.Rows)
                     {
                         string line = "";
-                        foreach( var cell in row.Cells)
+                        foreach (var cell in row.Cells)
                         {
                             if (cell.InvariantParseDoubleNull() != null || cell.InvariantParseLongNull() != null)
                             {
@@ -793,6 +793,10 @@ namespace EDDTest
                     }
                 }
 
+            }
+            else if (arg1.Equals("mergecsharp"))
+            {
+                MergeCSharp.Merge(args);
             }
             else
             {

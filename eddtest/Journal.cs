@@ -940,7 +940,7 @@ namespace EDDTest
 
                 qj.Object().UTC("timestamp").V("event", "CarrierJumpRequest")
                         .V("CarrierID", 3709149696)
-                        .V("SystemName", starsystem).V("Body", body).V("SystemAddress", 3657399571170).V("BodyID", bodyid).Close();
+                        .V("SystemName", starsystem).V("Body", body).V("SystemAddress", 3657399571170).V("BodyID", bodyid).V("DepartureTime",DateTime.UtcNow.AddMinutes(15)).Close();
             }
             else if (eventtype.Equals("carrierjumpcancelled") && args.Left >= 0)
             {
@@ -1241,6 +1241,11 @@ namespace EDDTest
                 filepart++;
                 WriteToLog(filename, cmdrname, null, gameversion, build, nogameversiononloadgame, odyssey , filepart, checkjson);
             }
+            else if (eventtype.Equals("clearimpound") && args.Left >= 1)
+            {
+                string sp = args.Next();
+                qj.Object().UTC("timestamp").V("event", "ClearImpound").V("ShipType", sp).V("ShipType_Localised",sp+"_loc").V("ShipID",10).V("MarketID", 12345678).V("ShipMarketID", 87654321);
+            }
 
             #endregion
 
@@ -1372,6 +1377,7 @@ namespace EDDTest
             s += he("", "Friends name", eventtype);
             s += he("", "NpcCrewRank/NpcCrewPaidWage", eventtype);
             s += he("", "PowerPlay", eventtype);
+            s += he("", "ClearImpound ship", eventtype);
             s += he("", "Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber", eventtype);
             s += he("", "screenshot inputfile outputfolder [NOJR]", eventtype);
             s += he("", "continued", eventtype);

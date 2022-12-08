@@ -212,6 +212,7 @@
     <Compile Include="Enums.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="InsertText.cs" />
+    <Compile Include="mergecsharp.cs" />
     <Compile Include="TranslationRepeats.cs" />
     <Compile Include="ReadJournals.cs" />
     <Compile Include="Journal.cs" />

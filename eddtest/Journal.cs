@@ -107,6 +107,7 @@ namespace EDDTest
             }
 
             string filename = argsentry.Next();
+
             string cmdrname = argsentry.Next();
 
             if (argsentry.Left == 0)
@@ -158,6 +159,8 @@ namespace EDDTest
         public static bool createJournalEntry(string cmdrname, CommandArgs args, int repeatcount, 
                                                 string gameversion, string build, bool nogameversiononloadgame, bool odyssey, string filename)
         {
+            string filenamepath = Path.GetDirectoryName(filename);
+
             string eventtype = args.Next().ToLower();
             string lineout = null;      //quick writer
             bool checkjson = true;  // check json before writing to file
@@ -175,12 +178,12 @@ namespace EDDTest
             {
                 qj.Object().UTC("timestamp").V("event", "Location");
                 qj.V("Docked", true);
+                qj.V("StarSystem", args.Next());
                 qj.V("StationName", args.Next());
                 qj.V("StationType", "Orbis");
                 qj.V("MarketID", 12829282);
                 qj.Object("StationFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
                 qj.Object("SystemFaction").V("Name", args.Next()).V("FactionState", "IceCream").Close();
-                qj.V("StarSystem", args.Next());
                 qj.V("SystemAddress", 6538272662)
                 .V("DistFromStarLS", 335.426033)
                 .V("StationGovernment", "$government_Democracy;").V("StationGovernment_Localised", "Democracy").V("StationAllegiance", "PilotsFederation")
@@ -211,7 +214,9 @@ namespace EDDTest
                 string starsystem = args.Next();
 
                 qj.Object().UTC("timestamp").V("event", "Location").V("DistFromStarLS", 12.705612)
-                .V("Docked", false).V("OnFoot", true).V("StarSystem", starsystem).V("SystemAddress", 35855326520745)
+                .V("Docked", false).V("OnFoot", true)
+                .V("StarSystem", starsystem)
+                .V("SystemAddress", 35855326520745)
                 .Array("StarPos").V(8.0).V(-11.1875).V(-2.65625).Close()
                 .V("SystemAllegiance", "Independent").V("SystemEconomy", "$economy_HighTech;").V("SystemEconomy_Localised", "High Tech").V("SystemSecondEconomy", "$economy_Refinery;").V("SystemSecondEconomy_Localised", "Refinery").V("SystemGovernment", "$government_Corporate;").V("SystemGovernment_Localised", "Corporate").V("SystemSecurity", "$SYSTEM_SECURITY_high;").V("SystemSecurity_Localised", "High Security").V("Population", 49769105).V("Body", "Toolfa A 1").V("BodyID", 7).V("BodyType", "Planet")
                 .Array("Factions")
@@ -250,21 +255,23 @@ namespace EDDTest
 
             }
             else if (eventtype.Equals("docked") && args.Left >= 3)
-            { 
-                    qj.Object()
-                    .UTC("timestamp").V("event", "Docked")
-                    .V("StationName", args.Next()).V("StationType", "Orbis").V("Taxi", false).V("Multicrew", false).V("StarSystem", args.Next()).V("SystemAddress", 3932277478106).V("MarketID", 128666762)
-                    .Object("StationFaction").V("Name", args.Next()).Close()
-                    .V("StationGovernment", "$government_Democracy;").V("StationGovernment_Localised", "Democracy").V("StationAllegiance", "PilotsFederation")
-                    .Array("StationServices").V("dock").V("autodock").V("commodities").V("contacts").V("exploration").V("missions").V("outfitting").V("crewlounge").V("rearm").V("refuel").V("repair").V("shipyard").V("tuning").V("engineer").V("missionsgenerated").V("flightcontroller").V("stationoperations").V("searchrescue").V("techBroker").V("stationMenu").V("shop").V("livery").V("socialspace").V("bartender").V("vistagenomics").V("pioneersupplies").V("apexinterstellar").V("frontlinesolutions").Close()
-                    .V("StationEconomy", "$economy_HighTech;").V("StationEconomy_Localised", "High Tech")
-                    .Array("StationEconomies")
-                    .Object().V("Name", "$economy_HighTech;").V("Name_Localised", "High Tech").V("Proportion", 0.67).Close()
-                    .Object().V("Name", "$economy_Industrial;").V("Name_Localised", "Industrial").V("Proportion", 0.33).Close()
-                    .Close()
-                    .V("DistFromStarLS", 335.135112)
-                    .Object("LandingPads").V("Small", 17).V("Medium", 18).V("Large", 9).Close()
-                .Close();
+            {
+                qj.Object()
+                .UTC("timestamp").V("event", "Docked")
+                .V("StarSystem", args.Next()).V("SystemAddress", 3932277478106).V("MarketID", 128666762)
+                .V("StationName", args.Next())
+                .V("StationType", "Orbis").V("Taxi", false).V("Multicrew", false)
+                .Object("StationFaction").V("Name", args.Next()).Close()
+                .V("StationGovernment", "$government_Democracy;").V("StationGovernment_Localised", "Democracy").V("StationAllegiance", "PilotsFederation")
+                .Array("StationServices").V("dock").V("autodock").V("commodities").V("contacts").V("exploration").V("missions").V("outfitting").V("crewlounge").V("rearm").V("refuel").V("repair").V("shipyard").V("tuning").V("engineer").V("missionsgenerated").V("flightcontroller").V("stationoperations").V("searchrescue").V("techBroker").V("stationMenu").V("shop").V("livery").V("socialspace").V("bartender").V("vistagenomics").V("pioneersupplies").V("apexinterstellar").V("frontlinesolutions").Close()
+                .V("StationEconomy", "$economy_HighTech;").V("StationEconomy_Localised", "High Tech")
+                .Array("StationEconomies")
+                .Object().V("Name", "$economy_HighTech;").V("Name_Localised", "High Tech").V("Proportion", 0.67).Close()
+                .Object().V("Name", "$economy_Industrial;").V("Name_Localised", "Industrial").V("Proportion", 0.33).Close()
+                .Close()
+                .V("DistFromStarLS", 335.135112)
+                .Object("LandingPads").V("Small", 17).V("Medium", 18).V("Large", 9).Close()
+            .Close();
             }
             else if (eventtype.Equals("dockedfc") && args.Left >= 0)
             {
@@ -335,7 +342,7 @@ namespace EDDTest
 
             else if (eventtype.Equals("fsdtarget") && args.Left >= 3)
             {
-                qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("StarClass",args.Next()).V("SystemAddress", 2232220).V("RemainingJumpsInRoute",args.Int());
+                qj.Object().UTC("timestamp").V("event", "FSDTarget").V("Name", args.Next()).V("StarClass", args.Next()).V("SystemAddress", 2232220).V("RemainingJumpsInRoute", args.Int());
             }
             else if (eventtype.Equals("reservoirreplenished") && args.Left >= 2)
             {
@@ -346,7 +353,7 @@ namespace EDDTest
                         .V("FuelMain", main)
                         .V("FuelReservoir", res);
             }
-                
+
             #endregion
             #region  Missions
 
@@ -403,8 +410,22 @@ namespace EDDTest
                 FMission(qj, id + 2000, "Mission_Assassinate_Legal_Corporate", false, 20000);
                 qj.Close(2);
             }
-            else if (eventtype.Equals("cargodepot") && args.Left >= 1)
-                lineout = CargoDepot(args);
+            else if (eventtype.Equals("cargodepot") && args.Left >= 5)
+            {
+                int missid = int.Parse(args.Next());
+                string type = args.Next();
+                int countcol = int.Parse(args.Next());
+                int countdel = int.Parse(args.Next());
+                int total = int.Parse(args.Next());
+
+                qj.UTC("timestamp").V("event", "CargoDepot")
+                    .V("MissionID", missid).V("UpdateType", type)
+                    .V("StartMarketID", 12).V("EndMarketID", 13)
+                    .V("ItemsCollected", countcol)
+                    .V("ItemsDelivered", countdel)
+                    .V("TotalItemsToDeliver", total)
+                    .V("Progress", (double)countcol / (double)total);
+            }
 
             #endregion
             #region  Crime/Bounties
@@ -523,9 +544,13 @@ namespace EDDTest
                             .V("Type", name).V("Type_Localised", name + "loc").V("Count", count).V("SellPrice", price).V("TotalSale", price * count)
                             .V("IllegalGoods", false).V("StolenGoods", false).V("BlackMarket", false);
             }
-            else if (eventtype.Equals("market") && args.Left >= 1)
+            else if (eventtype.Equals("market") && args.Left >= 2)
             {
-                lineout = Market(Path.GetDirectoryName(filename), args.Next());
+                qj.Object().UTC("timestamp").V("event", "Market").V("MarketID", 12345678).V("StarSystem", args.Next()).V("StationName", args.Next());
+                
+                string market1 = qj.CurrentText + ", " + EDDTest.Properties.Resources.Market;
+                string market2 = qj.CurrentText + ", " + EDDTest.Properties.Resources.Market2;
+                File.WriteAllText(Path.Combine(filenamepath, "Market.json"), args.Int() == 0 ? market1 : market2 );
             }
             else if (eventtype.Equals("materials") && args.Left >= 2)
             {
@@ -839,8 +864,13 @@ namespace EDDTest
             else if (eventtype.Equals("launchdrone"))
                 qj.Object().UTC("timestamp").V("event", "LaunchDrone").V("Type", "FuelTransfer");
 
-            else if (eventtype.Equals("shipyard") && args.Left>=1)
-                lineout = Shipyard(Path.GetDirectoryName(filename), args.Next());
+            else if (eventtype.Equals("shipyard") && args.Left >= 2)
+            {
+                qj.Object().UTC("timestamp").V("event", "Shipyard").V("MarketID", 12345678).V("StarSystem", args.Next()).V("StationName", args.Next());
+               
+                string fline = qj.CurrentText + ", " + EDDTest.Properties.Resources.Shipyard;
+                File.WriteAllText(Path.Combine(filenamepath, "Shipyard.json"), fline);
+            }
 
             #endregion
             #region  Music
@@ -886,11 +916,20 @@ namespace EDDTest
                 qj.V("ShipID", 35);
                 qj.Close();
             }
-            else if (eventtype.Equals("moduleinfo") && args.Left >= 1)
-                lineout = ModuleInfo(Path.GetDirectoryName(filename), args.Next());
+            else if (eventtype.Equals("moduleinfo") && args.Left >= 0)
+            {
+                qj.Object().UTC("timestamp").V("event", "ModuleInfo");
+                string market = qj.CurrentText + ", " + EDDTest.Properties.Resources.ModulesInfo;
+                File.WriteAllText(Path.Combine(filenamepath, "ModulesInfo.json"), market);     // note the plural
+            }
 
-            else if (eventtype.Equals("outfitting") && args.Left >= 1)
-                lineout = Outfitting(Path.GetDirectoryName(filename), args.Next());
+            else if (eventtype.Equals("outfitting") && args.Left >= 2)
+            {
+                qj.Object().UTC("timestamp").V("event", "Outfitting").V("MarketID", 12345678).V("StarSystem", args.Next()).V("StationName", args.Next());
+                
+                string fline = qj.CurrentText + ", " + EDDTest.Properties.Resources.Outfitting;
+                File.WriteAllText(Path.Combine(filenamepath, "Outfitting.json"), fline);
+            }
 
             #endregion
             #region  Carrier
@@ -940,7 +979,7 @@ namespace EDDTest
 
                 qj.Object().UTC("timestamp").V("event", "CarrierJumpRequest")
                         .V("CarrierID", 3709149696)
-                        .V("SystemName", starsystem).V("Body", body).V("SystemAddress", 3657399571170).V("BodyID", bodyid).V("DepartureTime",DateTime.UtcNow.AddMinutes(15)).Close();
+                        .V("SystemName", starsystem).V("Body", body).V("SystemAddress", 3657399571170).V("BodyID", bodyid).V("DepartureTime", DateTime.UtcNow.AddMinutes(15)).Close();
             }
             else if (eventtype.Equals("carrierjumpcancelled") && args.Left >= 0)
             {
@@ -1239,23 +1278,26 @@ namespace EDDTest
                 filename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".part2" + Path.GetExtension(filename));
                 Console.WriteLine("Continued.. change to filename " + filename);
                 filepart++;
-                WriteToLog(filename, cmdrname, null, gameversion, build, nogameversiononloadgame, odyssey , filepart, checkjson);
+                WriteToLog(filename, cmdrname, null, gameversion, build, nogameversiononloadgame, odyssey, filepart, checkjson);
             }
             else if (eventtype.Equals("clearimpound") && args.Left >= 1)
             {
                 string sp = args.Next();
-                qj.Object().UTC("timestamp").V("event", "ClearImpound").V("ShipType", sp).V("ShipType_Localised",sp+"_loc").V("ShipID",10).V("MarketID", 12345678).V("ShipMarketID", 87654321);
+                qj.Object().UTC("timestamp").V("event", "ClearImpound").V("ShipType", sp).V("ShipType_Localised", sp + "_loc").V("ShipID", 10).V("MarketID", 12345678).V("ShipMarketID", 87654321);
             }
 
             #endregion
 
 
             #region Output
+
             else
             {
                 Console.WriteLine("** Unrecognised journal event type or not enough parameters for entry" + Environment.NewLine + Help(eventtype));
                 return false;
             }
+
+            // we either produce lineout, or fill in qj.
 
             if (lineout == null && qj.Get().HasChars())
                 lineout = qj.Get();
@@ -1267,6 +1309,7 @@ namespace EDDTest
             }
             else
                 return false;
+
             #endregion
 
         }
@@ -1281,10 +1324,10 @@ namespace EDDTest
 
             s+=he("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
             s+=he("", "FSDTravel name x y z destx desty destz percentint ", eventtype);
-            s += he("", "Locdocked station stationfaction systemfaction systemname", eventtype);
-            s += he("", "Docked station starsystem faction", eventtype);
+            s += he("", "Locdocked stasystem station stationfaction systemfaction", eventtype);
+            s += he("", "Docked starsystem station faction", eventtype);
             s += he("", "dockedfc starsystem - on fleet carrier", eventtype);
-            s += he("", "onfootfc - on fleet carrier on foot", eventtype);
+            s += he("", "onfootfc starsystem - on fleet carrier on foot", eventtype);
             s += he("", "Undocked, Touchdown, Liftoff", eventtype);
             s+=he("", "FuelScoop amount total", eventtype);
             s+=he("", "JetConeBoost", eventtype);
@@ -1313,7 +1356,7 @@ namespace EDDTest
 
             s += he("Commds", "marketbuy fdname count price", eventtype);
             s += he("", "marketsell fdname count price", eventtype);
-            s += he("", "market filename.json (use NOFILE after to say don't write the file)", eventtype);
+            s += he("", "market starsystem stationname 0/1 (write different market data)", eventtype);
             s += he("", "materials name count ", eventtype);
             s += he("", "cargo name count ", eventtype);
             s += he("", "buymicroresources name category count price", eventtype);
@@ -1340,15 +1383,15 @@ namespace EDDTest
             s += he("Ships", "SellShipOnRebuy fdname", eventtype);
             s += he("", "afmurepairs module", eventtype);
             s += he("", "repairdrone/launchdrone", eventtype);
-            s += he("", "shipyard filename.json (use NOFILE after to say don't write the file)", eventtype);
+            s += he("", "shipyard starsystem stationname", eventtype);
 
             s += he("Music", "MusicNormal, MusicGalMap, MusicSysMap", eventtype);
 
             s += he("SRV", "LaunchSRV, DockSRV, SRVDestroyed", eventtype);
 
             s += he("Modules", "ModuleBuyAndStore fdname price", eventtype);
-            s += he("", "ModuleInfo filename.json (use NOFILE after to say don't write the file)", eventtype);
-            s += he("", "Outfitting filename.json (use NOFILE after to say don't write the file)", eventtype);
+            s += he("", "ModuleInfo", eventtype);
+            s += he("", "Outfitting starsystem stationname", eventtype);
 
             s += he("Carrier", "CarrierBuy starsystem price", eventtype);
             s += he("", "CarrierDepositFuel amount total", eventtype);
@@ -1489,94 +1532,6 @@ namespace EDDTest
             string starname = starnameroot + percent.ToStringInvariant("0");
 
             return FSDJump(starname, 10, x, y, z);
-        }
-
-        static string Market(string mpath, string opt)
-        {
-            JSONFormatter js = new JSONFormatter();
-            js.UTC("timestamp").V("event", "Market").V("MarketID", 12345678).V("StationName", "Columbus").V("StarSystem", "Sol");
-            string mline = js.ToString();
-            string market1 = mline + ", " + EDDTest.Properties.Resources.Market;
-            string market2 = mline + ", " + EDDTest.Properties.Resources.Market2;
-
-            bool writem1 = opt == null || opt.Equals("NOFILE", StringComparison.InvariantCultureIgnoreCase) == false;
-            bool writem2 = opt != null && opt.Equals("2");
-
-            if (writem1)
-                File.WriteAllText(Path.Combine(mpath, "Market.json"), market1);
-            if (writem2)
-                File.WriteAllText(Path.Combine(mpath, "Market.json"), market2);
-
-            return mline ;
-        }
-
-        static string Outfitting(string mpath, string opt)
-        {
-            //{ "timestamp":"2018-01-28T23:45:39Z", "event":"Outfitting", "MarketID":3229009408, "StationName":"Mourelle Gateway", "StarSystem":"G 65-9",
-
-            JSONFormatter js = new JSONFormatter();
-            js.UTC("timestamp").V("event", "Outfitting").V("MarketID", 12345678).V("StationName", "Columbus").V("StarSystem", "Sol");
-            string jline = js.ToString();
-            string fline = jline + ", " + EDDTest.Properties.Resources.Outfitting;
-
-            if (opt == null || opt.Equals("NOFILE", StringComparison.InvariantCultureIgnoreCase) == false)
-                File.WriteAllText(Path.Combine(mpath, "Outfitting.json"), fline);
-
-            return jline ;
-        }
-
-        static string CargoDepot(CommandArgs args)
-        {
-            try
-            {
-                int missid = int.Parse(args.Next());
-                string type = args.Next();
-                int countcol = int.Parse(args.Next());
-                int countdel = int.Parse(args.Next());
-                int total = int.Parse(args.Next());
-
-                JSONFormatter js = new JSONFormatter();
-                js.UTC("timestamp").V("event", "CargoDepot").V("MissionID", missid).V("UpdateType", type)
-                                .V("StartMarketID", 12) .V("EndMarketID", 13)
-                                .V("ItemsCollected", countcol)
-                                .V("ItemsDelivered", countdel)
-                                .V("TotalItemsToDeliver", total)
-                                .V("Progress", (double)countcol / (double)total) ;
-                return js.ToString();
-            }
-            catch
-            {
-                Console.WriteLine("missionid type col del total");
-                return null;
-            }
-        }
-
-        static string Shipyard(string mpath, string opt)
-        {
-            // { "timestamp":"2018-01-26T03:47:33Z", "event":"Shipyard", "MarketID":128004608, "StationName":"Vonarburg Co-operative", "StarSystem":"Wyrd",
-            JSONFormatter js = new JSONFormatter();
-            js.UTC("timestamp").V("event", "Shipyard") .V("MarketID", 12345678) .V("StationName", "Columbus") .V("StarSystem", "Sol");
-            string jline = js.ToString();
-            string fline = jline + ", " + EDDTest.Properties.Resources.Shipyard;
-
-            if (opt == null || opt.Equals("NOFILE", StringComparison.InvariantCultureIgnoreCase) == false)
-                File.WriteAllText(Path.Combine(mpath, "Shipyard.json"), fline);
-
-            return jline ;
-        }
-
-
-        static string ModuleInfo(string mpath, string opt)
-        {
-            JSONFormatter js = new JSONFormatter();
-            js.UTC("timestamp").V("event", "ModuleInfo");
-            string mline = js.ToString();
-            string market = mline + ", " + EDDTest.Properties.Resources.ModulesInfo;
-
-            if (opt == null || opt.Equals("NOFILE", StringComparison.InvariantCultureIgnoreCase) == false)
-                File.WriteAllText(Path.Combine(mpath, "ModulesInfo.json"), market);     // note the plural
-
-            return mline ;
         }
 
         public static void FMission(JSONFormatter q, int id, string name, bool pas, int time)

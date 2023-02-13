@@ -36,7 +36,8 @@ namespace EliteDangerousCore
 
         public string TranslatedCategory { get; private set; }      // translation of above..
 
-        public string Name { get; private set; }                    // name of it in nice text
+        public string Name { get; private set; }                    // name of it in nice text. This gets translated
+        public string EnglishName { get; private set; }             // name of it in English
         public string FDName { get; private set; }                  // fdname, lower case..
 
         public enum ItemType
@@ -91,9 +92,10 @@ namespace EliteDangerousCore
             }
         }
 
-        // expects lower case
+        // any case accepted
         static public bool IsJumponiumType(string fdname)
         {
+            fdname = fdname.ToLowerInvariant();
             return (fdname.Contains("arsenic") || fdname.Contains("cadmium") || fdname.Contains("carbon")
                 || fdname.Contains("germanium") || fdname.Contains("niobium") || fdname.Contains("polonium")
                 || fdname.Contains("vanadium") || fdname.Contains("yttrium"));
@@ -147,10 +149,10 @@ namespace EliteDangerousCore
             return i >= 0 ? lst[i] : null;
         }
 
-        public static MaterialCommodityMicroResourceType GetByName(string longname)
+        public static MaterialCommodityMicroResourceType GetByEnglishName(string name)
         {
             List<MaterialCommodityMicroResourceType> lst = cachelist.Values.ToList();
-            int i = lst.FindIndex(x => x.Name.Equals(longname));
+            int i = lst.FindIndex(x => x.EnglishName.Equals(name));
             return i >= 0 ? lst[i] : null;
         }
 
@@ -254,9 +256,9 @@ namespace EliteDangerousCore
         public MaterialCommodityMicroResourceType(CatType cs, string n, string fd, ItemType t, MaterialGroupType mtg, string shortn, Color cl, bool rare)
         {
             Category = cs;
-            TranslatedCategory = (Category == CatType.Item) ? "Goods" : (Category == CatType.Component) ? "Assets" : Category.ToString();      // name is as the game does
+            TranslatedCategory = (Category ==CatType.Item) ? "Goods" : (Category==CatType.Component) ? "Assets" : Category.ToString();      // name is as the game does
             TranslatedCategory = TranslatedCategory.TxID(typeof(MaterialCommodityMicroResourceType), TranslatedCategory);        // valid to pass this thru the Tx( system
-            Name = n;
+            EnglishName = Name = n;
             FDName = fd;
             Type = t;
             TranslatedType = Type.ToString().SplitCapsWord().TxID(typeof(MaterialCommodityMicroResourceType), Type.ToString());                // valid to pass this thru the Tx( system
@@ -643,7 +645,7 @@ namespace EliteDangerousCore
             AddCommodityList("Building Fabricators;Crop Harvesters;Emergency Power Cells;Exhaust Manifold;Geological Equipment", m);
             AddCommoditySN("HN Shock Mount", m, "HNSM", "");
             AddCommodityList("Mineral Extractors;Modular Terminals;Power Generators", m);
-            AddCommoditySN("Thermal Cooling Units", m, "TCU", "");
+            AddCommoditySN("Thermal Cooling Units", m, "TCU","");
             AddCommoditySN("Water Purifiers", m, "WPURE", "");
             AddCommoditySN("Heatsink Interlink", m, "HSI", "");
             AddCommoditySN("Energy Grid Assembly", m, "EGA", "powergridassembly");
@@ -1162,9 +1164,14 @@ namespace EliteDangerousCore
 
             AddCommodity("Drones", ItemType.Drones, "Drones");
 
+            int cmmds = cachelist.Where(x => x.Value.IsCommodity).Count();
+            int mats = cachelist.Where(x => x.Value.IsMaterial).Count();
+            int micro = cachelist.Where(x => x.Value.IsMicroResources).Count();
+            System.Diagnostics.Debug.WriteLine($"Commds {cmmds} Mats {mats} MRs {micro}");
+
             foreach (var x in cachelist.Values)
             {
-                x.Name = x.Name.TxID(typeof(MaterialCommodityMicroResourceType), x.FDName);
+                x.Name = x.Name.TxID(typeof(MaterialCommodityMicroResourceType),x.FDName);
             }
 
             // foreach (MaterialCommodityData d in cachelist.Values) System.Diagnostics.Debug.WriteLine(string.Format("{0},{1},{2},{3},{4},{5},{6}", d.Category, d.Type.ToString().SplitCapsWord(), d.MaterialGroup.ToString(), d.FDName, d.Name, d.Shortname, d.Rarity ));

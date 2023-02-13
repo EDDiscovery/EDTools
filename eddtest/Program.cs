@@ -50,6 +50,7 @@ namespace EDDTest
                                   "CoriolisShip name - process coriolis-data\\ships\n" +
                                   "CoriolisEng rootfolder - process coriolis-data\\modifications\n" +
                                   "FrontierData rootfolder - process cvs file exports of frontier data\n" +
+                                  "EDDIData - check vs EDDI data\n" +
                                   "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
                                   "normalisetranslate- process language files and normalise, run to see options\n" +
                                   "scanforenums enumssemicolonlist path wildcard\n" +
@@ -299,6 +300,11 @@ namespace EDDTest
             {
                 Status.StatusSet(args);
                 return;
+            }
+            else if (arg1.Equals("eddidata"))
+            {
+                EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();      // for the future
+                EDDIData.Process();
             }
 
             //*************************************************************************************************************
@@ -770,7 +776,7 @@ namespace EDDTest
                 string precode = args.Next();
                 CSVFile reader = new CSVFile();
 
-                if (reader.Read(filename, FileShare.Read, true))
+                if (reader.Read(filename))
                 {
                     foreach (var row in reader.Rows)
                     {

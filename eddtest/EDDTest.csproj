@@ -200,10 +200,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="From EDD Project Manually copied\ItemActors.cs" />
     <Compile Include="From EDD Project Manually copied\ItemData.cs" />
+    <Compile Include="From EDD Project Manually copied\ItemEngineers.cs" />
+    <Compile Include="From EDD Project Manually copied\ItemModules.cs" />
+    <Compile Include="From EDD Project Manually copied\ItemShips.cs" />
+    <Compile Include="From EDD Project Manually copied\ItemSuits.cs" />
+    <Compile Include="From EDD Project Manually copied\ItemWeapons.cs" />
     <Compile Include="From EDD Project Manually copied\MaterialRecipesData.cs" />
     <Compile Include="From EDD Project Manually copied\MCMRList.cs" />
     <Compile Include="From EDD Project Manually copied\MCMRType.cs" />
+    <Compile Include="From Other\EDDI.cs" />
+    <Compile Include="EDDIData.cs" />
     <Compile Include="Github.cs" />
     <Compile Include="CorolisEng.cs" />
     <Compile Include="CorolisShips.cs" />

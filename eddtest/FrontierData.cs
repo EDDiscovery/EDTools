@@ -116,7 +116,7 @@ namespace EDDTest
             // check for non cororolis now being in frontier data in main module section - this is due to previous undeclared modes becoming public
 
             {
-                foreach (var x in ItemData.noncorolismodules)
+                foreach (var x in ItemData.othermodules)
                 {
                     if (ItemData.modules.ContainsKey(x.Key))
                         Console.WriteLine("Error Non cororolis list contains " + x.Key + " and so does main module list");
@@ -139,7 +139,7 @@ namespace EDDTest
                         int? basespeed = rw.GetInt("X");
                         int? boostspeed = rw.GetInt("Y");
 
-                        var si = ItemData.Instance.GetShipProperties(fdname);
+                        var si = ItemData.GetShipProperties(fdname);
 
                         if (si == null)
                             Console.WriteLine("Error " + fdname + " not found in ship data");
@@ -289,8 +289,8 @@ namespace EDDTest
 
                         if (ItemData.modules.ContainsKey(fdname.ToLowerInvariant()))
                             minfo = ItemData.modules[fdname.ToLowerInvariant()];
-                        else if (ItemData.noncorolismodules.ContainsKey(fdname.ToLowerInvariant()))
-                            minfo = ItemData.noncorolismodules[fdname.ToLowerInvariant()];
+                        else if (ItemData.othermodules.ContainsKey(fdname.ToLowerInvariant()))
+                            minfo = ItemData.othermodules[fdname.ToLowerInvariant()];
 
                         if (minfo != null)
                         {
@@ -331,8 +331,8 @@ namespace EDDTest
 
                             if (ItemData.modules.ContainsKey(fdname.ToLowerInvariant()))
                                 minfo = ItemData.modules[fdname.ToLowerInvariant()];
-                            else if (ItemData.noncorolismodules.ContainsKey(fdname.ToLowerInvariant()))
-                                minfo = ItemData.noncorolismodules[fdname.ToLowerInvariant()];
+                            else if (ItemData.othermodules.ContainsKey(fdname.ToLowerInvariant()))
+                                minfo = ItemData.othermodules[fdname.ToLowerInvariant()];
 
                             if (minfo != null)
                             {
@@ -827,7 +827,7 @@ namespace EDDTest
                                     ingfd = ingfd.Trim();
                                     count[ic] = rw["E", ic * 2].InvariantParseInt(0);
 
-                                    mat[ic] = MaterialCommodityMicroResourceType.GetByName(ingfd);
+                                    mat[ic] = MaterialCommodityMicroResourceType.GetByFDName(ingfd);
                                     if (mat[ic] == null)
                                     {
                                         Console.WriteLine("Material DB does not have " + ingfd);
@@ -899,7 +899,7 @@ namespace EDDTest
 
                                         count[ic] = rw["F", ic * 2].InvariantParseInt(0);
 
-                                        mat[ic] = MaterialCommodityMicroResourceType.GetByName(ingfd);
+                                        mat[ic] = MaterialCommodityMicroResourceType.GetByEnglishName(ingfd);
                                         if (mat[ic] == null)
                                         {
                                             Console.WriteLine("Material DB does not have " + ingfd);
@@ -986,7 +986,7 @@ namespace EDDTest
                     string fdname = rw[2];
                     string ukname = rw[3].Trim();
 
-                    MaterialCommodityMicroResourceType cached = MaterialCommodityMicroResourceType.GetByFDName(fdname);
+                    MaterialCommodityMicroResourceType cached = MaterialCommodityMicroResourceType.GetByEnglishName(fdname);
 
                     if (cached == null)
                     {

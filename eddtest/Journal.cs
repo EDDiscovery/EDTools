@@ -563,6 +563,15 @@ namespace EDDTest
                     .Close()
                 .Close();
             }
+            else if (eventtype.Equals("materialcollected") && args.Left >= 3)
+            {
+                qj.Object()
+                    .UTC("timestamp").V("event", "MaterialCollected")
+                    .V("Name",args.Next())
+                    .V("Category", args.Next())
+                    .V("Count", args.Int())
+                .Close();
+            }
             else if (eventtype.Equals("cargo") && args.Left >= 2)
             {
                 qj.Object().UTC("timestamp").V("event", "Cargo").V("Vessel", "Ship").V("Count", 7)
@@ -1358,6 +1367,7 @@ namespace EDDTest
             s += he("", "marketsell fdname count price", eventtype);
             s += he("", "market starsystem stationname 0/1 (write different market data)", eventtype);
             s += he("", "materials name count ", eventtype);
+            s += he("", "materialcollected name category count", eventtype);
             s += he("", "cargo name count ", eventtype);
             s += he("", "buymicroresources name category count price", eventtype);
             s += he("", "buymicroresources2 name category count price", eventtype);

@@ -13,6 +13,7 @@
  */
 
 using EliteDangerousCore;
+using System.Linq;
 
 namespace EDDTest
 {
@@ -30,29 +31,42 @@ namespace EDDTest
                     {
                         string i = edm.Info == null ? "null": $"\"{edm.Info}\"";
 
-                        System.Diagnostics.Debug.WriteLine($"{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, {edm.Mass}, {edm.Power}, {i}, \"{edm.ModName}\", \"{edm.ModType}\" ) }},");
-                        mod.id = edm.ModuleID;
+                        System.Diagnostics.Debug.WriteLine($"!!{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, {edm.Mass}, {edm.Power}, {i}, \"{edm.ModName}\", \"{edm.ModType}\" ) }},");
+                        edm.ModuleID = (int)mod.id;
                     }
                 }
                 else
                 {
 
-                    System.Diagnostics.Debug.WriteLine($"{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, 0, 0, \"\", \"{mod.descr.SplitCapsWordFull()}\", \"\" ) }},");
+                //    System.Diagnostics.Debug.WriteLine($"{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, 0, 0, \"\", \"{mod.descr.SplitCapsWordFull()}\", \"\" ) }},");
                 }
 
             }
 
             System.Diagnostics.Debug.WriteLine($"//Modules");
-            foreach (var m in ItemData.modules)
+            string curtype = "";
+            foreach (var m in ItemData.modules.OrderBy(k => k.Value.ModType))
             {
-                System.Diagnostics.Debug.WriteLine($"       {{ \"{m.Key}\", new ShipModule({m.Value}) }},");
+                if (curtype != m.Value.ModType)
+                {
+                    System.Diagnostics.Debug.WriteLine("");
+                    curtype = m.Value.ModType;
+                }
+                System.Diagnostics.Debug.WriteLine($"            {{ \"{m.Key}\", new ShipModule({m.Value}) }},");
             }
+
             System.Diagnostics.Debug.WriteLine($"//Other");
-            foreach (var m in ItemData.othermodules)
+            curtype = "";
+            foreach (var m in ItemData.othermodules.OrderBy(k=>k.Value.ModType))
             {
-                System.Diagnostics.Debug.WriteLine($"       {{ \"{m.Key}\", new ShipModule({m.Value}) }},");
+                    if (curtype != m.Value.ModType)
+                    {
+                        System.Diagnostics.Debug.WriteLine("");
+                        curtype = m.Value.ModType;
+                    }
+                    System.Diagnostics.Debug.WriteLine($"            {{ \"{m.Key}\", new ShipModule({m.Value}) }},");
+                }
             }
-        }
 
     }
 }

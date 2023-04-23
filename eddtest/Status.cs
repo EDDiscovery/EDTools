@@ -10,8 +10,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
  * ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
- * 
- * EDDiscovery is not affiliated with Frontier Developments plc.
  */
 
 using BaseUtils;
@@ -26,10 +24,10 @@ namespace EDDTest
     {
         public enum StatusFlags1Ship                             // Flags
         {
-            Docked = 0, // (on a landing pad)
-            Landed = 1, // (on planet surface)
+            ShipDocked = 0, // (on a landing pad)
+            ShipLanded = 1, // (on planet surface)
             LandingGear = 2,
-            Supercruise = 4,
+            InSupercruise = 4,
             FlightAssist = 5,
             HardpointsDeployed = 6,
             InWing = 7,
@@ -126,7 +124,7 @@ namespace EDDTest
             double gravity = 0.166399;
             double lat = 3.2;
             double lon = 6.2;
-            double heading = 92.3;
+            double heading = -999;
             double altitude = -999;
             double planetradius = -999;
             string bodyname = "";
@@ -138,14 +136,14 @@ namespace EDDTest
 
             if ( args.Left == 0 )
             {
-                Console.WriteLine("Status [C:cargo] [F:fuel] [FG:Firegroup] [G:Gui] [L:Legalstate] [0x:flag dec int]\n" +
+                Console.WriteLine("Status [C:cargo] [F:fuel] [FG:Firegroup] [G:Gui] [LS:Legalstate] [0x:flag dec int]\n" +
                                   "       [GV:gravity] [H:health] [O:oxygen] [T:Temp] [S:selectedweapon] [B:bodyname] [P:W,E,S]\n" +
-                                  "       [D:Bodyname,number]\n" +
-                                  "       [normalspace | supercruise | dockedstarport | dockedinstallation | fight | fighter |\n" +
+                                  "       [D:destname,dest-bid] [L:lat,long,alt] [HD:heading] [R:radiusm]\n" +
+                                  "        normalspace | supercruise | dockedstarport | dockedinstallation | fight | fighter |\n" +
                                   "        landed | SRV | TaxiNormalSpace | TaxiSupercruise | Off\n" +
                                   "        onfootininstallation | onfootplanet |\n" +
                                   "        onfootinplanetaryporthangar | onfootinplanetaryportsocialspace |\n" +
-                                  "        onfootinstarporthangar | onfootinstarportsocialspace |\n"
+                                  "        onfootinstarporthangar | onfootinstarportsocialspace\n"
                                 );
                 Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlags1Ship))));
                 Console.WriteLine("       " + string.Join(",", Enum.GetNames(typeof(StatusFlags1SRV))));
@@ -169,7 +167,7 @@ namespace EDDTest
                 else if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlags1ShipType.InMainShip) |
-                                (1L << (int)StatusFlags1Ship.Supercruise) |
+                                (1L << (int)StatusFlags1Ship.InSupercruise) |
                                 (1L << (int)StatusFlags1All.ShieldsUp);
                 }
                 else if (v.Equals("NormalSpace", StringComparison.InvariantCultureIgnoreCase))          // checked alpha 4
@@ -180,7 +178,7 @@ namespace EDDTest
                 else if (v.Equals("TaxiSupercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlags1ShipType.InMainShip) |
-                                (1L << (int)StatusFlags1Ship.Supercruise) |
+                                (1L << (int)StatusFlags1Ship.InSupercruise) |
                                 (1L << (int)StatusFlags1All.ShieldsUp);
                     flags2 = (1L << (int)StatusFlags2ShipType.InTaxi);
                 }
@@ -203,7 +201,7 @@ namespace EDDTest
                 }
                 else if (v.Equals("DockedStarPort", StringComparison.InvariantCultureIgnoreCase))             
                 {
-                    flags = (1L << (int)StatusFlags1Ship.Docked) |
+                    flags = (1L << (int)StatusFlags1Ship.ShipDocked) |
                         (1L << (int)StatusFlags1Ship.LandingGear) |
                                 (1L << (int)StatusFlags1Ship.FsdMassLocked) |
                                 (1L << (int)StatusFlags1All.ShieldsUp) |
@@ -211,7 +209,7 @@ namespace EDDTest
                 }
                 else if (v.Equals("DockedInstallation", StringComparison.InvariantCultureIgnoreCase))   // TBD
                 {
-                    flags = (1L << (int)StatusFlags1Ship.Docked) |
+                    flags = (1L << (int)StatusFlags1Ship.ShipDocked) |
                            (1L << (int)StatusFlags1Ship.LandingGear) |
                             (1L << (int)StatusFlags1Ship.FsdMassLocked) |
                                 (1L << (int)StatusFlags1All.ShieldsUp) |
@@ -220,6 +218,7 @@ namespace EDDTest
 
                     bodyname = "Nervi 2g";
                     altitude = 0;
+                    heading = 20;
                     planetradius = 2796748.25;
                 }
                 else if (v.Equals("OnFootInPlanetaryPortHangar", StringComparison.InvariantCultureIgnoreCase))
@@ -284,7 +283,7 @@ namespace EDDTest
                 else if (v.Equals("Landed", StringComparison.InvariantCultureIgnoreCase))           // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlags1ShipType.InMainShip) |
-                                (1L << (int)StatusFlags1Ship.Landed) |
+                                (1L << (int)StatusFlags1Ship.ShipLanded) |
                                 (1L << (int)StatusFlags1Ship.LandingGear) |
                                 (1L << (int)StatusFlags1Ship.FsdMassLocked) |
                                 (1L << (int)StatusFlags1All.ShieldsUp) |
@@ -303,6 +302,7 @@ namespace EDDTest
                     bodyname = "Nervi 2g";
                     planetradius = 292892882.2;
                     altitude = 0;
+                    heading = 20;
                 }
                 else if (v.StartsWith("C:"))
                 {
@@ -324,7 +324,7 @@ namespace EDDTest
                 {
                     flags = long.Parse(v.Mid(3), System.Globalization.NumberStyles.HexNumber);
                 }
-                else if (v.StartsWith("L:"))
+                else if (v.StartsWith("LS:"))
                 {
                     legalstate = v.Mid(2);
                 }
@@ -343,6 +343,27 @@ namespace EDDTest
                 else if (v.StartsWith("GV:"))
                 {
                     gravity = v.Mid(3).InvariantParseDouble(0);
+                }
+                else if (v.StartsWith("R:"))
+                {
+                    planetradius = v.Mid(2).InvariantParseDouble(0);
+                }
+                else if (v.StartsWith("HD:"))
+                {
+                    heading = v.Mid(3).InvariantParseDouble(0);
+                }
+                else if (v.StartsWith("L:"))
+                {
+                    v = v.Substring(2);
+                    int comma1 = v.IndexOf(",");
+                    int comma2 = comma1 > 0 ? v.IndexOf(",", comma1+1) : -1;
+                    if (comma2 > 0)
+                    {
+                        lat = v.Substring(0, comma1).InvariantParseDouble(0);
+                        lon = v.Substring(comma1 + 1, comma2 - comma1 - 1).InvariantParseDouble(0);
+                        altitude = v.Substring(comma2 + 1).InvariantParseDouble(0);
+                        flags |= (1L << (int)StatusFlags1All.HasLatLong);
+                    }
                 }
                 else if (v.StartsWith("P:"))
                 {
@@ -394,6 +415,10 @@ namespace EDDTest
                 {
                     flags2 |= 1L << (int)f2o;
                 }
+                else if (Enum.TryParse<StatusFlags1ReportedInOtherEvents>(v, true, out StatusFlags1ReportedInOtherEvents f1o))
+                {
+                    flags |= 1L << (int)f1o;
+                }
                 else
                 {
                     Console.WriteLine("Bad flag " + v);
@@ -439,7 +464,8 @@ namespace EDDTest
                 {
                     qj.V("Latitude", lat);
                     qj.V("Longitude", lon);
-                    qj.V("Heading", heading);
+                    if ( heading>=0)
+                        qj.V("Heading", heading);
 
                     if (altitude >= 0)
                         qj.V("Altitude", altitude);
@@ -640,7 +666,7 @@ namespace EDDTest
         public static void StatusMove(CommandArgs args)
         {
             long flags = (1L << (int)StatusFlags1ShipType.InSRV) |
-                        (1L << (int)StatusFlags1Ship.Landed) |
+                        (1L << (int)StatusFlags1Ship.ShipLanded) |
                         (1L << (int)StatusFlags1All.ShieldsUp) |
                         (1L << (int)StatusFlags1All.Lights);
 

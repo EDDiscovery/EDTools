@@ -1250,7 +1250,24 @@ namespace EDDTest
 
 
             }
-            else if (eventtype.Equals("event") && args.Left >= 1)   // give it a line from the journal {"timestamp" ... }
+            else if (eventtype.Equals("event") && args.Left >= 1)   // give it a journal entry in a file {"timestamp" ... }
+            {
+                string file = args.Next();
+
+                var text = File.ReadAllText(file);
+                JObject jo = JObject.Parse(text);
+                if ( jo != null && jo.Contains("event") && jo.Contains("timestamp"))
+                {
+                    jo["timestamp"] = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");     // replace timestamp
+                    lineout += jo.ToString();
+                }
+                else
+                {
+                    Console.WriteLine("Bad journal line " + text);
+                }
+            }
+
+            else if (eventtype.Equals("journallog") && args.Left >= 1)   // give it a line from the journal {"timestamp" ... }
             {
                 string file = args.Next();
 
@@ -1434,7 +1451,8 @@ namespace EDDTest
             s += he("", "Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber", eventtype);
             s += he("", "screenshot inputfile outputfolder [NOJR]", eventtype);
             s += he("", "continued", eventtype);
-            s += he("", "event filename - copy in events from file, formatted as per journal lines", eventtype);
+            s += he("", "journallog filename - copy in events from file, formatted as per journal lines", eventtype);
+            s += he("", "event filename - a single JSON event in a file", eventtype);
             return s;
         }
 

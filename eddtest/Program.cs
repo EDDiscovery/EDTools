@@ -50,6 +50,7 @@ namespace EDDTest
                                   "CoriolisShip name - process coriolis-data\\ships\n" +
                                   "CoriolisEng rootfolder - process coriolis-data\\modifications\n" +
                                   "FrontierData rootfolder - process cvs file exports of frontier data\n" +
+                                  "FDEVIDs rootfolder - process cvs file exports of EDCD FDEV IDs\n" +
                                   "EDDIData - check vs EDDI data\n" +
                                   "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
                                   "normalisetranslate- process language files and normalise, run to see options\n" +
@@ -402,6 +403,11 @@ namespace EDDTest
             {
                 EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
                 FrontierData.Process(args.Next());
+            }
+            else if (arg1.Equals("fdevids"))
+            {
+                EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
+                FDevIDs.Process(args.Next());
             }
             else if (arg1.Equals("readjournals"))
             {

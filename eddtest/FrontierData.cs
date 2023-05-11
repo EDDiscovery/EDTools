@@ -555,7 +555,7 @@ namespace EDDTest
                                 string engnames = "Not Known";
 
 
-                                EngineeringRecipe er = Recipes.EngineeringRecipes.Find((x) => x.Name == ukname && x.level == level.Value.ToString() && x.modulesstring == modulename );
+                                EngineeringRecipe er = Recipes.EngineeringRecipes.Find((x) => x.Name == ukname && x.Level == level.Value.ToString() && x.ModuleList == modulename );
 
                                 if (er != null)
                                 {
@@ -664,7 +664,7 @@ namespace EDDTest
                         }
                         else
                         {
-                            Console.WriteLine($"Special Data: {fdname},{string.Join(",", find.engineers)}");
+                            Console.WriteLine($"Special Data: {fdname},{string.Join(",", find.Engineers)}");
                         }
                     }
 
@@ -931,7 +931,7 @@ namespace EDDTest
                                 else
                                 {
                                     Console.WriteLine("        new EngineeringRecipe(\"" + type + "\",\"" + fdname.ToLower() + "\",\"" + manu + "\",\"" + modtext + "\"," +
-                                                cost.Replace(",", "") + ",\"" + ilist + "\",\"" + string.Join(",", find.engineers) + "\"),");
+                                                cost.Replace(",", "") + ",\"" + ilist + "\",\"" + string.Join(",", find.Engineers) + "\"),");
 
                                 }
                             }

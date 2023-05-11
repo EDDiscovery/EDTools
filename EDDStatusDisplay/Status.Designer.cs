@@ -33,6 +33,7 @@ namespace EDDStatusDisplay
             this.radioButtonLG = new System.Windows.Forms.RadioButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.radioButton46 = new System.Windows.Forms.RadioButton();
+            this.radioButton47 = new System.Windows.Forms.RadioButton();
             this.radioButton31 = new System.Windows.Forms.RadioButton();
             this.radioButton19 = new System.Windows.Forms.RadioButton();
             this.radioButton13 = new System.Windows.Forms.RadioButton();
@@ -65,13 +66,14 @@ namespace EDDStatusDisplay
             this.radioButton16 = new System.Windows.Forms.RadioButton();
             this.radioButton26 = new System.Windows.Forms.RadioButton();
             this.radioButton24 = new System.Windows.Forms.RadioButton();
+            this.labelCargo = new System.Windows.Forms.Label();
             this.radioButton23 = new System.Windows.Forms.RadioButton();
+            this.labelFuelMain = new System.Windows.Forms.Label();
             this.radioButton17 = new System.Windows.Forms.RadioButton();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.labelWeapon = new System.Windows.Forms.Label();
             this.labelHealth = new System.Windows.Forms.Label();
             this.labelOxygen = new System.Windows.Forms.Label();
-            this.labelLegalState = new System.Windows.Forms.Label();
             this.labelGravity = new System.Windows.Forms.Label();
             this.labelTemperature = new System.Windows.Forms.Label();
             this.radioButton37 = new System.Windows.Forms.RadioButton();
@@ -87,19 +89,17 @@ namespace EDDStatusDisplay
             this.radioButton34 = new System.Windows.Forms.RadioButton();
             this.radioButton33 = new System.Windows.Forms.RadioButton();
             this.radioButton32 = new System.Windows.Forms.RadioButton();
+            this.labelLegalState = new System.Windows.Forms.Label();
             this.radioButton25 = new System.Windows.Forms.RadioButton();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.labelDest = new System.Windows.Forms.Label();
             this.labelBody = new System.Windows.Forms.Label();
             this.labelLatLong = new System.Windows.Forms.Label();
             this.radioButton27 = new System.Windows.Forms.RadioButton();
-            this.labelFuelMain = new System.Windows.Forms.Label();
-            this.labelCargo = new System.Windows.Forms.Label();
             this.labelBalance = new System.Windows.Forms.Label();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.labelFiregroup = new System.Windows.Forms.Label();
             this.labelGUI = new System.Windows.Forms.Label();
-            this.radioButton47 = new System.Windows.Forms.RadioButton();
+            this.labelFiregroup = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -160,7 +160,7 @@ namespace EDDStatusDisplay
             this.groupBox1.Controls.Add(this.radioButtonLG);
             this.groupBox1.Location = new System.Drawing.Point(8, 210);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(667, 175);
+            this.groupBox1.Size = new System.Drawing.Size(667, 134);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Ship";
@@ -177,6 +177,19 @@ namespace EDDStatusDisplay
             this.radioButton46.Tag = "F2-19";
             this.radioButton46.Text = "FSD Hyperdrive";
             this.radioButton46.UseVisualStyleBackColor = true;
+            // 
+            // radioButton47
+            // 
+            this.radioButton47.AutoCheck = false;
+            this.radioButton47.AutoSize = true;
+            this.radioButton47.Location = new System.Drawing.Point(6, 65);
+            this.radioButton47.Name = "radioButton47";
+            this.radioButton47.Size = new System.Drawing.Size(79, 17);
+            this.radioButton47.TabIndex = 1;
+            this.radioButton47.TabStop = true;
+            this.radioButton47.Tag = "F2-12";
+            this.radioButton47.Text = "Glide Mode";
+            this.radioButton47.UseVisualStyleBackColor = true;
             // 
             // radioButton31
             // 
@@ -471,7 +484,7 @@ namespace EDDStatusDisplay
             this.groupBox3.Controls.Add(this.radioButton22);
             this.groupBox3.Controls.Add(this.radioButton20);
             this.groupBox3.Controls.Add(this.radioButton15);
-            this.groupBox3.Location = new System.Drawing.Point(8, 391);
+            this.groupBox3.Location = new System.Drawing.Point(8, 350);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(448, 70);
             this.groupBox3.TabIndex = 3;
@@ -598,6 +611,15 @@ namespace EDDStatusDisplay
             this.radioButton24.Text = "Is In Danger";
             this.radioButton24.UseVisualStyleBackColor = true;
             // 
+            // labelCargo
+            // 
+            this.labelCargo.AutoSize = true;
+            this.labelCargo.Location = new System.Drawing.Point(320, 42);
+            this.labelCargo.Name = "labelCargo";
+            this.labelCargo.Size = new System.Drawing.Size(35, 13);
+            this.labelCargo.TabIndex = 2;
+            this.labelCargo.Text = "Cargo";
+            // 
             // radioButton23
             // 
             this.radioButton23.AutoCheck = false;
@@ -610,6 +632,15 @@ namespace EDDStatusDisplay
             this.radioButton23.Tag = "F1-19";
             this.radioButton23.Text = "Low Fuel";
             this.radioButton23.UseVisualStyleBackColor = true;
+            // 
+            // labelFuelMain
+            // 
+            this.labelFuelMain.AutoSize = true;
+            this.labelFuelMain.Location = new System.Drawing.Point(320, 15);
+            this.labelFuelMain.Name = "labelFuelMain";
+            this.labelFuelMain.Size = new System.Drawing.Size(27, 13);
+            this.labelFuelMain.TabIndex = 2;
+            this.labelFuelMain.Text = "Fuel";
             // 
             // radioButton17
             // 
@@ -644,7 +675,7 @@ namespace EDDStatusDisplay
             this.groupBox5.Controls.Add(this.radioButton34);
             this.groupBox5.Controls.Add(this.radioButton33);
             this.groupBox5.Controls.Add(this.radioButton32);
-            this.groupBox5.Location = new System.Drawing.Point(8, 468);
+            this.groupBox5.Location = new System.Drawing.Point(8, 426);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(667, 98);
             this.groupBox5.TabIndex = 3;
@@ -677,15 +708,6 @@ namespace EDDStatusDisplay
             this.labelOxygen.Size = new System.Drawing.Size(23, 13);
             this.labelOxygen.TabIndex = 2;
             this.labelOxygen.Text = "oxy";
-            // 
-            // labelLegalState
-            // 
-            this.labelLegalState.AutoSize = true;
-            this.labelLegalState.Location = new System.Drawing.Point(6, 45);
-            this.labelLegalState.Name = "labelLegalState";
-            this.labelLegalState.Size = new System.Drawing.Size(29, 13);
-            this.labelLegalState.TabIndex = 2;
-            this.labelLegalState.Text = "legal";
             // 
             // labelGravity
             // 
@@ -867,6 +889,15 @@ namespace EDDStatusDisplay
             this.radioButton32.Text = "Station";
             this.radioButton32.UseVisualStyleBackColor = true;
             // 
+            // labelLegalState
+            // 
+            this.labelLegalState.AutoSize = true;
+            this.labelLegalState.Location = new System.Drawing.Point(6, 45);
+            this.labelLegalState.Name = "labelLegalState";
+            this.labelLegalState.Size = new System.Drawing.Size(29, 13);
+            this.labelLegalState.TabIndex = 2;
+            this.labelLegalState.Text = "legal";
+            // 
             // radioButton25
             // 
             this.radioButton25.AutoCheck = false;
@@ -934,24 +965,6 @@ namespace EDDStatusDisplay
             this.radioButton27.Text = "Alt Avg";
             this.radioButton27.UseVisualStyleBackColor = true;
             // 
-            // labelFuelMain
-            // 
-            this.labelFuelMain.AutoSize = true;
-            this.labelFuelMain.Location = new System.Drawing.Point(320, 15);
-            this.labelFuelMain.Name = "labelFuelMain";
-            this.labelFuelMain.Size = new System.Drawing.Size(27, 13);
-            this.labelFuelMain.TabIndex = 2;
-            this.labelFuelMain.Text = "Fuel";
-            // 
-            // labelCargo
-            // 
-            this.labelCargo.AutoSize = true;
-            this.labelCargo.Location = new System.Drawing.Point(320, 42);
-            this.labelCargo.Name = "labelCargo";
-            this.labelCargo.Size = new System.Drawing.Size(35, 13);
-            this.labelCargo.TabIndex = 2;
-            this.labelCargo.Text = "Cargo";
-            // 
             // labelBalance
             // 
             this.labelBalance.AutoSize = true;
@@ -974,15 +987,6 @@ namespace EDDStatusDisplay
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Info";
             // 
-            // labelFiregroup
-            // 
-            this.labelFiregroup.AutoSize = true;
-            this.labelFiregroup.Location = new System.Drawing.Point(6, 66);
-            this.labelFiregroup.Name = "labelFiregroup";
-            this.labelFiregroup.Size = new System.Drawing.Size(21, 13);
-            this.labelFiregroup.TabIndex = 2;
-            this.labelFiregroup.Text = "FG";
-            // 
             // labelGUI
             // 
             this.labelGUI.AutoSize = true;
@@ -992,24 +996,20 @@ namespace EDDStatusDisplay
             this.labelGUI.TabIndex = 2;
             this.labelGUI.Text = "GUI";
             // 
-            // radioButton47
+            // labelFiregroup
             // 
-            this.radioButton47.AutoCheck = false;
-            this.radioButton47.AutoSize = true;
-            this.radioButton47.Location = new System.Drawing.Point(6, 65);
-            this.radioButton47.Name = "radioButton47";
-            this.radioButton47.Size = new System.Drawing.Size(79, 17);
-            this.radioButton47.TabIndex = 1;
-            this.radioButton47.TabStop = true;
-            this.radioButton47.Tag = "F2-12";
-            this.radioButton47.Text = "Glide Mode";
-            this.radioButton47.UseVisualStyleBackColor = true;
+            this.labelFiregroup.AutoSize = true;
+            this.labelFiregroup.Location = new System.Drawing.Point(6, 66);
+            this.labelFiregroup.Name = "labelFiregroup";
+            this.labelFiregroup.Size = new System.Drawing.Size(21, 13);
+            this.labelFiregroup.TabIndex = 2;
+            this.labelFiregroup.Text = "FG";
             // 
             // Status
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(687, 586);
+            this.ClientSize = new System.Drawing.Size(687, 531);
             this.Controls.Add(this.groupBox7);
             this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);

@@ -272,5 +272,5 @@ namespace EliteDangerousCore
             return changed;
         }
 
-     }
+    }
 }

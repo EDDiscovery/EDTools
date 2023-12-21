@@ -42,13 +42,15 @@ namespace EDDTest
                     using (StreamWriter sr = new StreamWriter(fs))
                     {
                         JSONFormatter fileheader = new JSONFormatter();
-                        fileheader.Object().UTC("timestamp").V("event", "Fileheader").V("language", "English\\\\UK").V("part",part);
+
+
+                        fileheader.Object().UTC("timestamp",-1).V("event", "Fileheader").V("language", "English\\\\UK").V("part",part);
 
                         fileheader.V("gameversion", gameversion).V("build", build);
 
                         JSONFormatter loadgame = new JSONFormatter();
 
-                        loadgame.Object().UTC("timestamp").V("event", "LoadGame").V("FID", "F1962222").V("Commander", cmdrname)
+                        loadgame.Object().UTC("timestamp",-1).V("event", "LoadGame").V("FID", "F1962222").V("Commander", cmdrname)
                                 .V("Horizons", true);
 
                         if (odyssey)

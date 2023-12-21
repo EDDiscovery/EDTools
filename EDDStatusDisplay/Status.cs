@@ -1,13 +1,6 @@
 ﻿using QuickJSON;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace EDDStatusDisplay
@@ -97,7 +90,7 @@ namespace EDDStatusDisplay
             double? bal = json["Balance"].DoubleNull();
             labelBalance.Text = bal.HasValue ? ("Balance: " + bal.ToStringInvariant("0") + " cr") : "";
             int gui = json["GuiFocus"].Int();
-            labelGUI.Text = "GUIMode: " + ((Focus)gui).ToString();
+            labelGUI.Text = "GUIMode: " + ((FocusValues)gui).ToString();
             int fg = json["FireGroup"].Int();
             labelFiregroup.Text = "Firegroup: " + "ABCDEFGHIJKL"[fg];
 
@@ -130,7 +123,7 @@ namespace EDDStatusDisplay
             }
         }
 
-        public enum Focus
+        public enum FocusValues
         {
             NoFocus = 0,
             SystemPanel = 1,

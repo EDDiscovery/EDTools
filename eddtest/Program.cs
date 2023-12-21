@@ -75,7 +75,8 @@ namespace EDDTest
                                   "mddoc path wildcard [REMOVE]\n" +
                                   "finddoclinks path wildcard [REMOVE]\n" +
                                   "finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
-                                  "insertext path wildcard find insert\n" 
+                                  "insertext path wildcard find insert\n",
+                                  "outfitting file - Read outfitting.csv and compare vs item data\n"
 
                                   );
 
@@ -305,7 +306,7 @@ namespace EDDTest
             else if (arg1.Equals("eddidata"))
             {
                 EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();      // for the future
-                EDDIData.Process();
+                EDDIData.CheckModulesvsEDDI();
             }
 
             //*************************************************************************************************************
@@ -618,9 +619,10 @@ namespace EDDTest
             else if (arg1.Equals("xmldump"))
             {
                 string filename = args.Next();
+                int format = args.Int();
 
                 XElement bindings = XElement.Load(filename);
-                Dump(bindings, 0);
+                Dump(bindings, 0, format );
             }
             else if (arg1.Equals("escapestring"))
             {
@@ -810,6 +812,40 @@ namespace EDDTest
             {
                 MergeCSharp.Merge(args);
             }
+            else if (arg1.Equals("jsontest"))
+            {
+                string path = args.Next();
+                try
+                {
+                    string text = File.ReadAllText(path);
+
+                    JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
+                    if (tk != null)
+                    {
+                        Console.WriteLine(tk.ToString(true));
+
+                        JArray v = tk["values"].Array();
+                        foreach( var x in v)
+                        {
+                            System.Diagnostics.Debug.WriteLine("{ \"" + x.Str() + "\", EDPlanet.H },");
+                        }
+
+
+                    }
+                    else
+                        Console.WriteLine($"{err}\r\nERROR in JSON");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed " + ex.Message);
+                }
+            }
+            else if (arg1.Equals("outfitting"))
+            {
+                string filename = args.Next();
+                EDCDOutfitting.Process(filename);
+            }
+
             else
             {
                 Console.WriteLine("Unknown command, run with empty line for help");
@@ -817,16 +853,25 @@ namespace EDDTest
         }
 
 
-        static void Dump( XElement x, int level)
+        static void Dump( XElement x, int level, int format)
         {
             string pretext = "                                       ".Substring(0, level * 3);
-            Console.WriteLine(level + pretext + x.NodeType + " " + x.Name.LocalName + (x.Value.HasChars() ? (" : " + x.Value) : ""));
+            if (format == 0)
+                Console.WriteLine(level + pretext + x.NodeType + " " + x.Name.LocalName + (x.Value.HasChars() ? (" : " + x.Value) : ""));
+            else if (format == 1)
+            {
+                if (level > 1)
+                    Console.Write(",\"" + x.Value + "\"");
+            }
 
             if (x.HasAttributes)
             {
                 foreach (XAttribute y in x.Attributes())
                 {
-                    Console.WriteLine(level + pretext + "  attr " + y.Name + " = " + y.Value);
+                    if (format == 0)
+                        Console.WriteLine(level + pretext + "  attr " + y.Name + " = " + y.Value);
+                    else if ( !y.Name.ToString().StartsWith("{http"))
+                        Console.Write("\"$" + y.Value.ToString().ToLower() +"\"");
                 }
             }
 
@@ -835,10 +880,13 @@ namespace EDDTest
                 foreach (XElement y in x.Elements())
                 {
                     //Console.WriteLine(level + pretext + x.Name.LocalName + " desc " + y.Name.LocalName);
-                    Dump(y, level + 1);
+                    Dump(y, level + 1, format);
                     //Console.WriteLine(level + pretext + x.Name.LocalName + " Out desc " + y.Name.LocalName);
                 }
             }
+
+            if (level == 1)
+                Console.WriteLine(",");
 
         }
 

@@ -32,6 +32,13 @@ namespace EDDTest
             bool odyssey = true;
             bool nogameversiononloadgame = false;
 
+            if ( argsentry.Left == 1 )
+            {
+                string name = argsentry.Next();
+                Console.WriteLine(Help(name));
+                return;
+            }
+
             while (true) // read optional args
             {
                 string opt = (argsentry.Left > 0) ? argsentry[0] : null;
@@ -352,6 +359,19 @@ namespace EDDTest
                 qj.Object().UTC("timestamp").V("event", "ReservoirReplenished")
                         .V("FuelMain", main)
                         .V("FuelReservoir", res);
+            }
+            else if (eventtype.Equals("approachbody") && args.Left >= 4)
+            {
+                string systemname = args.Next();
+                long sysaddr = args.Long();
+                string bodyname = args.Next();
+                int bodyid = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "ApproachBody")
+                        .V("StarSystem", systemname)
+                        .V("SystemAddress", sysaddr)
+                        .V("Body", bodyname)
+                        .V("BodyID", bodyid);
             }
 
             #endregion
@@ -725,9 +745,12 @@ namespace EDDTest
             else if (eventtype.Equals("fsssignaldiscovered") && args.Left >= 2)
             {
                 string name = args.Next();
-                int system = args.Int();
+                long system = args.Long();
 
                 qj.Object().UTC("timestamp").V("event", "FSSSignalDiscovered");
+                if (name == "crazy")
+                    name = @"'-II========II=#\"">";
+
                 qj.V("SignalName", name);
                 qj.V("SystemAddress", system);
 
@@ -802,23 +825,37 @@ namespace EDDTest
             }
             else if (eventtype.Equals("scanorganic") && args.Left >= 4)
             {
+                //{ "timestamp":"2023-08-31T14:13:35Z", "event":"ScanOrganic", "ScanType":"Analyse", "Genus":"$Codex_Ent_Osseus_Genus_Name;",
+                //"Genus_Localised":"Osseus", "Species":"$Codex_Ent_Osseus_02_Name;", "Species_Localised":"Osseus Discus",
+                //"Variant":"$Codex_Ent_Osseus_02_Tin_Name;", "Variant_Localised":"Osseus Discus - Blue", "SystemAddress":6365988787843, "Body":25 }
+
                 string st = args.Next();
                 if (st == "Log" || st == "Sample" || st == "Analyse")
                 {
+                    long sysid = args.Long();
+                    int body = args.Int();
                     string genus = args.Next();
                     string species = args.Next();
-                    int body = args.Int();
+                    string variant = args.Next();
+
+                    var decoratedvariant = "$Codex_Ent_" + genus + "_" + species + "_" + variant + "_Name;";
+                    var decoratedspecies = "$Codex_Ent_" + genus + "_" + species + "_Name;";
+                    var decoratedgenus = "$Codex_Ent_" + genus + "_Genus_Name;";
 
                     qj.Object().UTC("timestamp").V("event", "ScanOrganic");
                     qj.V("ScanType", st);
-                    qj.V("Genus", genus);
-                    qj.V("Genus_Localised", genus.Replace("$Codex_Ent_", "").Replace("_Genus_Name;", ""));
-                    qj.V("Species", species);
-                    qj.V("Species_Localised", species.Replace("$Codex_Ent_", "").Replace("_Name;", ""));
-                    qj.V("SystemAddress", 1416164883666);
+                    qj.V("Genus", decoratedgenus);
+                    qj.V("Genus_Localised", genus);
+                    qj.V("Species", decoratedspecies);
+                    qj.V("Species_Localised", species);
+                    qj.V("Variant", decoratedvariant);
+                    qj.V("Variant_Localised", variant);
+                    qj.V("SystemAddress", sysid);
                     qj.V("Body", body);
                     qj.Close();
                 }
+                else
+                    Console.WriteLine($"Need Log, Sample or Analyse");
             }
             else if (eventtype.Equals("codexentry") && args.Left >= 4)
             {
@@ -1340,145 +1377,6 @@ namespace EDDTest
 
         }
 
-        #region Help!
-
-        public static string Help(string eventtype)
-        {
-            string s = "Usage:    Journal [options] pathtologfile CMDRname [eventname [<paras>] ]..\n";
-            s += "Options:  [-keyrepeat]|[-repeat ms] [-repeatfor N] [-nogameversiononloadgame]\n";
-            s += "          [-gameversion ver] [-build ver] [-horizons] [-dayoffset N] [-beta] [-3.8]\n";
-
-            s+=he("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
-            s+=he("", "FSDTravel name x y z destx desty destz percentint ", eventtype);
-            s += he("", "Locdocked stasystem station stationfaction systemfaction", eventtype);
-            s += he("", "Docked starsystem station faction", eventtype);
-            s += he("", "dockedfc starsystem - on fleet carrier", eventtype);
-            s += he("", "onfootfc starsystem - on fleet carrier on foot", eventtype);
-            s += he("", "Undocked, Touchdown, Liftoff", eventtype);
-            s+=he("", "FuelScoop amount total", eventtype);
-            s+=he("", "JetConeBoost", eventtype);
-            s += he("", "navroute system", eventtype);
-            s += he("", "navrouteclear", eventtype);
-            s += he("", "NavBeaconScan", eventtype);
-            s += he("", "Startjump system", eventtype);
-            s += he("", "fsdtarget system starclass jumpsremaining", eventtype);
-            s += he("", "reservoirreplenished main reserve", eventtype);
-
-            s += he("Missions", "MissionAccepted/MissionCompleted faction victimfaction id", eventtype);
-            s+=he("", "MissionRedirected newsystem newstation id", eventtype);
-            s+=he("", "Missions activeid", eventtype);
-            s += he("", "CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total", eventtype);
-
-            s += he("C/B", "Bounty faction reward", eventtype);
-            s+=he("", "CommitCrime faction amount", eventtype);
-            s+=he("", "CrimeVictim offender amount", eventtype);
-            s+=he("", "FactionKillBond faction victimfaction reward", eventtype);
-            s+=he("", "CapShipBond faction victimfaction reward", eventtype);
-            s+=he("", "ShipTargeted [ship [pilot rank [health [faction]]]]", eventtype);
-            s += he("", "Resurrect cost", eventtype);
-            s += he("", "Died", eventtype);
-            s += he("", "FighterDestroyed, FigherRebuilt", eventtype);
-            s += he("", "UnderAttack", eventtype);
-
-            s += he("Commds", "marketbuy fdname count price", eventtype);
-            s += he("", "marketsell fdname count price", eventtype);
-            s += he("", "market starsystem stationname 0/1 (write different market data)", eventtype);
-            s += he("", "materials name count ", eventtype);
-            s += he("", "materialcollected name category count", eventtype);
-            s += he("", "cargo name count ", eventtype);
-            s += he("", "buymicroresources name category count price", eventtype);
-            s += he("", "buymicroresources2 name category count price", eventtype);
-            s += he("", "sellmicroresources name category count price", eventtype);
-            s += he("", "cargotransfer type count direction", eventtype);
-
-            s += he("Eng", "engineercraft", eventtype);
-
-            s += he("Mining", "asteroidcracked name", eventtype);
-            s += he("", "propectedasteroid", eventtype);
-            s += he("", "MiningRefined fdname", eventtype);
-
-            s += he("Scans", "ScanPlanet/ScanStar/ScanEarth/Ring name bodyid", eventtype);
-            s += he("", "fsssignaldiscovered name systemid [spawingstate spawingfaction]", eventtype);
-            s += he("", "fssallbodiesfound count", eventtype);
-            s += he("", "saascancomplete name", eventtype);
-            s += he("", "saasignalsfound bodyname", eventtype);
-            s += he("", "multisellexplorationdata", eventtype);
-            s += he("", "scanorganic scantype (Log/Sample/Analyse) genus species bodyid", eventtype);
-            s += he("", "CodexEntry name subcat cat system", eventtype);
-            s += he("", "fssdiscoveryscan bodycount", eventtype);
-
-            s += he("Ships", "SellShipOnRebuy fdname", eventtype);
-            s += he("", "afmurepairs module", eventtype);
-            s += he("", "repairdrone/launchdrone", eventtype);
-            s += he("", "shipyard starsystem stationname", eventtype);
-
-            s += he("Music", "MusicNormal, MusicGalMap, MusicSysMap", eventtype);
-
-            s += he("SRV", "LaunchSRV, DockSRV, SRVDestroyed", eventtype);
-
-            s += he("Modules", "ModuleBuyAndStore fdname price", eventtype);
-            s += he("", "ModuleInfo", eventtype);
-            s += he("", "Outfitting starsystem stationname", eventtype);
-
-            s += he("Carrier", "CarrierBuy starsystem price", eventtype);
-            s += he("", "CarrierDepositFuel amount total", eventtype);
-            s += he("", "CarrierFinance balance", eventtype);
-            s += he("", "CarrierNameChanged name", eventtype);
-            s += he("", "CarrierJumpRequest system body bodyid", eventtype);
-            s += he("", "CarrierJumpCancelled", eventtype);
-            s += he("", "CarrierJump system body bodyid", eventtype);
-            s += he("", "CarrierLocation system body bodyid (used for odyssey - it does not write up to v13 carrierjump)", eventtype);
-
-            s += he("", "CarrierStats balance", eventtype);
-
-            s += he("Crew", "crewassign name role", eventtype);
-            s += he("", "crewlaunchfighter crew telepresence(1/0)", eventtype);
-            s += he("", "kickcrewmember crew oncrime(1/0) telepresence(1/0)", eventtype);
-
-            s += he("Suit/Weapons", "Buysuit name", eventtype);
-
-            s += he("Squadron", "*Squadrons* name (use squardon event name)", eventtype);
-
-            s += he("Text", "Receivetext from channel msg", eventtype);
-            s += he("", "SentText to/channel msg", eventtype);
-
-            s += he("Misc", "SearchAndRescue fdname count", eventtype);
-            s += he("", "CommunityGoal", eventtype);
-            s += he("", "Friends name", eventtype);
-            s += he("", "NpcCrewRank/NpcCrewPaidWage", eventtype);
-            s += he("", "PowerPlay", eventtype);
-            s += he("", "ClearImpound ship", eventtype);
-            s += he("", "Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber", eventtype);
-            s += he("", "screenshot inputfile outputfolder [NOJR]", eventtype);
-            s += he("", "continued", eventtype);
-            s += he("", "journallog filename - copy in events from file, formatted as per journal lines", eventtype);
-            s += he("", "event filename - a single JSON event in a file", eventtype);
-            return s;
-        }
-
-        static string lastsection = "";
-
-        static string he(string section, string text, string eventtype)
-        {
-            if (section.HasChars() && section != lastsection)
-            {
-                lastsection = section;
-            }
-
-            if (eventtype.HasChars())
-            {
-                if (text.StartsWith(eventtype,StringComparison.InvariantCultureIgnoreCase) || text.Contains(", " + eventtype,StringComparison.InvariantCultureIgnoreCase))
-                    return lastsection.PadRight(10) + text + Environment.NewLine;
-                else
-                    return "";
-            }
-            else
-                return section.PadRight(10) + text + Environment.NewLine;
-        }
-
-        #endregion
-
-
         #region Implementation
 
         static string FSDJump(CommandArgs args, int repeatcount)
@@ -1588,6 +1486,148 @@ namespace EDDTest
         }
 
         #endregion
+
+        #region Help!
+
+        public static string Help(string eventtype)
+        {
+            string s = "Usage:    Journal [options] pathtologfile CMDRname [eventname [<paras>] ]..\n";
+            s += "Options:  [-keyrepeat]|[-repeat ms] [-repeatfor N] [-nogameversiononloadgame]\n";
+            s += "          [-gameversion ver] [-build ver] [-horizons] [-dayoffset N] [-beta] [-3.8]\n";
+
+            s += helpout("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
+            s += helpout("", "FSDTravel name x y z destx desty destz percentint ", eventtype);
+            s += helpout("", "Locdocked stasystem station stationfaction systemfaction", eventtype);
+            s += helpout("", "Docked starsystem station faction", eventtype);
+            s += helpout("", "dockedfc starsystem - on fleet carrier", eventtype);
+            s += helpout("", "onfootfc starsystem - on fleet carrier on foot", eventtype);
+            s += helpout("", "Undocked, Touchdown, Liftoff", eventtype);
+            s += helpout("", "FuelScoop amount total", eventtype);
+            s += helpout("", "JetConeBoost", eventtype);
+            s += helpout("", "navroute system", eventtype);
+            s += helpout("", "navrouteclear", eventtype);
+            s += helpout("", "NavBeaconScan", eventtype);
+            s += helpout("", "Startjump system", eventtype);
+            s += helpout("", "fsdtarget system starclass jumpsremaining", eventtype);
+            s += helpout("", "reservoirreplenished main reserve", eventtype);
+            s += helpout("", "approachbody starsystem sysaddr bodyname bodyid", eventtype);
+
+            s += helpout("Missions", "MissionAccepted/MissionCompleted faction victimfaction id", eventtype);
+            s += helpout("", "MissionRedirected newsystem newstation id", eventtype);
+            s += helpout("", "Missions activeid", eventtype);
+            s += helpout("", "CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total", eventtype);
+
+            s += helpout("C/B", "Bounty faction reward", eventtype);
+            s += helpout("", "CommitCrime faction amount", eventtype);
+            s += helpout("", "CrimeVictim offender amount", eventtype);
+            s += helpout("", "FactionKillBond faction victimfaction reward", eventtype);
+            s += helpout("", "CapShipBond faction victimfaction reward", eventtype);
+            s += helpout("", "ShipTargeted [ship [pilot rank [health [faction]]]]", eventtype);
+            s += helpout("", "Resurrect cost", eventtype);
+            s += helpout("", "Died", eventtype);
+            s += helpout("", "FighterDestroyed, FigherRebuilt", eventtype);
+            s += helpout("", "UnderAttack", eventtype);
+
+            s += helpout("Commds", "marketbuy fdname count price", eventtype);
+            s += helpout("", "marketsell fdname count price", eventtype);
+            s += helpout("", "market starsystem stationname 0/1 (write different market data)", eventtype);
+            s += helpout("", "materials name count ", eventtype);
+            s += helpout("", "materialcollected name category count", eventtype);
+            s += helpout("", "cargo name count ", eventtype);
+            s += helpout("", "buymicroresources name category count price", eventtype);
+            s += helpout("", "buymicroresources2 name category count price", eventtype);
+            s += helpout("", "sellmicroresources name category count price", eventtype);
+            s += helpout("", "cargotransfer type count direction", eventtype);
+
+            s += helpout("Eng", "engineercraft", eventtype);
+
+            s += helpout("Mining", "asteroidcracked name", eventtype);
+            s += helpout("", "propectedasteroid", eventtype);
+            s += helpout("", "MiningRefined fdname", eventtype);
+
+            s += helpout("Scans", "ScanPlanet/ScanStar/ScanEarth/Ring name bodyid", eventtype);
+            s += helpout("", "fsssignaldiscovered name systemid [spawingstate spawingfaction]", eventtype);
+            s += helpout("", "fssallbodiesfound count", eventtype);
+            s += helpout("", "saascancomplete name", eventtype);
+            s += helpout("", "saasignalsfound bodyname", eventtype);
+            s += helpout("", "multisellexplorationdata", eventtype);
+            s += helpout("", "scanorganic scantype (Log/Sample/Analyse) sysid bodyid genus species variant : Ie. Log 1234 1 Osseus 02 Tin", eventtype);
+            s += helpout("", "CodexEntry name subcat cat system", eventtype);
+            s += helpout("", "fssdiscoveryscan bodycount", eventtype);
+
+            s += helpout("Ships", "SellShipOnRebuy fdname", eventtype);
+            s += helpout("", "afmurepairs module", eventtype);
+            s += helpout("", "repairdrone/launchdrone", eventtype);
+            s += helpout("", "shipyard starsystem stationname", eventtype);
+
+            s += helpout("Music", "MusicNormal, MusicGalMap, MusicSysMap", eventtype);
+
+            s += helpout("SRV", "LaunchSRV, DockSRV, SRVDestroyed", eventtype);
+
+            s += helpout("Modules", "ModuleBuyAndStore fdname price", eventtype);
+            s += helpout("", "ModuleInfo", eventtype);
+            s += helpout("", "Outfitting starsystem stationname", eventtype);
+
+            s += helpout("Carrier", "CarrierBuy starsystem price", eventtype);
+            s += helpout("", "CarrierDepositFuel amount total", eventtype);
+            s += helpout("", "CarrierFinance balance", eventtype);
+            s += helpout("", "CarrierNameChanged name", eventtype);
+            s += helpout("", "CarrierJumpRequest system body bodyid", eventtype);
+            s += helpout("", "CarrierJumpCancelled", eventtype);
+            s += helpout("", "CarrierJump system body bodyid", eventtype);
+            s += helpout("", "CarrierLocation system body bodyid (used for odyssey - it does not write up to v13 carrierjump)", eventtype);
+
+            s += helpout("", "CarrierStats balance", eventtype);
+
+            s += helpout("Crew", "crewassign name role", eventtype);
+            s += helpout("", "crewlaunchfighter crew telepresence(1/0)", eventtype);
+            s += helpout("", "kickcrewmember crew oncrime(1/0) telepresence(1/0)", eventtype);
+
+            s += helpout("Suit/Weapons", "Buysuit name", eventtype);
+
+            s += helpout("Squadron", "*Squadrons* name (use squardon event name)", eventtype);
+
+            s += helpout("Text", "Receivetext from channel msg", eventtype);
+            s += helpout("", "SentText to/channel msg", eventtype);
+
+            s += helpout("Misc", "SearchAndRescue fdname count", eventtype);
+            s += helpout("", "CommunityGoal", eventtype);
+            s += helpout("", "Friends name", eventtype);
+            s += helpout("", "NpcCrewRank/NpcCrewPaidWage", eventtype);
+            s += helpout("", "PowerPlay", eventtype);
+            s += helpout("", "ClearImpound ship", eventtype);
+            s += helpout("", "Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber", eventtype);
+            s += helpout("", "screenshot inputfile outputfolder [NOJR]", eventtype);
+            s += helpout("", "continued", eventtype);
+            s += helpout("", "journallog filename - copy in events from file, formatted as per journal lines", eventtype);
+            s += helpout("", "event filename - a single JSON event in a file", eventtype);
+            return s;
+        }
+
+        static string lastsection = "";
+
+        static string helpout(string section, string text, string eventtype)
+        {
+            if (section.HasChars() && section != lastsection)
+            {
+                lastsection = section;
+            }
+
+            if (eventtype.HasChars())
+            {
+                if (text.StartsWith(eventtype, StringComparison.InvariantCultureIgnoreCase) || text.Contains(", " + eventtype, StringComparison.InvariantCultureIgnoreCase))
+                    return lastsection.PadRight(10) + text + Environment.NewLine;
+                else
+                    return "";
+            }
+            else
+                return section.PadRight(10) + text + Environment.NewLine;
+        }
+
+        #endregion
+
+
+
     }
 
 }

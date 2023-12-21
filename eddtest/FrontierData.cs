@@ -116,9 +116,9 @@ namespace EDDTest
             // check for non cororolis now being in frontier data in main module section - this is due to previous undeclared modes becoming public
 
             {
-                foreach (var x in ItemData.othermodules)
+                foreach (var x in ItemData.othershipmodules)
                 {
-                    if (ItemData.modules.ContainsKey(x.Key))
+                    if (ItemData.shipmodules.ContainsKey(x.Key))
                         Console.WriteLine("Error Non cororolis list contains " + x.Key + " and so does main module list");
                 }
             }
@@ -182,7 +182,7 @@ namespace EDDTest
                 {
                     Console.WriteLine("******************** Check Commodities from our data");
 
-                    List<MaterialCommodityMicroResourceType> ourcommods = MaterialCommodityMicroResourceType.GetCommodities(true).ToList();
+                    List<MaterialCommodityMicroResourceType> ourcommods = MaterialCommodityMicroResourceType.GetCommodities(MaterialCommodityMicroResourceType.SortMethod.Alphabetical).ToList();
 
                     foreach (MaterialCommodityMicroResourceType m in ourcommods)     // check our list vs the excel
                     {
@@ -286,11 +286,7 @@ namespace EDDTest
                         double powerdraw = rw["AA"].InvariantParseDouble(0);
 
                         ItemData.ShipModule minfo = null;
-
-                        if (ItemData.modules.ContainsKey(fdname.ToLowerInvariant()))
-                            minfo = ItemData.modules[fdname.ToLowerInvariant()];
-                        else if (ItemData.othermodules.ContainsKey(fdname.ToLowerInvariant()))
-                            minfo = ItemData.othermodules[fdname.ToLowerInvariant()];
+                        ItemData.TryGetShipModule(fdname, out minfo, false);
 
                         if (minfo != null)
                         {
@@ -327,12 +323,7 @@ namespace EDDTest
 
                         if (ukdesc.IndexOf("(Information)", StringComparison.InvariantCultureIgnoreCase) == -1 && !fdname.Contains("_free"))
                         {
-                            ItemData.ShipModule minfo = null;
-
-                            if (ItemData.modules.ContainsKey(fdname.ToLowerInvariant()))
-                                minfo = ItemData.modules[fdname.ToLowerInvariant()];
-                            else if (ItemData.othermodules.ContainsKey(fdname.ToLowerInvariant()))
-                                minfo = ItemData.othermodules[fdname.ToLowerInvariant()];
+                            ItemData.TryGetShipModule(fdname, out ItemData.ShipModule minfo, false);
 
                             if (minfo != null)
                             {
@@ -456,7 +447,7 @@ namespace EDDTest
                 {
                     Console.WriteLine("******************** Check Materials");
 
-                    MaterialCommodityMicroResourceType[] ourmats = MaterialCommodityMicroResourceType.GetMaterials(true);
+                    MaterialCommodityMicroResourceType[] ourmats = MaterialCommodityMicroResourceType.GetMaterials(MaterialCommodityMicroResourceType.SortMethod.Alphabetical);
 
                     foreach (MaterialCommodityMicroResourceType m in ourmats)
                     {

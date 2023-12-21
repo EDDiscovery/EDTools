@@ -8,11 +8,12 @@ namespace EDDTest
 {
     public static class QuickAssist
     {
+        // used by -dayoffset to write logs at a different time point
         static public TimeSpan DateTimeOffset = new TimeSpan(0);
 
-        public static QuickJSON.JSONFormatter UTC(this QuickJSON.JSONFormatter fmt, string name)
+        public static QuickJSON.JSONFormatter UTC(this QuickJSON.JSONFormatter fmt, string name, int offset = 0)
         {
-            DateTime utc = DateTime.UtcNow.Add(DateTimeOffset);
+            DateTime utc = DateTime.UtcNow.Add(DateTimeOffset).AddSeconds(offset);
             fmt.V(name, utc.ToStringZulu());
             return fmt;
         }

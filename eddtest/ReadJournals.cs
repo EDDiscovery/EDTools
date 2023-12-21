@@ -67,9 +67,107 @@ namespace EDDTest
 
         public void Report()
         {
-            foreach( var kvp in rep )
+            foreach (var kvp in rep)
             {
-               Console.WriteLine($"{kvp.Key} {kvp.Value}");
+                Console.WriteLine($"{kvp.Key} {kvp.Value}");
+            }
+        }
+    }
+
+    class EconomyAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+        public void Process(int lineno, JObject jr, string eventname)
+        {
+            if (jr.Contains("Economy"))
+            {
+                string bt = jr["Economy"].Str();
+                if (rep.TryGetValue(bt, out int v))
+                    rep[bt]++;
+                else
+                    rep[bt] = 1;
+                // Console.WriteLine(jr.ToString());
+            }
+            if (jr.Contains("StationEconomy"))
+            {
+                string bt = jr["StationEconomy"].Str();
+                if (rep.TryGetValue(bt, out int v))
+                    rep[bt]++;
+                else
+                    rep[bt] = 1;
+                // Console.WriteLine(jr.ToString());
+            }
+        }
+
+        public void Report()
+        {
+            foreach (var kvp in rep)
+            {
+                Console.WriteLine($"{kvp.Key} {kvp.Value}");
+            }
+        }
+    }
+
+
+    class ServicesAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+        public void Process(int lineno, JObject jr, string eventname)
+        {
+            if (jr.Contains("StationServices"))
+            {
+                JArray je = jr["StationServices"].Array();
+                foreach (var ss in je)
+                {
+                    string bt = ss.Str().ToLower();
+                    if (rep.TryGetValue(bt, out int v))
+                        rep[bt]++;
+                    else
+                        rep[bt] = 1;
+                }
+            }
+        }
+
+        public void Report()
+        {
+            foreach (var kvp in rep)
+            {
+                Console.WriteLine($"[\"{kvp.Key}\"] = \"{kvp.Key}\",");
+            }
+        }
+    }
+
+
+    class StationTypeAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+        public void Process(int lineno, JObject jr, string eventname)
+        {
+            if (jr.Contains("StationType"))
+            {
+                string bt = jr["StationType"].Str();
+                if (rep.TryGetValue(bt, out int v))
+                    rep[bt]++;
+                else
+                    rep[bt] = 1;
+            }
+
+            //if ( jr["event"].Str() == "RedeemVoucher" && jr.Contains("Type"))
+            //{
+            //    string bt = jr["Type"].Str();
+            //    if (rep.TryGetValue(bt, out int v))
+            //        rep[bt]++;
+            //    else
+            //        rep[bt] = 1;
+
+            //}
+        }
+
+        public void Report()
+        {
+            foreach (var kvp in rep)
+            {
+                Console.WriteLine($"[\"{kvp.Key}\"] = \"{kvp.Key}\",");
             }
         }
     }
@@ -81,7 +179,7 @@ namespace EDDTest
         {
             FileInfo[] allFiles = Directory.EnumerateFiles(path, "*.log", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
-            JournalAnalyse ja = new BodyTypeAnalyse();
+            JournalAnalyse ja = new  StationTypeAnalyse();
 
             foreach (var fi in allFiles)
             {

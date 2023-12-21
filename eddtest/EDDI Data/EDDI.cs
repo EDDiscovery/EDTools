@@ -39,6 +39,7 @@ namespace EDDTest
 
         static EDDI()
         {
+            // copy in from moduledefinitions.cs
 
             Modules = new List<Module>
             {

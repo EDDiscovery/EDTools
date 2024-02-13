@@ -27,21 +27,24 @@ namespace EDDTest
 
     interface JournalAnalyse
     {
-        void Process(int lineno, JObject jr, string eventname);
+        bool Process(int lineno, JObject jr, string eventname);
         void Report();
     }
 
     class ScanAnalyse : JournalAnalyse
     {
-        public void Process(int lineno, JObject jr, string eventname)
+        public bool Process(int lineno, JObject jr, string eventname)
         {
             if (eventname == "Scan")
             {
                 if (jr["BodyName"].Str().Contains("Ring", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Console.WriteLine(jr.ToString());
+                    return true;
                 }
             }
+
+            return false;
         }
 
         public void Report()
@@ -52,7 +55,7 @@ namespace EDDTest
     class BodyTypeAnalyse : JournalAnalyse
     {
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public void Process(int lineno, JObject jr, string eventname)
+        public bool Process(int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("BodyType"))
             {
@@ -61,8 +64,10 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                // Console.WriteLine(jr.ToString());
+                return true;
             }
+
+            return false;
         }
 
         public void Report()
@@ -77,7 +82,7 @@ namespace EDDTest
     class EconomyAnalyse : JournalAnalyse
     {
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public void Process(int lineno, JObject jr, string eventname)
+        public bool Process(int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("Economy"))
             {
@@ -86,7 +91,7 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                // Console.WriteLine(jr.ToString());
+                return true;
             }
             if (jr.Contains("StationEconomy"))
             {
@@ -95,8 +100,10 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                // Console.WriteLine(jr.ToString());
+                return true;
             }
+
+            return false;
         }
 
         public void Report()
@@ -112,7 +119,7 @@ namespace EDDTest
     class ServicesAnalyse : JournalAnalyse
     {
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public void Process(int lineno, JObject jr, string eventname)
+        public bool Process(int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("StationServices"))
             {
@@ -124,8 +131,12 @@ namespace EDDTest
                         rep[bt]++;
                     else
                         rep[bt] = 1;
+                    return true;
+
                 }
             }
+
+            return false;
         }
 
         public void Report()
@@ -141,7 +152,7 @@ namespace EDDTest
     class StationTypeAnalyse : JournalAnalyse
     {
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public void Process(int lineno, JObject jr, string eventname)
+        public bool Process(int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("StationType"))
             {
@@ -150,17 +161,11 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
+                return true;
+
             }
 
-            //if ( jr["event"].Str() == "RedeemVoucher" && jr.Contains("Type"))
-            //{
-            //    string bt = jr["Type"].Str();
-            //    if (rep.TryGetValue(bt, out int v))
-            //        rep[bt]++;
-            //    else
-            //        rep[bt] = 1;
-
-            //}
+            return false;
         }
 
         public void Report()
@@ -172,18 +177,103 @@ namespace EDDTest
         }
     }
 
+    class PassengerAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+        public bool Process(int lineno, JObject jr, string eventname)
+        {
+            if (jr.Contains("PassengerType"))
+            {
+                string bt = jr["PassengerType"].Str();
+                if (rep.TryGetValue(bt, out int v))
+                    rep[bt]++;
+                else
+                    rep[bt] = 1;
+                return true;
+
+            }
+
+            return false;
+        }
+
+        public void Report()
+        {
+            foreach (var kvp in rep)
+            {
+                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+            }
+        }
+    }
+
+    class AlleiganceAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+        public bool Process(int lineno, JObject jr, string eventname)
+        {
+            if (jr.Contains("SystemAllegiance"))
+            {
+                string bt = jr["SystemAllegiance"].Str();
+                if (bt != "")
+                {
+                    if (rep.TryGetValue(bt, out int v))
+                        rep[bt]++;
+                    else
+                        rep[bt] = 1;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public void Report()
+        {
+            foreach (var kvp in rep)
+            {
+                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+            }
+        }
+    }
+    class FactionsAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+        public bool Process(int lineno, JObject jr, string eventname)
+        {
+            string bt = jr.MultiStr(new string[] { "SpawningFaction","Faction","VictimFaction" });
+
+            if ( bt != null && bt.StartsWith("$faction_"))
+            {
+                if (rep.TryGetValue(bt, out int v))
+                    rep[bt]++;
+                else
+                    rep[bt] = 1;
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Report()
+        {
+            foreach (var kvp in rep)
+            {
+                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+            }
+        }
+    }
+
 
     public static class JournalReader
     {
-        public static void ReadJournals(string path)
+        public static void ReadJournals(string path, string filename)
         {
-            FileInfo[] allFiles = Directory.EnumerateFiles(path, "*.log", SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+            FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
-            JournalAnalyse ja = new  StationTypeAnalyse();
+            JournalAnalyse ja = new FactionsAnalyse();
 
             foreach (var fi in allFiles)
             {
-                Console.WriteLine(fi.FullName);
+                int found = 0;
                 using (StreamReader sr = new StreamReader(fi.FullName))         // read directly from file.. presume UTF8 no bom
                 {
                     int lineno = 1;
@@ -197,13 +287,23 @@ namespace EDDTest
                             if (jr != null)
                             {
                                 string eventname = jr["event"].Str();
-                                ja.Process(lineno, jr, eventname);
+                                if (ja.Process(lineno, jr, eventname))
+                                    found++;
                             }
                         }
 
                         lineno++;
                     }
                 }
+
+                if ( found>0 )
+                    Console.WriteLine($"Found {found} : {fi.FullName}");
+                else
+                {
+                   // Console.WriteLine($"Nothing in : {fi.FullName}");
+                }
+
+
             }
 
             ja.Report();

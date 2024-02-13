@@ -114,23 +114,33 @@ namespace EDDTest
                     fileenc = sr.CurrentEncoding;
 
                     string line;
+                    int lineno = 0;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        // fix references to new naming system
+                        lineno++;
 
-                        if (line.IndexOf("[") < line.IndexOf("]") && line.IndexOf("(") < line.IndexOf(")") && line.IndexOf("[") < line.IndexOf("("))
-                        {
-                            int lb = line.IndexOf("[");
+                        int replacepos = 0;
+
+                        // fix references to new naming system
+                        // its [text](link 'fancyname')
+
+                        while(line.IndexOf("[",replacepos) < line.IndexOf("](",replacepos) && 
+                                        line.IndexOf("](", replacepos) < line.IndexOf(")", replacepos))
+                        { 
+                            int lb = line.IndexOf("[",replacepos);
 
                             StringParser s = new StringParser(line.Substring(lb));
-
                             string name = s.NextWord("(");          // pattern is [text] (file fancyname)
                             s.GetChar();
                             string link = s.NextWord(" ");
                             string fancyname = s.NextWord(")");
                             s.GetChar();
 
-                            if (name != null && link != null && fancyname != null && !link.Contains("http"))
+                            System.Diagnostics.Debug.WriteLine($"{lineno} : Link: `{name}` to `{link}` `{fancyname}`");
+
+                            System.Diagnostics.Debug.Assert(name != null && link != null && fancyname != null);
+
+                            if (!link.Contains("http"))
                             {
                                 if (removerootnamespace)
                                 {
@@ -138,11 +148,14 @@ namespace EDDTest
                                     link = link.ReplaceIfStartsWith(rootname + "-", "");        // class list has name-
                                 }
 
-                                link = link.Replace("_", ".");
-                                string l = line.Substring(0, lb) + name + "(" + link + " " + fancyname + ")" + s.LineLeft;
-                                //System.Diagnostics.Debug.WriteLine($"{name} . {link} = `{l}`");
+                                string l = line.Substring(0, lb) + name + "(" + link + " " + fancyname + ")";
+                                replacepos = l.Length;
+                                l += s.LineLeft;
                                 line = l;
+                                System.Diagnostics.Debug.WriteLine($"... output {line}");
                             }
+                            else
+                                replacepos = lb + s.Position;
                         }
 
                         if ( line.Equals("### Constructors") || line.Equals("### Enums" ) || line.Equals("### Methods") || line.Equals("### Fields") || 
@@ -168,6 +181,11 @@ namespace EDDTest
                         {
                             lines.Add("***");
                             lines.Add("# Classes");
+                            lines.Add(line);
+                        }
+                        else if (line.StartsWith("<a name='"))  // just here to pick up in case we ever want to process
+                        {
+                            // System.Diagnostics.Debug.WriteLine($"{lineno} : Anchor found: {line}");
                             lines.Add(line);
                         }
                         else

@@ -1261,7 +1261,7 @@ namespace EDDTest
 
                 if (File.Exists(infile))
                 {
-                    int n = 100;
+                    int n = 1000;
                     string outfile;
                     do
                     {

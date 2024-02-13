@@ -59,8 +59,8 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
-    <Reference Include="QuickJSON, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\RJKJSoft.QuickJSON.0.9.0\lib\net48\QuickJSON.dll</HintPath>
+    <Reference Include="QuickJSON, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RJKJSoft.QuickJSON.2.0.0\lib\net48\QuickJSON.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.AppContext, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">

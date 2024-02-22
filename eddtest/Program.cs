@@ -138,7 +138,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
                 else if (cmd.Equals("finddoclinks"))
@@ -167,7 +167,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("mddoc"))      // processes MD DOC for wiki and makes it better
                 {
@@ -190,7 +190,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
 
                 else if (cmd.Equals("inserttext"))
@@ -215,7 +215,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
 
                 else if (cmd.Equals("normalisetranslate"))
@@ -255,7 +255,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("translationrepeats"))
                 {
@@ -278,7 +278,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("scanforenums"))
                 {
@@ -304,7 +304,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("journal"))
                 {
@@ -341,7 +341,7 @@ namespace EDDTest
                         GitHub.Stats(file);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("dwwp"))
                 {
@@ -376,7 +376,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("voicerecon"))
                 {
@@ -385,7 +385,7 @@ namespace EDDTest
                         BindingsFile.Bindings(args.Next());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("devicemappings"))
                 {
@@ -394,7 +394,7 @@ namespace EDDTest
                         BindingsFile.DeviceMappings(args.Next());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("phoneme"))
                 {
@@ -403,7 +403,7 @@ namespace EDDTest
                         Speech.Phoneme(args.Next(), args.Next());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("wikiconvert"))
                 {
@@ -412,7 +412,7 @@ namespace EDDTest
                         WikiConvert.Convert(args.Next(), args.Next());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("coriolisships"))
                 {
@@ -423,7 +423,7 @@ namespace EDDTest
                         Console.WriteLine(ret);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("coriolisship"))
                 {
@@ -434,7 +434,7 @@ namespace EDDTest
                         Console.WriteLine(ret);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("coriolismodules"))
                 {
@@ -445,7 +445,7 @@ namespace EDDTest
                         Console.WriteLine(ret);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("coriolismodule"))
                 {
@@ -456,7 +456,7 @@ namespace EDDTest
                         Console.WriteLine(ret);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("corioliseng"))
                 {
@@ -467,7 +467,7 @@ namespace EDDTest
                         Console.WriteLine(ret);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("frontierdata"))
                 {
@@ -477,7 +477,7 @@ namespace EDDTest
                         FrontierData.Process(args.Next());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("fdevids"))
                 {
@@ -487,16 +487,16 @@ namespace EDDTest
                         FDevIDs.Process(args.Next());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("readjournals"))
                 {
                     if (args.Left >= 2)
                     {
-                        JournalReader.ReadJournals(args.Next(),args.Next());
+                        JournalReader.ReadJournals(args.Next(), args.Next());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
                 else if (cmd.Equals("journalindented"))
@@ -528,7 +528,7 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
                 else if (cmd.Equals("journalplay"))

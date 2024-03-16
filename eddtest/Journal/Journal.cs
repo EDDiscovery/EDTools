@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2015 - 2022 robbyxp @ github.com
+ * Copyright © 2015 - 2024 robbyxp @ github.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -92,7 +92,7 @@ namespace EDDTest
                     {
                         argsentry.Remove();
                         int days = argsentry.Int();
-                        QuickAssist.DateTimeOffset = new TimeSpan(days, 0, 0, 0);
+                        DateTimeOffset = new TimeSpan(days, 0, 0, 0);
                     }
                     else if (opt.Equals("-3.8", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -430,16 +430,20 @@ namespace EDDTest
                 FMission(qj, id + 2000, "Mission_Assassinate_Legal_Corporate", false, 20000);
                 qj.Close(2);
             }
-            else if (eventtype.Equals("cargodepot") && args.Left >= 5)
+            else if (eventtype.Equals("cargodepot") && args.Left >= 7)
             {
-                int missid = int.Parse(args.Next());
+                int missid = args.Int();
                 string type = args.Next();
-                int countcol = int.Parse(args.Next());
-                int countdel = int.Parse(args.Next());
-                int total = int.Parse(args.Next());
+                string cargotype = args.Next();
+                int count = args.Int();
+                int countcol = args.Int();
+                int countdel = args.Int();
+                int total = args.Int();
 
-                qj.UTC("timestamp").V("event", "CargoDepot")
+                qj.Object().UTC("timestamp").V("event", "CargoDepot")
                     .V("MissionID", missid).V("UpdateType", type)
+                    .V("CargoType", cargotype)
+                    .V("Count", count)
                     .V("StartMarketID", 12).V("EndMarketID", 13)
                     .V("ItemsCollected", countcol)
                     .V("ItemsDelivered", countdel)
@@ -450,7 +454,34 @@ namespace EDDTest
             #endregion
             #region  Crime/Bounties
 
-            else if (eventtype.Equals("bounty"))
+            else if (eventtype.Equals("redeemvoucher") && args.Left >= 4)
+            {
+                string vtype = args.Next();
+                int amount = args.Int();
+                int brokerpercentage = args.Int();
+                string faction = args.Next();
+                qj.Object().UTC("timestamp").V("event", "RedeemVoucher")
+                        .V("Type", vtype)
+                        .V("Amount", amount);
+
+                if (brokerpercentage > 0)
+                    qj.V("BrokerPercentage", amount);
+
+                if (faction.Contains(","))
+                {
+                    string[] factions = faction.Split(',');
+                    qj.Array("Factions");
+                    foreach (var x in factions)
+                    {
+                        qj.Object().V("Faction", x).V("Amount", 1000).Close();
+                    }
+                    qj.Close();
+                }
+                else if (faction.HasChars())
+                    qj.V("Faction", faction);
+            }
+
+            else if (eventtype.Equals("bounty") && args.Left >= 2)
             {
                 string f = args.Next();
                 int rw = args.Int();
@@ -458,19 +489,19 @@ namespace EDDTest
                 qj.Object().UTC("timestamp").V("event", "Bounty").V("VictimFaction", f).V("VictimFaction_Localised", f + "_Loc")
                     .V("TotalReward", rw);
             }
-            else if (eventtype.Equals("commitcrime"))
+            else if (eventtype.Equals("commitcrime") && args.Left >= 2)
             {
                 string f = args.Next();
                 int id = args.Int();
                 qj.Object().UTC("timestamp").V("event", "CommitCrime").V("CrimeType", "collidedAtSpeedInNoFireZone").V("Faction", f).V("Fine", id);
             }
-            else if (eventtype.Equals("crimevictim"))
+            else if (eventtype.Equals("crimevictim") && args.Left >= 2)
             {
                 string f = args.Next();
                 int bounty = args.Int();
                 qj.Object().UTC("timestamp").V("event", "CrimeVictim").V("CrimeType", "assault").V("Offender", f).V("Bounty", bounty);
             }
-            else if (eventtype.Equals("factionkillbond"))
+            else if (eventtype.Equals("factionkillbond") && args.Left >= 3)
             {
                 string f = args.Next();
                 string vf = args.Next();
@@ -480,7 +511,7 @@ namespace EDDTest
                     .V("AwardingFaction", f).V("AwardingFaction_Localised", f + "_Loc")
                     .V("Reward", rw);
             }
-            else if (eventtype.Equals("capshipbond"))
+            else if (eventtype.Equals("capshipbond") && args.Left >= 3)
             {
                 string f = args.Next();
                 string vf = args.Next();
@@ -1258,34 +1289,42 @@ namespace EDDTest
                 string infile = args.Next();
                 string outfolder = args.Next();
                 bool nojr = args.Left >= 1 && args.Next().Equals("NOJR");
+                int times = args.Left >= 1 ? args.Int() : 1;
 
                 if (File.Exists(infile))
                 {
-                    int n = 1000;
-                    string outfile;
-                    do
+                    for (int count = 0; count < times; count++)
                     {
-                        outfile = Path.Combine(outfolder, string.Format("Screenshot_{0}.bmp", n++));
-                    } while (File.Exists(outfile));
+                        int n = 1000;
+                        string outfile;
+                        do
+                        {
+                            outfile = Path.Combine(outfolder, string.Format("Screenshot_{0}.bmp", n++));
+                        } while (File.Exists(outfile));
 
-                    File.Copy(infile, outfile);
+                        string temp = Path.GetTempFileName();
+                        File.Copy(infile, temp, true);
+                        File.SetLastWriteTimeUtc(temp, DateTime.UtcNow);
+                        File.Move(temp, outfile);
 
-                    Console.WriteLine("{0} -> {1}", infile, outfile);
+                        Console.WriteLine($"{infile} -> {temp} -> {outfile}");
 
-                    if (!nojr)
-                    {
-                        qj.Object().UTC("timestamp").V("event", "Screenshot")
-                            .V("Filename", "\\\\ED_Pictures\\\\" + Path.GetFileName(outfile))
-                            .V("Width", 1920)
-                            .V("Height", 1200)
-                            .V("System", "Fredsys")
-                            .V("Body", "Jimbody");
+                        if (!nojr)
+                        {
+                            JSONFormatter fmt = new JSONFormatter();
+                            fmt.Object().UTC("timestamp").V("event", "Screenshot")
+                                .V("Filename", "\\\\ED_Pictures\\\\" + Path.GetFileName(outfile))
+                                .V("Width", 1920)
+                                .V("Height", 1200)
+                                .V("System", "Fredsys")
+                                .V("Body", "Jimbody");
+
+                            WriteToLog(filename, cmdrname, fmt.Get(), gameversion, build, nogameversiononloadgame, odyssey, filepart, checkjson);
+                        }
                     }
                 }
                 else
                     Console.WriteLine("No such file {0}", infile);
-
-
             }
             else if (eventtype.Equals("event") && args.Left >= 1)   // give it a journal entry in a file {"timestamp" ... }
             {
@@ -1515,7 +1554,7 @@ namespace EDDTest
             s += helpout("Missions", "MissionAccepted/MissionCompleted faction victimfaction id", eventtype);
             s += helpout("", "MissionRedirected newsystem newstation id", eventtype);
             s += helpout("", "Missions activeid", eventtype);
-            s += helpout("", "CargoDepot missionid updatetype(Collect,Deliver,WingUpdate) count total", eventtype);
+            s += helpout("", "CargoDepot missionid cargotype count updatetype(Collect,Deliver,WingUpdate) itemcsollected delivered totalitemstodeliver", eventtype);
 
             s += helpout("C/B", "Bounty faction reward", eventtype);
             s += helpout("", "CommitCrime faction amount", eventtype);
@@ -1597,7 +1636,7 @@ namespace EDDTest
             s += helpout("", "PowerPlay", eventtype);
             s += helpout("", "ClearImpound ship", eventtype);
             s += helpout("", "Promotion Combat/Trade/Explore/CQC/Federation/Empire Ranknumber", eventtype);
-            s += helpout("", "screenshot inputfile outputfolder [NOJR]", eventtype);
+            s += helpout("", "screenshot inputfile outputfolder [NOJR [repeatcount]]", eventtype);
             s += helpout("", "continued", eventtype);
             s += helpout("", "journallog filename - copy in events from file, formatted as per journal lines", eventtype);
             s += helpout("", "event filename - a single JSON event in a file", eventtype);

@@ -15,6 +15,7 @@
  */
 
 using BaseUtils;
+using Microsoft.Win32;
 using QuickJSON;
 using System;
 using System.Collections.Generic;
@@ -88,59 +89,6 @@ namespace EDDTest
                 if (cmd == null)
                     break;
 
-                if (cmd.Equals("scantranslate"))
-                {
-                    if (args.Left >= 5)
-                    {
-                        // sample scantranslate c:\code\eddiscovery\elitedangerous\journalevents *.cs c:\code\eddiscovery\eddiscovery\translations\ 2 italiano-it combine > c:\code\output.txt
-
-                        string path = args.Next();
-                        string wildcard = args.Next();
-                        string txpath = args.Next();
-                        int txsearchdepth = args.Int();
-                        string lang = args.Next();
-
-                        if (path != null && wildcard != null)
-                        {
-                            FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-                            bool showrepeat = false;
-                            bool showerrorsonly = false;
-
-                            while (args.More)
-                            {
-                                string a = args.Next().ToLowerInvariant();
-                                if (a == "showrepeats")
-                                    showrepeat = true;
-                                if (a == "showerrorsonly")
-                                    showerrorsonly = true;
-                            }
-
-                            string ret = ScanTranslate.Process(allFiles, lang, txpath, txsearchdepth, showrepeat, showerrorsonly);
-                            Console.WriteLine(ret);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Usage:\n" +
-                                     "scantranslate path filewildcard languagefilepath searchdepth language[opt]..- \n\n" +
-                                     "path filewildcard is where the source files to search for .Tx is in \n" +
-                                     "languagefilepath is where the .tlf files are located\n" +
-                                     "searchupdepth is the depth of search upwards (to root) to look thru folders for include files - 2 is normal\n" +
-                                     "language is the language to compare against - example-ex\n" +
-                                     "Opt: ShowRepeats means show repeated entries in output\n" +
-                                     "Opt: ShowErrorsOnly means show only errors\n" +
-                                     "\n" +
-                                     "Example:n" +
-                                     "eddtest scantranslate . *.cs  c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex showerrorsonly\n" +
-                                     "\nJudgement is still required to see if a found definition has to be in the example-ex file.  Its not perfect\n" +
-                                     "\nYou first run this with example-ex and fix up example-ex until the translator log (in appdata) shows no errors\n" +
-                                     "Then you use translatereader to normalise the example-ex and all the other files\n"
-                                     );
-                        }
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-
-                }
                 else if (cmd.Equals("finddoclinks"))
                 {
                     if (args.Left >= 5)
@@ -227,21 +175,17 @@ namespace EDDTest
                         string primarylanguage = args.Next();   // mandatory
 
                         string language2 = args.Next();         // optional..
-                        string options = args.Next();
                         string renamefile = args.Next();
                         string enums = args.Next();
 
                         if (primarypath == null || primarylanguage == null)
                         {
                             Console.WriteLine("Usage:\n" +
-                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none] [options] [renamefile] [semicolon-list-of-enum-files]\n" +
-                                                "Read the language-to-use and write out it into the same files cleanly\n" +
-                                                "If secondary is present, read it, and use its definitions instead of the language-to-use. Use its filename for output files\n" +
-                                                "Options: single string: Use NS for don't report secondary, NoOutput for no files written (excepting report.lst)\n" +
+                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none] [renamefile] [semicolon-list-of-enum-files]\n" +
+                                                "Read the language-to-use and check it\n" +
+                                                "secondary-language: Read this language and overwrite the secondary files with normalised versions against the first, but carrying over the translations\n" +
                                                 "Rename file: List of lines with orgID | RenamedID to note renaming of existing IDs (if does not exist won't stop)\n" +
-                                                "Unless NoOutput, Write back out the tlf and tlp files to the current directory, and \n" +
-                                                "write out copy.bat instructions to move those files back to their correct places\n" +
-                                                "semicolon-list-of-enums-files give list of enumerations to cross check against. Use stdenums for built in EDD list\n" +
+                                                "semicolon-list-of-enums-files: give list of enumerations to cross check against. Use stdenums for built in EDD list\n" +
                                                 "Always write report.txt\n" +
                                                 "Example:\n" +
                                                 "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n"
@@ -249,7 +193,7 @@ namespace EDDTest
                         }
                         else
                         {
-                            string ret = NormaliseTranslationFiles.Process(primarylanguage, primarypath, primarysearchdepth, language2, options, renamefile, enums);
+                            string ret = NormaliseTranslationFiles.ProcessNew(primarylanguage, primarypath, primarysearchdepth, language2, renamefile, enums);
                             Console.WriteLine(ret);
                             System.Diagnostics.Debug.WriteLine(ret);
                         }
@@ -1133,7 +1077,7 @@ namespace EDDTest
                         EDCDOutfitting.Process(filename);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
                 else

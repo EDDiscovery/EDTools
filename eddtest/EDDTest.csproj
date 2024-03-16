@@ -200,7 +200,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OutfittingCSV.cs" />
+    <Compile Include="Misc\OutfittingCSV.cs" />
     <Compile Include="From EDD Project Manually copied\ItemActors.cs" />
     <Compile Include="From EDD Project Manually copied\ItemData.cs" />
     <Compile Include="From EDD Project Manually copied\ItemEngineers.cs" />
@@ -212,21 +212,21 @@
     <Compile Include="From EDD Project Manually copied\MCMRList.cs" />
     <Compile Include="From EDD Project Manually copied\MCMRType.cs" />
     <Compile Include="EDDI Data\EDDI.cs" />
-    <Compile Include="EDDIModuleCheck.cs" />
-    <Compile Include="FDEVIDS.cs" />
-    <Compile Include="Github.cs" />
-    <Compile Include="CorolisEng.cs" />
-    <Compile Include="CorolisShips.cs" />
-    <Compile Include="CorolisModules.cs" />
-    <Compile Include="FrontierData.cs" />
-    <Compile Include="Enums.cs" />
-    <Compile Include="Helpers.cs" />
-    <Compile Include="InsertText.cs" />
-    <Compile Include="mergecsharp.cs" />
-    <Compile Include="TranslationRepeats.cs" />
-    <Compile Include="ReadJournals.cs" />
-    <Compile Include="Journal.cs" />
-    <Compile Include="Journalhelperfuncs.cs" />
+    <Compile Include="EDDI Data\EDDIModuleCheck.cs" />
+    <Compile Include="Misc\FDEVIDS.cs" />
+    <Compile Include="Misc\Github.cs" />
+    <Compile Include="Coriolis\CorolisEng.cs" />
+    <Compile Include="Coriolis\CorolisShips.cs" />
+    <Compile Include="Coriolis\CorolisModules.cs" />
+    <Compile Include="Misc\FrontierData.cs" />
+    <Compile Include="Translations\Enums.cs" />
+    <Compile Include="Misc\InsertText.cs" />
+    <Compile Include="Misc\mergecsharp.cs" />
+    <Compile Include="Translations\VerifyTranslationFormatting.cs" />
+    <Compile Include="Translations\TranslationRepeats.cs" />
+    <Compile Include="Journal\ReadAnalyseJournals.cs" />
+    <Compile Include="Journal\Journal.cs" />
+    <Compile Include="Journal\Journalhelperfuncs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -234,13 +234,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Bindings.cs" />
-    <Compile Include="MDDoc.cs" />
-    <Compile Include="wikiconvert.cs" />
-    <Compile Include="NormaliseTranslationFiles.cs" />
-    <Compile Include="ScanTranslate.cs" />
-    <Compile Include="Speech.cs" />
-    <Compile Include="Status.cs" />
+    <Compile Include="Misc\Bindings.cs" />
+    <Compile Include="Documentation\MDDoc.cs" />
+    <Compile Include="Documentation\wikiconvert.cs" />
+    <Compile Include="Translations\NormaliseTranslationFiles.cs" />
+    <Compile Include="Misc\Speech.cs" />
+    <Compile Include="Misc\Status.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

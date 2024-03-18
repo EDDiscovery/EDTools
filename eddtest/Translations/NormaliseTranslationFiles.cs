@@ -13,6 +13,7 @@
  */
 
 using BaseUtils;
+using QuickJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -80,6 +81,8 @@ namespace EDDTest
 
             List<string> keys = primary.EnumerateKeys.ToList();
 
+            string[] secondaryfilelist = secondary?.FileList();
+
             foreach (string id in keys)
             {
                 //System.Diagnostics.Debug.WriteLine($"Primary  {primary.GetOriginalFile(id)}:{primary.GetOriginalLine(id)}: {id} `{primary.GetOriginalEnglish(id)}` `{primary.GetTranslation(id)}`");
@@ -126,7 +129,7 @@ namespace EDDTest
 
                     if (secondary.IsDefined(secid))
                     {
-                        if (secondary.GetTranslation(secid) != null)     // if secondary has a key and its not null, meaning not known
+                        if (secondary.GetTranslation(secid) != null)     // if secondary has a key and its not null(meaning not known)
                         {
                             string sectranslation = secondary.GetTranslation(secid);
                             string res = VerifyFormattingClass.VerifyFormatting(secondary.GetOriginalFile(secid), secondary.GetOriginalLine(secid),
@@ -136,16 +139,30 @@ namespace EDDTest
                                 System.Diagnostics.Debug.WriteLine(res);
                                 reporttext += res + Environment.NewLine;
                             }
-                            primary.ReDefine(secid, sectranslation);
-                            secondary.UnDefine(secid);                             // remove id so its not reported as missing
-                            reporttext += $"Secondary {secid} translation '{sectranslation.EscapeControlChars()}'" + Environment.NewLine;
+
+                            string otherkey = secondary.FindTranslation(sectranslation,secondaryfilelist[0],secondary.GetOriginalFile(secid),true);
+                            if (otherkey != secid)
+                            {
+                                //System.Diagnostics.Debug.WriteLine($"Secondary key {secid} value already defined in {otherkey}");
+                               // System.Diagnostics.Debug.WriteLine($".. {secondary.GetTranslation(secid)} vs {secondary.GetTranslation(otherkey)}");
+                                if (!secondary.GetOriginalEnglish(secid).EqualsIIC(secondary.GetOriginalEnglish(otherkey)))
+                                {
+                                    //System.Diagnostics.Debug.WriteLine($".. English! {secid} `{secondary.GetOriginalEnglish(secid)}` vs {otherkey} `{secondary.GetOriginalEnglish(otherkey)}`");
+                                }
+                     
+                                primary.ReDefine(secid, $"==={otherkey}");
+                            }
+                            else
+                            {
+                                primary.ReDefine(secid, sectranslation);
+                                reporttext += $"Secondary {secid} translation '{sectranslation.EscapeControlChars()}'" + Environment.NewLine;
+                            }
                             //System.Diagnostics.Debug.WriteLine($".. altered to {sectranslation}");
                         }
                         else
                         {
                             // its a null
                             reporttext += $"Secondary {secid} not defined " + Environment.NewLine;
-                            secondary.UnDefine(secid);                             // remove id so its not reported as missing
                         }
                     }
                     else
@@ -154,14 +171,6 @@ namespace EDDTest
                         reporttext += $"Secondary {secid} not found" + Environment.NewLine;
                         //System.Diagnostics.Debug.WriteLine($".. not found in secondary");
                     }
-                }
-            }
-
-            if (secondary.Translating)
-            {
-                foreach (string id in secondary.EnumerateKeys)
-                {
-                    reporttext += "In secondary but not in primary: " + id + " in " + secondary.GetOriginalFile(id) + ":" + secondary.GetOriginalLine(id) + Environment.NewLine;
                 }
             }
 
@@ -176,23 +185,28 @@ namespace EDDTest
 
             if (secondary.Translating)
             {
-                string currentfilename = null, currentsectionname = null;
+                string currentfilename = null, currentsectionname = "";
                 bool hasdotted = false;
 
                 List<string> filename = new List<string>();
                 List<StringBuilder> fileoutputs = new List<StringBuilder>();
+
+                QuickJSON.JSONFormatter englishfile = new QuickJSON.JSONFormatter();        // file holding keys->english
+                englishfile.Object().LF().Object("Main").LF();
+                QuickJSON.JSONFormatter foreignfile = new QuickJSON.JSONFormatter();        // file holding keys->foreign translation, or "" if not
+                foreignfile.Object().LF().Object("Main").LF();
 
                 foreach (string id in keys)
                 {
                     string primaryfilename = primary.GetOriginalFile(id);
                     if (currentfilename == null || primaryfilename != currentfilename)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Switch to {primaryfilename}");
                         currentfilename = primaryfilename;
                         fileoutputs.Add(new StringBuilder());
                         string nerfname = currentfilename.Replace(language, language2);
                         nerfname = nerfname.Replace(language.Substring(0, language.IndexOf("-")), language2.Substring(0, language2.IndexOf("-")));
                         filename.Add(nerfname);
+                        System.Diagnostics.Debug.WriteLine($"Output file {nerfname}");
                     }
 
                     string idtouse = id;
@@ -203,12 +217,19 @@ namespace EDDTest
                     {
                         if (hasdotted || sp.IsChar('.'))
                         {
+                            currentsectionname = front;
+
                             //System.Diagnostics.Debug.WriteLine($"Switch to {front}");
                             fileoutputs.Last().Append(Environment.NewLine + "SECTION " + front + Environment.NewLine + Environment.NewLine);
+
+                            englishfile.Close().LF();
+                            englishfile.Object(front.SplitCapsWordFull()).LF(); // open new section
+                            foreignfile.Close().LF();
+                            foreignfile.Object(front.SplitCapsWordFull()).LF(); 
                         }
+
                         if (sp.IsChar('.'))
                             hasdotted = true;
-                        currentsectionname = front;
                     }
 
                     if (hasdotted && sp.IsChar('.'))
@@ -218,13 +239,32 @@ namespace EDDTest
                     fileoutputs.Last().Append(": ");
                     fileoutputs.Last().Append(primary.GetOriginalEnglish(id).EscapeControlChars().AlwaysQuoteString());
                     string translation = primary.GetTranslation(id);
+
                     if (translation == null)
+                    {
                         fileoutputs.Last().Append(" @");
+                        englishfile.V(currentsectionname + idtouse, primary.GetOriginalEnglish(id).EscapeControlCharsFull());
+                        foreignfile.V(currentsectionname + idtouse, "");
+                    }
+                    else if (translation.StartsWith("==="))
+                    {
+                        fileoutputs.Last().Append(" = ");
+                        string keyid = translation.Substring(3);
+                        fileoutputs.Last().Append(keyid.EscapeControlCharsFull());
+                        englishfile.V(currentsectionname + idtouse, primary.GetOriginalEnglish(id).EscapeControlCharsFull());
+                        translation = primary.GetTranslation(keyid);
+                        foreignfile.V(currentsectionname + idtouse, translation.EscapeControlCharsFull());
+                    }
                     else
                     {
                         fileoutputs.Last().Append(" => ");
                         fileoutputs.Last().Append(translation.EscapeControlChars().AlwaysQuoteString());
+                        englishfile.V(currentsectionname + idtouse, primary.GetOriginalEnglish(id).EscapeControlCharsFull());
+                        foreignfile.V(currentsectionname + idtouse, translation.EscapeControlCharsFull());
                     }
+
+                    englishfile.LF();
+                    foreignfile.LF();
                     fileoutputs.Last().Append(Environment.NewLine);
                 }
 
@@ -240,6 +280,17 @@ namespace EDDTest
                     string contents = fileoutputs[i].ToString();
                     File.WriteAllText(filename[i], contents, Encoding.UTF8);
                 }
+
+                englishfile.Close();
+                englishfile.LF();
+                foreignfile.Close();
+                foreignfile.LF();
+                string englishoutput = englishfile.Get();
+                string foreignoutput = foreignfile.Get();
+                System.Diagnostics.Debug.Assert(JObject.Parse(englishoutput, out string errore, JToken.ParseOptions.CheckEOL) != null);
+                System.Diagnostics.Debug.Assert(JObject.Parse(foreignoutput, out string errorf, JToken.ParseOptions.CheckEOL) != null);
+                File.WriteAllText($"edd.json", englishoutput);      // this is the keyfile -> main language crowdin file
+                File.WriteAllText("{language2}.json", foreignoutput);      // this is the keyfile -> current translation file
             }
 
             File.WriteAllText("report.txt", reporttext);

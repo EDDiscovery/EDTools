@@ -123,6 +123,36 @@ namespace EDDTest
                     Console.WriteLine("No Commds CSV");
             }
 
+            {
+                CSVFile file = new CSVFile();
+                if (file.Read(Path.Combine(rootpath, "outfitting.csv"), FileShare.ReadWrite))
+                {
+                    Console.WriteLine("******************** Check Outfitting");
+
+                    foreach (CSVFile.Row rw in file.RowsExcludingHeaderRow)
+                    {
+                        long? id = rw.GetLong(0);
+                        string fdname = rw[1].Trim();
+                        string type = rw[2].Trim();
+                        string engname = rw[3].Trim();
+                        string mount = rw[4].Trim();
+                        string guidance = rw[5].Trim();
+                        string ship = rw[6].Trim();
+                        string classtype = rw[7].Trim();
+                        string rating = rw[8].Trim();
+                        string entitlement = rw[9].Trim();
+                        System.Diagnostics.Debug.WriteLine($"{id} {fdname} {type} {engname} {mount} {guidance} {ship} {classtype} {rating} {entitlement}");
+
+                        if (!ItemData.TryGetShipModule(fdname, out ItemData.ShipModule m, false))
+                        {
+                            Console.WriteLine($"{{ \"{fdname.ToLower()}\", new ShipModule({id},0,0,\"\",\"{engname}\",ShipModule.ModuleTypes.{type}) }},");
+                        }
+                    }
+                }
+                else
+                    Console.WriteLine("No outfitting CSV");
+            }
+
         }
 
     }

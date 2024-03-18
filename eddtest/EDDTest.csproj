@@ -213,7 +213,7 @@
     <Compile Include="From EDD Project Manually copied\MCMRType.cs" />
     <Compile Include="EDDI Data\EDDI.cs" />
     <Compile Include="EDDI Data\EDDIModuleCheck.cs" />
-    <Compile Include="Misc\FDEVIDS.cs" />
+    <Compile Include="FDEVIDs\FDEVIDS.cs" />
     <Compile Include="Misc\Github.cs" />
     <Compile Include="Coriolis\CorolisEng.cs" />
     <Compile Include="Coriolis\CorolisShips.cs" />

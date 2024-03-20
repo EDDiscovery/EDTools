@@ -497,6 +497,7 @@ namespace EDDTest
                                 {
                                     JObject jo = JObject.Parse(s);
                                     string eventname = jo["event"].Str();
+                                    jo["timestamp"] = "";
 
                                     Console.WriteLine(lineno++ + ": " + eventname + ": " + jo.ToString(false));
 
@@ -529,7 +530,9 @@ namespace EDDTest
                                         }
                                     }
 
-                                    BaseUtils.FileHelpers.TryAppendToFile(outpath, s + Environment.NewLine, true);
+                                    jo["timestamp"] = DateTime.UtcNow.StartOfSecond().ToStringZuluInvariant();  // change time to right now
+
+                                    BaseUtils.FileHelpers.TryAppendToFile(outpath, jo.ToString() + Environment.NewLine, true);
 
                                     if (timerms > 0)
                                         System.Threading.Thread.Sleep(timerms);

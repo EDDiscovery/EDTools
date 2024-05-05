@@ -14,7 +14,7 @@ namespace JournalPlayer
 {
     public partial class JournalPlayerForm : Form
     {
-        string datafile = "playersettings.json";
+        string datafile;
         JObject settings;
         string SourceFolder { get { return settings["Source"].Str(@"C:\Users\RK\Saved Games\Frontier Developments\Elite Dangerous"); } set { settings["Source"] = value; } }
         string DestFolder { get { return settings["Dest"].Str(@"c:\code\logs\test"); } set { settings["Dest"] = value; } }
@@ -37,6 +37,11 @@ namespace JournalPlayer
         public JournalPlayerForm()
         {
             InitializeComponent();
+
+            string dpath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"JournalPlayer");
+            BaseUtils.FileHelpers.CreateDirectoryNoError(dpath);
+            datafile = Path.Combine(dpath,"settings.json");
+
 
             settings = new JObject();
 

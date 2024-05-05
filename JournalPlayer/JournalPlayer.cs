@@ -193,7 +193,7 @@ namespace JournalPlayer
 
                 if (stoponline > 0 && stoponline > curlineno)  // if parsed, and in future
                 {
-                    tme.Interval = 100;
+                    tme.Interval = 50;
                     tme.Start();
                 }
             }
@@ -373,7 +373,11 @@ namespace JournalPlayer
                          }
                 }
                 string outline = richTextBoxNextEntry.Text.Substring(richTextBoxNextEntry.Text.IndexOf(": ") + 1) + Environment.NewLine;
-                BaseUtils.FileHelpers.TryAppendToFile(outfilepath, outline, true);
+                if (!BaseUtils.FileHelpers.TryAppendToFile(outfilepath, outline, true))
+                {
+                    MessageBox.Show($"Can't write {outfilepath}");
+                    tme.Stop();
+                }
                 richTextBoxCurrentEntry.Text = richTextBoxNextEntry.Text;
             }
         }
@@ -416,13 +420,20 @@ namespace JournalPlayer
 
                 if (fs == null)
                 {
+                    outfilename = UseCurrentTime ? "Journal." + DateTime.UtcNow.ToString("yyyy-MM-ddThhmmss") + ".01.log" : Path.GetFileName(files[fileentry].FullName);
+
+                    string writefile = Path.Combine(DestFolder, outfilename);
+                    if (Array.FindIndex(files, x => x.FullName.EqualsIIC(writefile)) >= 0)
+                    {
+                        MessageBox.Show("File name clash");
+                        Clear();
+                        return;
+                    }
+
                     fs = new FileStream(files[fileentry].FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     sr = new StreamReader(fs);
                     curlineno = 0;
                     textBoxJournalFile.Text = files[fileentry].FullName;
-                    outfilename = UseCurrentTime ? "Journal." + DateTime.UtcNow.ToString("yyyy-MM-ddThhmmss")+ ".01.log" :  Path.GetFileName(files[fileentry].FullName);
-
-                    stoponline = 0;     // cancel stop on line
                 }
 
                 string line = sr.ReadLine();
@@ -430,6 +441,7 @@ namespace JournalPlayer
 
                 if (line == null)
                 {
+                    stoponline = 0;     // cancel stop on line
                     sr.Close();
                     sr = null;
                     fs.Close();

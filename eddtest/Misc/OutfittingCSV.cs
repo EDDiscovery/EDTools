@@ -46,7 +46,7 @@ namespace EDDTest
                     }
                 }
 
-                var allmodules = ItemData.GetShipModuleDictionary(false, false,false, false);
+                var allmodules = ItemData.GetShipModules(false, false,false, false);
 
                 foreach( var kvp in allmodules)
                 {

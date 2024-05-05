@@ -13,16 +13,16 @@
  */
 
 using EliteDangerousCore;
+using QuickJSON;
 using System.Linq;
 
 namespace EDDTest
 {
-    static public class EDDIData
+    static public partial class EDDIData
     {
-
         static public void CheckModulesvsEDDI()
         {
-            foreach (var mod in EDDI.Modules)
+            foreach (var mod in EDDI.GetModules())
             {
                 if (ItemData.TryGetShipModule(mod.fdname, out ItemData.ShipModule edm, false))
                 {
@@ -30,15 +30,23 @@ namespace EDDTest
                     {
                         string i = edm.Info == null ? "null" : $"\"{edm.Info}\"";
 
-                        System.Diagnostics.Debug.WriteLine($"!!{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, {edm.Mass}, {edm.Power}, {i}, \"{edm.ModName}\", \"{edm.ModType}\" ) }},");
+                        System.Diagnostics.Debug.WriteLine($"!!{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, {edm.Mass}, {edm.Power}, {i}, \"{edm.EnglishModName}\", \"{edm.ModType}\" ) }},");
                         edm.ModuleID = (int)mod.id;
                     }
                 }
                 else
                 {
 
-                    //    System.Diagnostics.Debug.WriteLine($"{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, 0, 0, \"\", \"{mod.descr.SplitCapsWordFull()}\", \"\" ) }},");
+                    System.Diagnostics.Debug.WriteLine($"{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, 0, 0, \"\", \"{mod.descr.SplitCapsWordFull()}\", \"\" ) }},");
                 }
+
+            }
+
+
+            JArray modread = JArray.Parse(BaseUtils.FileHelpers.TryReadAllTextFromFile(@"c:\code\mods.json"),out string err, JToken.ParseOptions.None);
+            foreach( JObject jo in modread)
+            {
+                System.Diagnostics.Debug.WriteLine($"{{ \"{jo["Name"].Str().ToLowerInvariant()}\", new ShipModule({jo["id"].Long()}, 1, 1, \"\", \"{jo["Name"].Str().SplitCapsWordFull()}\", ShipModule.ModuleTypes.FrameShiftDrive ) }},");
 
             }
         }

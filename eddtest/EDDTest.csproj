@@ -37,7 +37,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;TESTHARNESS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -46,7 +46,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;TESTHARNESS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -200,6 +200,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EDDI Data\EDDISignalCheck.cs" />
+    <Compile Include="EDDI Data\EDDISignalSources.cs" />
+    <Compile Include="From EDD Project Manually copied\Identifiers.cs" />
     <Compile Include="Misc\OutfittingCSV.cs" />
     <Compile Include="From EDD Project Manually copied\ItemActors.cs" />
     <Compile Include="From EDD Project Manually copied\ItemData.cs" />
@@ -211,7 +214,7 @@
     <Compile Include="From EDD Project Manually copied\MaterialRecipesData.cs" />
     <Compile Include="From EDD Project Manually copied\MCMRList.cs" />
     <Compile Include="From EDD Project Manually copied\MCMRType.cs" />
-    <Compile Include="EDDI Data\EDDI.cs" />
+    <Compile Include="EDDI Data\EDDIModules.cs" />
     <Compile Include="EDDI Data\EDDIModuleCheck.cs" />
     <Compile Include="FDEVIDs\FDEVIDS.cs" />
     <Compile Include="Misc\Github.cs" />

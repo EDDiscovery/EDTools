@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2023-2023 EDDiscovery development team
+ * Copyright 2022-2024 EDDiscovery development team
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -37,7 +37,7 @@ namespace EliteDangerousCore
             {
                 string nid = id.ToLowerInvariant().Trim();
 
-               // lock (identifiers)    // since only changed by HistoryList accumulate, and accessed by foreground, no need I think for a lock
+                // lock (identifiers)    // since only changed by HistoryList accumulate, and accessed by foreground, no need I think for a lock
                 {
                     text = text.Replace("&NBSP;", " ");
                     //System.Diagnostics.Debug.WriteLine($"Identifier {id} -> {nid} -> {text}");
@@ -47,7 +47,7 @@ namespace EliteDangerousCore
             }
             else
             {
-               // System.Diagnostics.Debug.WriteLine($"Rejected adding {id} vs {text}");
+                // System.Diagnostics.Debug.WriteLine($"Rejected adding {id} vs {text}");
             }
 
         }
@@ -57,7 +57,7 @@ namespace EliteDangerousCore
         {
             string nid = id.ToLowerInvariant().Trim();
 
-          //  lock (identifiers)
+            //  lock (identifiers)
             {
                 if (Items.TryGetValue(nid, out string str))
                 {
@@ -78,41 +78,43 @@ namespace EliteDangerousCore
             }
         }
 
+#if !TESTHARNESS
         public static void Process(JournalEntry je)
         {
             if (je is IIdentifiers)
                 (je as IIdentifiers).UpdateIdentifiers();
         }
+#endif
 
         // from EDDI 17/11/23
 
         static string[] defdefs = new string[]
         {
-            "$multiplayer_scenario42_title","Nav Beacon","Nav beacon",
-            "$multiplayer_scenario80_title","Compromised Nav Beacon","Compromised nav beacon",
+            "$multiplayer_scenario42_title","Nav Beacon","Nav Beacon",
+            "$multiplayer_scenario80_title","Compromised Nav Beacon","Compromised Nav Beacon",
             "$uss","Unidentified Signal Source","Unidentified Signal Source",
             "$warzone_pointrace_high","High Intensity Conflict Zone","Conflict Zone (High Intensity)",
             "$warzone_pointrace_med","Medium Intensity Conflict Zone","Conflict Zone (Medium Intensity)",
             "$warzone_pointrace_low","Low Intensity Conflict Zone","Conflict Zone (Low Intensity)",
             "$uss_type_salvage","Degraded Emissions","Salvage signal",
-            "$uss_type_aftermath","Combat Aftermath","Aftermatch signal",
+            "$uss_type_aftermath","Combat Aftermath","Aftermath signal",
             "$uss_type_anomaly","Anomaly","Anomaly signal",
             "$uss_type_ceremonial","Ceremonial Comms","Ceremonial signal",
-            "$uss_type_veryvaluablesalvage","High Grade Emissions","VeryValuable signal",
+            "$uss_type_veryvaluablesalvage","High Grade Emissions","Very Valuable signal",
             "$uss_type_valuablesalvage","Encoded Emissions","Valuable signal",
-            "$uss_type_nonhuman","Non-Human Signal Source","NonHuman signal",
-            "$uss_type_weaponsfire","Weapons Fire","WeaponsFire signal",
-            "$uss_type_missiontarget","Mission Target","MissionTarget signal",
+            "$uss_type_nonhuman","Non-Human Signal Source","Non-Human signal",
+            "$uss_type_weaponsfire","Weapons Fire","Weapons Fire signal",
+            "$uss_type_missiontarget","Mission Target","Mission Target signal",
             "$uss_type_convoy","Convoy Dispersal Pattern","Convoy signal",
             "$uss_type_distresssignal","Distress Call","Distress signal",
-            "$uss_type_tradingbeacon","Trading Beacon","TradingBeacon signal",
-            "$multiplayer_scenario78_title","High Intensity Resource Extraction Site","ResourceExtraction Site (High Intensity)",
-            "$multiplayer_scenario77_title","Low Intensity Resource Extraction Site","Resource Extraction site (Low)",
+            "$uss_type_tradingbeacon","Trading Beacon","Trading Beacon signal",
+            "$multiplayer_scenario78_title","High Intensity Resource Extraction Site","Resource Extraction Site (High Intensity)",
+            "$multiplayer_scenario77_title","Low Intensity Resource Extraction Site","Resource Extraction Site (Low)",
             "$multiplayer_scenario14_title","Resource Extraction Site","Resource Extraction Site",
             "$multiplayer_scenario79_title","Hazardous Resource Extraction Site","Resource Extraction Site [Hazardous]",
-            "$numberstation","Unregistered Comms Beacon","NumberStation",
+            "$numberstation","Unregistered Comms Beacon","Number Station",
             "$warzone_tg","AX Conflict Zone","Thargoid conflict zone",
-            "$listeningpost","Listening Post","ListeningPost",
+            "$listeningpost","Listening Post","Listening Post",
             "$fixed_event_life_cloud","Notable Stellar Phenomena","Notable Stellar Phenomena",
             "$fixed_event_capship","Capital Ship","Capital Ship",
             "$fixed_event_life_ring","Notable Stellar Phenomena","Notable Stellar Phenomena",
@@ -123,7 +125,7 @@ namespace EliteDangerousCore
             "$saa_signaltype_thargoid","Thargoid Surface Signal","Thargoid Surface Signal",
             "$settlement_unflattened_unknown","Thargoid Barnacle","Thargoid Barnacle",
             "$fixed_event_checkpoint","Checkpoint","Checkpoint",
-            "$fixed_event_convoy","Convoy Beacon","Convoy Beacon	",
+            "$fixed_event_convoy","Convoy Beacon","Convoy Beacon",
             "$fixed_event_highthreatscenario_t6","Pirate Activity","Pirate Activity Detected [Threat 6]",
             "$fixed_event_highthreatscenario_t7","Pirate Activity","Pirate Activity Detected [Threat 7]",
             "$saa_signaltype_guardian","Guardian Surface Signal","Guardian Surface Signal",
@@ -131,7 +133,7 @@ namespace EliteDangerousCore
             "$ancient_small","Guardian Structure","Guardian Structure",
             "$ancient_tiny","Guardian Structure","Guardian Structure",
             "$ancient_medium","Guardian Structure","Guardian Structure",
-            "$fixed_event_debris","Debris Field","Debris field",
+            "$fixed_event_debris","Debris Field","Debris Field",
             "$saa_signaltype_other","Other Surface Signal","Other Surface Signal",
             "$settlement_unflattened_wreckedunknown","Crashed Thargoid ship","Thargoid crash site",
             "$multiplayer_scenario81_title","Salvageable Wreckage","Salvageable Wreckage signal source",
@@ -163,6 +165,7 @@ namespace EliteDangerousCore
             "$warzone_tg_high","High Intensity AX Conflict Zone","High Intensity Thargoid Conflict Zone",
             "$warzone_tg_veryhigh","Very High Intensity AX Conflict Zone","Very High Intensity AX Conflict Zone",
             "$wreckage_ancientprobe","Minor Wreckage","Minor Wreckage",
+            "$settlement_unflattened_tgmegabarnacle","Thargoid Spire","Thargoid Spire",
         };
     }
 }

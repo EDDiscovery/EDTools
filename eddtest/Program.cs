@@ -276,6 +276,7 @@ namespace EDDTest
                 {
                     EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();      // for the future
                     EDDIData.CheckModulesvsEDDI();
+                    EDDIData.CheckSignalsvsEDDI();
                 }
                 else if (cmd.Equals("githubreleases"))
                 {

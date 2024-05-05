@@ -19,6 +19,7 @@ namespace JournalPlayer
         string DestFolder { get { return settings["Dest"].Str(); } set { settings["Dest"] = value; } }
         string SourceFolder { get { return settings["Source"].Str(); } set { settings["Source"] = value; } }
         DateTime Starttime { get { return settings["Starttime"].DateTimeUTC(); } set { settings["Starttime"] = value.ToStringZulu(); } }
+        bool UseCurrentTime { get { return settings["UseCurrentTime"].Bool(); } set { settings["UseCurrentTime"] = value; } }
 
         FileInfo[] files;
         int fileentry;
@@ -26,6 +27,7 @@ namespace JournalPlayer
         Stream fs;
         StreamReader sr;
         string outfilename;
+        string outfilepath;
         Timer tme = new Timer();
         string stopon;
 
@@ -37,7 +39,8 @@ namespace JournalPlayer
             {
                 ["Source"] = @"C:\Users\RK\Saved Games\Frontier Developments\Elite Dangerous",
                 ["Dest"] = @"c:\code\logs\test",
-                ["Starttime"] = "2024-01-22T14:42:01Z"
+                ["Starttime"] = "2024-01-22T14:42:01Z",
+                ["UseCurrentTime"] = true,
             };
 
             if ( File.Exists(datafile))
@@ -50,10 +53,12 @@ namespace JournalPlayer
             textBoxDestFolder.Text = DestFolder;
             textBoxSourceFolder.Text = SourceFolder;
             dateTimePickerStartDate.Value = Starttime;
+            checkBoxUseCurrentTime.Checked = UseCurrentTime;
 
             this.textBoxSourceFolder.TextChanged += new System.EventHandler(this.textBoxSourceFolder_TextChanged);
             this.textBoxDestFolder.TextChanged += new System.EventHandler(this.textBoxDestFolder_TextChanged);
             this.dateTimePickerStartDate.ValueChanged += new System.EventHandler(this.dateTimePickerStartDate_ValueChanged);
+            this.checkBoxUseCurrentTime.CheckedChanged += new System.EventHandler(this.checkboxUseCurrentTime_ValueChanged);
 
             Clear();
 
@@ -86,6 +91,11 @@ namespace JournalPlayer
         {
             Clear();
             DestFolder = textBoxDestFolder.Text;
+        }
+        private void checkboxUseCurrentTime_ValueChanged(object sender, EventArgs e)
+        {
+            Clear();
+            UseCurrentTime = checkBoxUseCurrentTime.Checked;
         }
         private void buttonClearDestFolder_Click(object sender, EventArgs e)
         {
@@ -151,8 +161,30 @@ namespace JournalPlayer
             tme.Interval = 100;
             stopon = "StartJump";
             tme.Start();
+        }
+
+        private void buttonSelectSourceFolder_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            fbd.SelectedPath = textBoxSourceFolder.Text;
+            fbd.Description = "Select folder where Journal*.log files are found";
+
+            if (fbd.ShowDialog(this) == DialogResult.OK)
+                textBoxSourceFolder.Text = fbd.SelectedPath;
 
         }
+
+        private void buttonSelectDestFolder_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            fbd.SelectedPath = textBoxDestFolder.Text;
+            fbd.Description = "Select folder where Journal*.log files are to be stored";
+
+            if (fbd.ShowDialog(this) == DialogResult.OK)
+                textBoxDestFolder.Text = fbd.SelectedPath;
+
+        }
+
 
         private void Clear()
         {
@@ -162,6 +194,7 @@ namespace JournalPlayer
             richTextBoxNextEntry.Clear();
             textBoxJournalFile.Text = "None";
             richTextBoxCurrentEntry.Text = richTextBoxNextEntry.Text = "";
+            textBoxOutputFile.Text = "";
             tme.Stop();
         }
 
@@ -170,7 +203,7 @@ namespace JournalPlayer
             if (richTextBoxNextEntry.Text.Length > 0)        // if we have a previous next entry
             {
                 string outline = richTextBoxNextEntry.Text.Substring(richTextBoxNextEntry.Text.IndexOf(": ") + 1) + Environment.NewLine;
-                BaseUtils.FileHelpers.TryAppendToFile(outfilename, outline, true);
+                BaseUtils.FileHelpers.TryAppendToFile(outfilepath, outline, true);
                 richTextBoxCurrentEntry.Text = richTextBoxNextEntry.Text;
             }
         }
@@ -216,6 +249,7 @@ namespace JournalPlayer
                     sr = new StreamReader(fs);
                     lineno = 0;
                     textBoxJournalFile.Text = files[fileentry].FullName;
+                    outfilename = UseCurrentTime ? "Journal." + DateTime.UtcNow.ToString("yyyy-MM-ddThhmmss")+ ".01.log" :  Path.GetFileName(files[fileentry].FullName);
                 }
 
                 string line = sr.ReadLine();
@@ -233,8 +267,20 @@ namespace JournalPlayer
                 {
                     WriteLast();
 
+                    if ( UseCurrentTime )
+                    {
+                        JObject jo = JObject.Parse(line);
+                        if ( jo != null )
+                        {
+                            jo["timestamp"] = DateTime.UtcNow.StartOfSecond().ToStringZuluInvariant();
+                            line = jo.ToString();
+                        }
+                    }
+
                     richTextBoxNextEntry.Text = lineno.ToStringInvariant() + ": " + line;
-                    outfilename = Path.Combine(DestFolder, Path.GetFileName(files[fileentry].FullName));        // set here as when we change we need to write to the last file
+                    outfilepath = Path.Combine(DestFolder, outfilename);        // set here as when we change we need to write to the last file in WriteLast()
+                    
+                    textBoxOutputFile.Text = outfilepath;
 
                     if (stopon != null)
                     {

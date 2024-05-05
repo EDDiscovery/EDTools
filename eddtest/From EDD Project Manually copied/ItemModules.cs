@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2016-2023 EDDiscovery development team
+ * Copyright 2016-2024 EDDiscovery development team
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -10,9 +10,8 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
  * ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
- * 
- * Data is intellectual property and copyright of Frontier Developments plc ('Frontier', 'Frontier Developments') and are subject to their terms and conditions.
  */
+
 
 using System;
 using System.Collections.Generic;
@@ -22,7 +21,7 @@ namespace EliteDangerousCore
 {
     public partial class ItemData
     {
-        static public bool TryGetShipModule(string fdid, out ShipModule m, bool synthesiseit )
+        static public bool TryGetShipModule(string fdid, out ShipModule m, bool synthesiseit)
         {
             m = null;
             string lowername = fdid.ToLowerInvariant();
@@ -31,15 +30,15 @@ namespace EliteDangerousCore
             bool state = shipmodules.TryGetValue(lowername, out m) || othershipmodules.TryGetValue(lowername, out m) ||
                         srvmodules.TryGetValue(lowername, out m) || fightermodules.TryGetValue(lowername, out m) || vanitymodules.TryGetValue(lowername, out m);
 
-            if ( state == false)    // not found, try find the synth modules. Since we can be called in journal creation thread, we need some safety.
+            if (state == false)    // not found, try find the synth modules. Since we can be called in journal creation thread, we need some safety.
             {
-                lock(synthesisedmodules)
+                lock (synthesisedmodules)
                 {
                     state = synthesisedmodules.TryGetValue(lowername, out m);
                 }
             }
 
-            if ( !state && synthesiseit )   // if not found, and we want to synthesise it
+            if (!state && synthesiseit)   // if not found, and we want to synthesise it
             {
                 lock (synthesisedmodules)  // lock for safety
                 {
@@ -51,7 +50,7 @@ namespace EliteDangerousCore
 
                     var newmodule = new ShipModule(-1, 0, candidatename, IsVanity(lowername) ? ShipModule.ModuleTypes.VanityType : ShipModule.ModuleTypes.UnknownType);
 
-                    System.Diagnostics.Debug.WriteLine("******* Unknown Module { \"" + lowername + "\", new ShipModule(-1,0, \"" + newmodule.ModName + "\", " + (IsVanity(lowername) ? "VanityType" : "UnknownType") + " ) },");
+                    System.Diagnostics.Debug.WriteLine("*** Unknown Module { \"" + lowername + "\", new ShipModule(-1,0, \"" + newmodule.EnglishModName + "\", " + (IsVanity(lowername) ? "ShipModule.ModuleTypes.VanityType" : "ShipModule.ModuleTypes.UnknownType") + " ) },");
 
                     synthesisedmodules[lowername] = m = newmodule;                   // lets cache them for completeness..
                 }
@@ -61,48 +60,91 @@ namespace EliteDangerousCore
         }
 
         // List of ship modules. Synthesised are not included
-        static public List<ShipModule> GetShipModulesList(bool includenonbuyable = false, bool includesrv = false, bool includefighter = false, bool includevanity = false,  bool addunknowntype = false)       
+        // default is buyable modules only
+        // you can include other types
+        // compressarmour removes all armour entries except the ones for the sidewinder
+        static public Dictionary<string, ShipModule> GetShipModules(bool includebuyable = true, bool includenonbuyable = false, bool includesrv = false,
+                                                                    bool includefighter = false, bool includevanity = false, bool addunknowntype = false,
+                                                                    bool compressarmourtosidewinderonly = false)
         {
-            List<ShipModule> mlist = new List<ShipModule>(shipmodules.Values);
+            Dictionary<string, ShipModule> ml = new Dictionary<string, ShipModule>();
+
+            if (includebuyable)
+            {
+                foreach (var x in shipmodules) ml[x.Key] = x.Value;
+            }
+
+            if (compressarmourtosidewinderonly)        // remove all but _grade1 armours in list
+            {
+                var list = shipmodules.Keys;
+                foreach (var name in list)
+                {
+                    if (name.Contains("_armour_") && !name.Contains("sidewinder")) // only keep sidewinder - all other ones are removed
+                        ml.Remove(name);
+                }
+            }
+
             if (includenonbuyable)
-                mlist.AddRange(othershipmodules.Values);
+            {
+                foreach (var x in othershipmodules) ml[x.Key] = x.Value;
+            }
             if (includesrv)
-                mlist.AddRange(srvmodules.Values);
+            {
+                foreach (var x in srvmodules) ml[x.Key] = x.Value;
+            }
             if (includefighter)
-                mlist.AddRange(fightermodules.Values);
+            {
+                foreach (var x in fightermodules) ml[x.Key] = x.Value;
+
+            }
             if (includevanity)
-                mlist.AddRange(vanitymodules.Values);
+            {
+                foreach (var x in vanitymodules) ml[x.Key] = x.Value;
+
+            }
             if (addunknowntype)
-                mlist.Add(new ShipModule(-1, 0, "Unknown Type", ShipModule.ModuleTypes.UnknownType));
-            return mlist;
+            {
+                ml["Unknown"] = new ShipModule(-1, 0, "Unknown Type", ShipModule.ModuleTypes.UnknownType);
+
+            }
+            return ml;
         }
 
-        // Dictionary of ship modules, merged. Using this can show up repeats between dictionaries. Synthesised are not included
-        static public Dictionary<string,ShipModule> GetShipModuleDictionary(bool includenonbuyable = false, bool includesrv = false, bool includefighter = false, bool includevanity = false)
+        // a dictionary of module english module type vs translated module type for a set of modules
+        public static Dictionary<string, string> GetModuleTypeNamesTranslations(Dictionary<string, ShipModule> modules)
         {
-            Dictionary<string, ShipModule> res = new Dictionary<string, ShipModule>(shipmodules);
-            if (includenonbuyable)
+            var ret = new Dictionary<string, string>();
+            foreach (var x in modules)
             {
-                foreach (var kvp in othershipmodules)
-                    res.Add(kvp.Key, kvp.Value);
+                if (!ret.ContainsKey(x.Value.EnglishModTypeString))
+                    ret[x.Value.EnglishModTypeString] = x.Value.TranslatedModTypeString;
             }
-            if (includesrv)
+            return ret;
+        }
+
+        // given a module name list containing siderwinder_armour_gradeX only,
+        // expand out to include all other ships armours of the same grade
+        // used in spansh station to reduce list of shiptype armours shown, as if one is there for a ship, they all are there for all ships
+        public static string[] ExpandArmours(string[] list)
+        {
+            List<string> ret = new List<string>();
+            foreach (var x in list)
             {
-                foreach (var kvp in srvmodules)
-                    res.Add(kvp.Key, kvp.Value);
-            }
-            if (includefighter)
-            {
-                foreach (var kvp in fightermodules)
-                    res.Add(kvp.Key, kvp.Value);
-            }
-            if (includevanity)
-            {
-                foreach (var kvp in vanitymodules)
-                    res.Add(kvp.Key, kvp.Value);
+                if (x.StartsWith("sidewinder_armour"))
+                {
+                    string grade = x.Substring(x.IndexOf("_"));     // its grade (_armour_grade1, _grade2 etc)
+
+                    foreach (var kvp in shipmodules)
+                    {
+                        if (kvp.Key.EndsWith(grade))
+                            ret.Add(kvp.Key);
+                    }
+                }
+                else
+                    ret.Add(x);
             }
 
-            return res;
+            return ret.ToArray();
         }
 
         static public bool IsVanity(string ifd)
@@ -111,6 +153,87 @@ namespace EliteDangerousCore
             string[] vlist = new[] { "bobble", "decal", "enginecustomisation", "nameplate", "paintjob",
                                     "shipkit", "weaponcustomisation", "voicepack" , "lights", "spoiler" , "wings", "bumper"};
             return Array.Find(vlist, x => ifd.Contains(x)) != null;
+        }
+
+        static string TXIT(string text)
+        {
+            return BaseUtils.Translator.Instance.Translate(text, "ModulePartNames." + text.Replace(" ", "_"));
+        }
+
+        // called at start up to set up translation of module names
+        static private void TranslateModules()
+        {
+            foreach (var kvp in shipmodules)
+            {
+                ShipModule sm = kvp.Value;
+
+                // this logic breaks down the 
+
+                if (kvp.Key.Contains("_armour_", StringComparison.InvariantCulture))
+                {
+                    string[] armourdelim = new string[] { "Lightweight", "Reinforced", "Military", "Mirrored", "Reactive" };
+                    int index = sm.EnglishModName.IndexOf(armourdelim, out int anum, StringComparison.InvariantCulture);
+                    string translated = TXIT(sm.EnglishModName.Substring(index));
+                    sm.TranslatedModName = sm.EnglishModName.Substring(0, index) + translated;
+                }
+                else
+                {
+                    int cindex = sm.EnglishModName.IndexOf(" Class ", StringComparison.InvariantCulture);
+                    int rindex = sm.EnglishModName.IndexOf(" Rating ", StringComparison.InvariantCulture);
+
+                    if (cindex != -1 && rindex != -1)
+                    {
+                        string translated = TXIT(sm.EnglishModName.Substring(0, cindex));
+                        string cls = TXIT(sm.EnglishModName.Substring(cindex + 1, 5));
+                        string rat = TXIT(sm.EnglishModName.Substring(rindex + 1, 6));
+                        sm.TranslatedModName = translated + " " + cls + " " + sm.EnglishModName.Substring(cindex + 7, 1) + " " + rat + " " + sm.EnglishModName.Substring(rindex + 8, 1);
+                    }
+                    else if (cindex != -1)
+                    {
+                        string translated = TXIT(sm.EnglishModName.Substring(0, cindex));
+                        string cls = TXIT(sm.EnglishModName.Substring(cindex + 1, 5));
+                        sm.TranslatedModName = translated + " " + cls + " " + sm.EnglishModName.Substring(cindex + 7, 1);
+                    }
+                    else if (rindex != -1)
+                    {
+                        string translated = TXIT(sm.EnglishModName.Substring(0, rindex));
+                        string rat = TXIT(sm.EnglishModName.Substring(rindex + 1, 6));
+                        sm.TranslatedModName = translated + " " + rat + " " + sm.EnglishModName.Substring(rindex + 8, 1);
+                    }
+                    else
+                    {
+                        string[] sizes = new string[] { " Small", " Medium", " Large", " Huge", " Tiny", " Standard", " Intermediate", " Advanced" };
+                        int sindex = sm.EnglishModName.IndexOf(sizes, out int snum, StringComparison.InvariantCulture);
+
+                        if (sindex >= 0)
+                        {
+                            string[] types = new string[] { " Gimbal ", " Fixed ", " Turret " };
+                            int gindex = sm.EnglishModName.IndexOf(types, out int gnum, StringComparison.InvariantCulture);
+
+                            if (gindex >= 0)
+                            {
+                                string translated = TXIT(sm.EnglishModName.Substring(0, gindex));
+                                string typen = TXIT(sm.EnglishModName.Substring(gindex + 1, types[gnum].Length - 2));
+                                string sizen = TXIT(sm.EnglishModName.Substring(sindex + 1, sizes[snum].Length - 1));
+                                sm.TranslatedModName = translated + " " + typen + " " + sizen;
+                            }
+                            else
+                            {
+                                string translated = TXIT(sm.EnglishModName.Substring(0, sindex));
+                                string sizen = TXIT(sm.EnglishModName.Substring(sindex + 1, sizes[snum].Length - 1));
+                                sm.TranslatedModName = translated + " " + sizen;
+                            }
+                        }
+                        else
+                        {
+                            sm.TranslatedModName = TXIT(sm.EnglishModName);
+                            //System.Diagnostics.Debug.WriteLine($"?? {kvp.Key} = {sm.ModName}");
+                        }
+                    }
+                }
+
+                //System.Diagnostics.Debug.WriteLine($"Module {sm.ModName} : {sm.ModType} => {sm.TranslatedModName} : {sm.TranslatedModTypeString}");
+            }
         }
 
         #region ShipModule
@@ -122,137 +245,141 @@ namespace EliteDangerousCore
                 // Aligned with spansh, spansh is aligned with outfitting.csv on EDCD.
                 // all buyable
 
-                AXMissileRack, 
-                AXMulti_Cannon, 
-                AbrasionBlaster, 
-                AdvancedDockingComputer, 
-                AdvancedMissileRack, 
+                AXMissileRack,
+                AXMulti_Cannon,
+                AbrasionBlaster,
+                AdvancedDockingComputer,
+                AdvancedMissileRack,
                 AdvancedMulti_Cannon,
-                AdvancedPlanetaryApproachSuite, 
-                AdvancedPlasmaAccelerator, 
-                AutoField_MaintenanceUnit, 
-                BeamLaser, 
-                Bi_WeaveShieldGenerator, 
-                BurstLaser, 
-                BusinessClassPassengerCabin, 
-                Cannon, 
-                CargoRack, 
-                CargoScanner, 
+                AdvancedPlanetaryApproachSuite,
+                AdvancedPlasmaAccelerator,
+                AutoField_MaintenanceUnit,
+                BeamLaser,
+                Bi_WeaveShieldGenerator,
+                BurstLaser,
+                BusinessClassPassengerCabin,
+                Cannon,
+                CargoRack,
+                CargoScanner,
                 CausticSinkLauncher,
                 ChaffLauncher,
-                CollectorLimpetController, 
+                CollectorLimpetController,
                 CorrosionResistantCargoRack,
-                CytoscramblerBurstLaser, 
-                DecontaminationLimpetController, 
-                DetailedSurfaceScanner, 
+                CytoscramblerBurstLaser,
+                DecontaminationLimpetController,
+                DetailedSurfaceScanner,
                 EconomyClassPassengerCabin,
                 ElectronicCountermeasure,
                 EnforcerCannon,
                 EnhancedAXMissileRack,
                 EnhancedAXMulti_Cannon,
-                EnhancedPerformanceThrusters, 
+                EnhancedPerformanceThrusters,
                 EnhancedXenoScanner,
-                EnzymeMissileRack, 
-                ExperimentalWeaponStabiliser, 
+                EnzymeMissileRack,
+                ExperimentalWeaponStabiliser,
                 FighterHangar,
                 FirstClassPassengerCabin,
                 FragmentCannon,
-                FrameShiftDrive, 
-                FrameShiftDriveInterdictor, 
+                FrameShiftDrive,
+                FrameShiftDriveInterdictor,
                 FrameShiftWakeScanner,
                 FuelScoop,
                 FuelTank,
-                FuelTransferLimpetController, 
-                GuardianFSDBooster, 
-                GuardianGaussCannon, 
-                GuardianHullReinforcement, 
-                GuardianHybridPowerDistributor, 
+                FuelTransferLimpetController,
+                GuardianFSDBooster,
+                GuardianGaussCannon,
+                GuardianHullReinforcement,
+                GuardianHybridPowerDistributor,
                 GuardianHybridPowerPlant,
-                GuardianModuleReinforcement, 
-                GuardianPlasmaCharger, 
+                GuardianModuleReinforcement,
+                GuardianPlasmaCharger,
                 GuardianShardCannon,
-                GuardianShieldReinforcement, 
+                GuardianShieldReinforcement,
                 HatchBreakerLimpetController,
                 HeatSinkLauncher,
-                HullReinforcementPackage, 
-                ImperialHammerRailGun, 
-                KillWarrantScanner, 
-                LifeSupport, 
+                HullReinforcementPackage,
+                ImperialHammerRailGun,
+                KillWarrantScanner,
+                LifeSupport,
                 LightweightAlloy,
                 ////LimpetControl,
-                LuxuryClassPassengerCabin, 
-                MetaAlloyHullReinforcement, 
-                MilitaryGradeComposite, 
-                MineLauncher, 
-                MiningLance, 
-                MiningLaser, 
-                MiningMultiLimpetController, 
-                MirroredSurfaceComposite, 
-                MissileRack, 
-                ModuleReinforcementPackage, 
-                Multi_Cannon, 
-                OperationsMultiLimpetController, 
-                PacifierFrag_Cannon, 
-                Pack_HoundMissileRack, 
-                PlanetaryApproachSuite, 
-                PlanetaryVehicleHangar, 
-                PlasmaAccelerator, 
-                PointDefence, 
-                PowerDistributor, 
-                PowerPlant, 
-                PrismaticShieldGenerator, 
-                ProspectorLimpetController, 
-                PulseDisruptorLaser, 
-                PulseLaser, 
-                PulseWaveAnalyser, 
-                RailGun, 
-                ReactiveSurfaceComposite, 
-                ReconLimpetController, 
-                Refinery, 
-                ReinforcedAlloy, 
-                RemoteReleaseFlakLauncher, 
-                RemoteReleaseFlechetteLauncher, 
-                RepairLimpetController, 
-                RescueMultiLimpetController, 
+                LuxuryClassPassengerCabin,
+                MetaAlloyHullReinforcement,
+                MilitaryGradeComposite,
+                MineLauncher,
+                MiningLance,
+                MiningLaser,
+                MiningMultiLimpetController,
+                MirroredSurfaceComposite,
+                MissileRack,
+                ModuleReinforcementPackage,
+                Multi_Cannon,
+                OperationsMultiLimpetController,
+                PacifierFrag_Cannon,
+                Pack_HoundMissileRack,
+                PlanetaryApproachSuite,
+                PlanetaryVehicleHangar,
+                PlasmaAccelerator,
+                PointDefence,
+                PowerDistributor,
+                PowerPlant,
+                PrismaticShieldGenerator,
+                ProspectorLimpetController,
+                PulseDisruptorLaser,
+                PulseLaser,
+                PulseWaveAnalyser,
+                RailGun,
+                ReactiveSurfaceComposite,
+                ReconLimpetController,
+                Refinery,
+                ReinforcedAlloy,
+                RemoteReleaseFlakLauncher,
+                RemoteReleaseFlechetteLauncher,
+                RepairLimpetController,
+                RescueMultiLimpetController,
                 ResearchLimpetController,
-                RetributorBeamLaser, 
-                RocketPropelledFSDDisruptor, 
-                SeekerMissileRack, 
-                SeismicChargeLauncher, 
-                Sensors, 
-                ShieldBooster, 
-                ShieldCellBank, 
-                ShieldGenerator, 
-                ShockCannon, 
-                ShockMineLauncher, 
-                ShutdownFieldNeutraliser, 
-                StandardDockingComputer, 
-                Sub_SurfaceDisplacementMissile, 
-                SupercruiseAssist, 
-                Thrusters, 
-                TorpedoPylon, 
-                UniversalMultiLimpetController, 
-                XenoMultiLimpetController, 
+                RetributorBeamLaser,
+                RocketPropelledFSDDisruptor,
+                SeekerMissileRack,
+                SeismicChargeLauncher,
+                Sensors,
+                ShieldBooster,
+                ShieldCellBank,
+                ShieldGenerator,
+                ShockCannon,
+                ShockMineLauncher,
+                ShutdownFieldNeutraliser,
+                StandardDockingComputer,
+                Sub_SurfaceDisplacementMissile,
+                SupercruiseAssist,
+                Thrusters,
+                TorpedoPylon,
+                UniversalMultiLimpetController,
+                XenoMultiLimpetController,
                 XenoScanner,
 
-                // EDD, not buyable
-                DiscoveryScanner,PrisonCells,DataLinkScanner,SRVScanner,FighterWeapon,
-                VanityType,UnknownType,CockpitType,CargoBayDoorType,WearAndTearType,Codex,
+                // Not buyable, DiscoveryScanner marks the first non buyable
+                DiscoveryScanner, PrisonCells, DataLinkScanner, SRVScanner, FighterWeapon,
+                VanityType, UnknownType, CockpitType, CargoBayDoorType, WearAndTearType, Codex,
             };
 
-            public string ModName { get; set; }
+            public string EnglishModName { get; set; }     // english name
+            public string TranslatedModName { get; set; }     // foreign name
             public int ModuleID { get; set; }
             public double Mass { get; set; }
             public ModuleTypes ModType { get; set; }
-            public string ModTypeString {  get { return ModType.ToString().Replace("AX","AX ").Replace("_", "-").SplitCapsWordFull(); } }     // string should be in spansh/EDCD csv compatible format
+
+            // string should be in spansh/EDCD csv compatible format, in english, as it it fed into Spansh
+            public string EnglishModTypeString { get { return ModType.ToString().Replace("AX", "AX ").Replace("_", "-").SplitCapsWordFull(); } }
+            public string TranslatedModTypeString { get { return BaseUtils.Translator.Instance.Translate(EnglishModTypeString, "ModuleTypeNames." + EnglishModTypeString.Replace(" ", "_")); } }     // string should be in spansh/EDCD csv compatible format, in english
             public double Power { get; set; }
             public string Info { get; set; }
-            
-            public bool IsBuyable { get { return !(ModType == ModuleTypes.VanityType || ModType == ModuleTypes.UnknownType || ModType == ModuleTypes.CockpitType || ModType == ModuleTypes.CargoBayDoorType || ModType == ModuleTypes.WearAndTearType || ModType == ModuleTypes.Codex); } }
 
-            public ShipModule(int id, double mass, string descr, ModuleTypes modtype) { ModuleID = id; Mass = mass; ModName = descr; ModType = modtype; }
-            public ShipModule(int id, double mass, double power, string descr, ModuleTypes modtype) { ModuleID = id; Mass = mass; Power = power; ModName = descr; ModType = modtype; }
-            public ShipModule(int id, double mass, double power, string info, string descr, ModuleTypes modtype) { ModuleID = id; Mass = mass; Power = power; Info = info; ModName = descr; ModType = modtype; }
+            public bool IsBuyable { get { return !(ModType < ModuleTypes.DiscoveryScanner); } }
+
+            public ShipModule(int id, double mass, string descr, ModuleTypes modtype) { ModuleID = id; Mass = mass; TranslatedModName = EnglishModName = descr; ModType = modtype; }
+            public ShipModule(int id, double mass, double power, string descr, ModuleTypes modtype) { ModuleID = id; Mass = mass; Power = power; TranslatedModName = EnglishModName = descr; ModType = modtype; }
+            public ShipModule(int id, double mass, double power, string info, string descr, ModuleTypes modtype) { ModuleID = id; Mass = mass; Power = power; Info = info; TranslatedModName = EnglishModName = descr; ModType = modtype; }
 
             public string InfoMassPower(bool mass)
             {
@@ -266,7 +393,7 @@ namespace EliteDangerousCore
             public override string ToString()
             {
                 string i = Info == null ? "null" : $"\"{Info}\"";
-                return $"{ModuleID},{Mass:0.##},{Power:0.##},{i},\"{ModName}\",{ModTypeString}";
+                return $"{ModuleID},{Mass:0.##},{Power:0.##},{i},\"{EnglishModName}\",{EnglishModTypeString}";
                 //return $"{ModuleID}, {Mass:0.##}, {Power:0.##}, {i}, \"{ModName}\", {mt}";
             }
 
@@ -275,7 +402,7 @@ namespace EliteDangerousCore
         #endregion
 
         // History
-        // Originally from coriolis
+        // Originally from coriolis, but now not.  Synced with Frontier data
         // Nov 1/12/23 synched with EDDI data, with outfitting.csv
 
         #region Ship Modules
@@ -514,6 +641,12 @@ namespace EliteDangerousCore
             { "mamba_armour_mirrored", new ShipModule(128915984,38,0,"Explosive:-50%, Kinetic:-75%, Thermal:50%","Mamba Mirrored Surface Composite Armour",ShipModule.ModuleTypes.MirroredSurfaceComposite) },
             { "mamba_armour_reactive", new ShipModule(128915985,38,0,"Explosive:20%, Kinetic:25%, Thermal:-40%","Mamba Reactive Surface Composite Armour",ShipModule.ModuleTypes.ReactiveSurfaceComposite) },
 
+            { "python_nx_armour_grade1", new ShipModule(-1,0,0,"Explosive:-40%, Kinetic:-20%, Thermal:0%","Python Mk II Lightweight Armour",ShipModule.ModuleTypes.LightweightAlloy) }, // EDDI
+            { "python_nx_armour_grade2", new ShipModule(-1,19,0,"Explosive:-40%, Kinetic:-20%, Thermal:0%","Python Mk II Reinforced Armour",ShipModule.ModuleTypes.ReinforcedAlloy) },
+            { "python_nx_armour_grade3", new ShipModule(-1,38,0,"Explosive:-40%, Kinetic:-20%, Thermal:0%","Python Mk II Military Armour",ShipModule.ModuleTypes.MilitaryGradeComposite) },
+            { "python_nx_armour_mirrored", new ShipModule(-1,38,0,"Explosive:-50%, Kinetic:-75%, Thermal:50%","Python Mk II Mirrored Surface Composite Armour",ShipModule.ModuleTypes.MirroredSurfaceComposite) },
+            { "python_nx_armour_reactive", new ShipModule(-1,38,0,"Explosive:20%, Kinetic:25%, Thermal:-40%","Python Mk II Reactive Surface Composite Armour",ShipModule.ModuleTypes.ReactiveSurfaceComposite) },
+
             // Auto field maint
 
             { "int_repairer_size1_class1", new ShipModule(128667598,0,0.54,"Ammo:1000, Repair:12","Auto Field Maintenance Class 1 Rating E",ShipModule.ModuleTypes.AutoField_MaintenanceUnit) },    //EDDI
@@ -638,7 +771,8 @@ namespace EliteDangerousCore
             { "int_corrosionproofcargorack_size1_class2", new ShipModule(128681992,0,0,"Size:2t","Corrosion Proof Cargo Rack Class 1 Rating F",ShipModule.ModuleTypes.CorrosionResistantCargoRack) },
 
             { "int_corrosionproofcargorack_size4_class1", new ShipModule(128833944,0,0,"Size:16t","Corrosion Proof Cargo Rack Class 4 Rating E",ShipModule.ModuleTypes.CorrosionResistantCargoRack) },  // EDDI
-            { "int_corrosionproofcargorack_size5_class1", new ShipModule(128833944,0,0,"Size:32t","Corrosion Proof Cargo Rack Class 5 Rating E",ShipModule.ModuleTypes.CorrosionResistantCargoRack) },  // EDDI
+            { "int_corrosionproofcargorack_size5_class1", new ShipModule(128957069,0,0,"Size:32t","Corrosion Proof Cargo Rack Class 5 Rating E",ShipModule.ModuleTypes.CorrosionResistantCargoRack) },  // EDDI
+            { "int_corrosionproofcargorack_size6_class1", new ShipModule(999999906, 0, 0, "Size:64t", "Corrosion Resistant Cargo Rack Class 6 Rating E", ShipModule.ModuleTypes.CorrosionResistantCargoRack ) }, // EDDI
 
             // Cargo scanner
 
@@ -651,10 +785,10 @@ namespace EliteDangerousCore
             // Chaff, ECM
 
             { "hpt_chafflauncher_tiny", new ShipModule(128049513,1.3,0.2,"Ammo:10/1, Reload:10s, ThermL:4","Chaff Launcher",ShipModule.ModuleTypes.ChaffLauncher) },    // EDDI
-            { "hpt_electroniccountermeasure_tiny", new ShipModule(128049516,1.3,0.2,"Range:3000m, Reload:10s, ThermL:4","Electronic Countermeasure", ShipModule.ModuleTypes.ElectronicCountermeasure) },
-            { "hpt_heatsinklauncher_turret_tiny", new ShipModule(128049519,1.3,0.2,"Ammo:2/1, Reload:10s","Heat Sink Launcher Turret",ShipModule.ModuleTypes.HeatSinkLauncher) },
-            { "hpt_causticsinklauncher_turret_tiny", new ShipModule(129019262,1.3,0.2,"Ammo:2/1, Reload:10s","Caustic Heat Sink Launcher Turret",ShipModule.ModuleTypes.CausticSinkLauncher) },
-            { "hpt_plasmapointdefence_turret_tiny", new ShipModule(128049522,0.5,0.2,"Ammo:10000/12, Damage:0.2, Range:2500m, Speed:1000m/s, Reload:0.4s, ThermL:0.1","Plasma Point Defence Turret",ShipModule.ModuleTypes.PointDefence) },
+            { "hpt_electroniccountermeasure_tiny", new ShipModule(128049516,1.3,0.2,"Range:3000m, Reload:10s, ThermL:4","Electronic Countermeasure Tiny", ShipModule.ModuleTypes.ElectronicCountermeasure) },
+            { "hpt_heatsinklauncher_turret_tiny", new ShipModule(128049519,1.3,0.2,"Ammo:2/1, Reload:10s","Heat Sink Launcher Turret Tiny",ShipModule.ModuleTypes.HeatSinkLauncher) },
+            { "hpt_causticsinklauncher_turret_tiny", new ShipModule(129019262,1.3,0.2,"Ammo:2/1, Reload:10s","Caustic Heat Sink Launcher Turret Tiny",ShipModule.ModuleTypes.CausticSinkLauncher) },
+            { "hpt_plasmapointdefence_turret_tiny", new ShipModule(128049522,0.5,0.2,"Ammo:10000/12, Damage:0.2, Range:2500m, Speed:1000m/s, Reload:0.4s, ThermL:0.1","Plasma Point Defence Turret Tiny",ShipModule.ModuleTypes.PointDefence) },
 
             // kill warrant
 
@@ -897,6 +1031,41 @@ namespace EliteDangerousCore
             { "int_hyperdrive_size8_class5", new ShipModule(128064137,160,1.05,"OptMass:0t","Hyperdrive Class 8 Rating A",ShipModule.ModuleTypes.FrameShiftDrive) },
             { "int_hyperdrive_size2_class1_free", new ShipModule(128666637,2.5,0.16,"OptMass:48t","Hyperdrive Class 2 Rating E",ShipModule.ModuleTypes.FrameShiftDrive) },
 
+            { "int_hyperdrive_overcharge_size5_class3", new ShipModule(129030474,20,0.45,"OptMass: 665t, SpeedIncrease: 80%, AccelerationRate: 0.055, HeatGenerationRate: 1.4, ControlInterference: 0.4","Hyperdrive Overcharged Class 5 Rating C",ShipModule.ModuleTypes.FrameShiftDrive) },
+
+            { "int_hyperdrive_overcharge_size7_class3", new ShipModule(129030483,80,0.68,"OptMass: 1710t, SpeedIncrease: 46%, AccelerationRate: 0.04, HeatGenerationRate: 2, ControlInterference: 0.67","Hyperdrive Overcharged Class 7 Rating C",ShipModule.ModuleTypes.FrameShiftDrive) },
+            { "int_hyperdrive_overcharge_size6_class3", new ShipModule(129030484,40,0.5,"OptMass: 1200t, SpeedIncrease: 62%, AccelerationRate: 0.045, HeatGenerationRate: 1.8, ControlInterference: 0.64","Hyperdrive Overcharged Class 6 Rating C",ShipModule.ModuleTypes.FrameShiftDrive) },
+            { "int_hyperdrive_overcharge_size4_class3", new ShipModule(129030485,10,0.3,"OptMass: 350t, SpeedIncrease: 100%, AccelerationRate: 0.06, HeatGenerationRate: 1.23, ControlInterference: 0.35","Hyperdrive Overcharged Class 4 Rating C",ShipModule.ModuleTypes.FrameShiftDrive) },
+            { "int_hyperdrive_overcharge_size3_class3", new ShipModule(129030486,5,0.3,"OptMass: 100t, SpeedIncrease: 120%, AccelerationRate: 0.07, HeatGenerationRate: 0.49, ControlInterference: 0.29","Hyperdrive Overcharged Class 3 Rating C",ShipModule.ModuleTypes.FrameShiftDrive) },
+            { "int_hyperdrive_overcharge_size2_class3", new ShipModule(129030487,2.5,0.2,"OptMass: 60t, SpeedIncrease: 142%, AccelerationRate: 0.09, HeatGenerationRate: 0.41, ControlInterference: 0.24","Hyperdrive Overcharged Class 2 Rating C",ShipModule.ModuleTypes.FrameShiftDrive) },
+
+            { "int_hyperdrive_overcharge_size2_class1", new ShipModule(129030577, 1, 1, "", "Hyperdrive Overcharge Class 2 Rating E", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size2_class2", new ShipModule(129030578, 1, 1, "", "Hyperdrive Overcharge Class 2 Rating D", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size2_class4", new ShipModule(129030579, 1, 1, "", "Hyperdrive Overcharge Class 2 Rating B", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size2_class5", new ShipModule(129030580, 1, 1, "", "Hyperdrive Overcharge Class 2 Rating A", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size3_class1", new ShipModule(129030581, 1, 1, "", "Hyperdrive Overcharge Class 3 Rating E", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size3_class2", new ShipModule(129030582, 1, 1, "", "Hyperdrive Overcharge Class 3 Rating D", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size3_class4", new ShipModule(129030583, 1, 1, "", "Hyperdrive Overcharge Class 3 Rating B", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size3_class5", new ShipModule(129030584, 1, 1, "", "Hyperdrive Overcharge Class 3 Rating A", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size4_class1", new ShipModule(129030585, 1, 1, "", "Hyperdrive Overcharge Class 4 Rating E", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size4_class2", new ShipModule(129030586, 1, 1, "", "Hyperdrive Overcharge Class 4 Rating D", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size4_class4", new ShipModule(129030587, 1, 1, "", "Hyperdrive Overcharge Class 4 Rating B", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size4_class5", new ShipModule(129030588, 1, 1, "", "Hyperdrive Overcharge Class 4 Rating A", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size5_class1", new ShipModule(129030589, 1, 1, "", "Hyperdrive Overcharge Class 5 Rating E", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size5_class2", new ShipModule(129030590, 1, 1, "", "Hyperdrive Overcharge Class 5 Rating D", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size5_class4", new ShipModule(129030591, 1, 1, "", "Hyperdrive Overcharge Class 5 Rating B", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size5_class5", new ShipModule(129030592, 1, 1, "", "Hyperdrive Overcharge Class 5 Rating A", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size6_class1", new ShipModule(129030593, 1, 1, "", "Hyperdrive Overcharge Class 6 Rating E", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size6_class2", new ShipModule(129030594, 1, 1, "", "Hyperdrive Overcharge Class 6 Rating D", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size6_class4", new ShipModule(129030595, 1, 1, "", "Hyperdrive Overcharge Class 6 Rating B", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size6_class5", new ShipModule(129030596, 1, 1, "", "Hyperdrive Overcharge Class 6 Rating A", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size7_class1", new ShipModule(129030597, 1, 1, "", "Hyperdrive Overcharge Class 7 Rating E", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size7_class2", new ShipModule(129030598, 1, 1, "", "Hyperdrive Overcharge Class 7 Rating D", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size7_class4", new ShipModule(129030599, 1, 1, "", "Hyperdrive Overcharge Class 7 Rating B", ShipModule.ModuleTypes.FrameShiftDrive ) },
+            { "int_hyperdrive_overcharge_size7_class5", new ShipModule(129030600, 1, 1, "", "Hyperdrive Overcharge Class 7 Rating A", ShipModule.ModuleTypes.FrameShiftDrive ) },
+
+
+
             // wake scanner
 
             { "hpt_cloudscanner_size0_class1", new ShipModule(128662525,1.3,0.2,"Range:2000m","Cloud Scanner Rating E",ShipModule.ModuleTypes.FrameShiftWakeScanner) },  // EDDI
@@ -1129,13 +1298,13 @@ namespace EliteDangerousCore
             { "hpt_atdumbfiremissile_turret_medium", new ShipModule(128788704,4,1.2,"Ammo:64/8, Damage:50, Speed:750m/s, Reload:5s, ThermL:1.5","AX Dumbfire Missile Turret Medium",ShipModule.ModuleTypes.AXMissileRack) },
             { "hpt_atdumbfiremissile_turret_large", new ShipModule(128788705,8,1.75,"Ammo:128/12, Damage:64, Speed:750m/s, Reload:5s, ThermL:1.9","AX Dumbfire Missile Turret Large",ShipModule.ModuleTypes.AXMissileRack) },
 
-            { "hpt_atdumbfiremissile_fixed_medium_v2", new ShipModule(129022081,4,1.3,"Damage: 16.0/S","Enhanced AX Missile Rack 2D",ShipModule.ModuleTypes.EnhancedAXMissileRack) }, // EDDI
-            { "hpt_atdumbfiremissile_fixed_large_v2", new ShipModule(129022079,8,1.72,"Damage: 16.0/S","Enhanced AX Missile Rack 3B",ShipModule.ModuleTypes.EnhancedAXMissileRack) },
-            { "hpt_atdumbfiremissile_turret_medium_v2", new ShipModule(129022083,4,1.3,"Damage: 12.2/S","Enhanced AX Missile Rack 2E",ShipModule.ModuleTypes.EnhancedAXMissileRack) },
-            { "hpt_atdumbfiremissile_turret_large_v2", new ShipModule(129022082,8,1.85,"Damage: 12.2/S","Enhanced AX Missile Rack 3D",ShipModule.ModuleTypes.EnhancedAXMissileRack) },
+            { "hpt_atdumbfiremissile_fixed_medium_v2", new ShipModule(129022081,4,1.3,"Damage: 16.0/S","Enhanced AX Missile Rack Medium",ShipModule.ModuleTypes.EnhancedAXMissileRack) }, // EDDI
+            { "hpt_atdumbfiremissile_fixed_large_v2", new ShipModule(129022079,8,1.72,"Damage: 16.0/S","Enhanced AX Missile Rack Large",ShipModule.ModuleTypes.EnhancedAXMissileRack) },
+            { "hpt_atdumbfiremissile_turret_medium_v2", new ShipModule(129022083,4,1.3,"Damage: 12.2/S","Enhanced AX Missile Rack Medium",ShipModule.ModuleTypes.EnhancedAXMissileRack) },
+            { "hpt_atdumbfiremissile_turret_large_v2", new ShipModule(129022082,8,1.85,"Damage: 12.2/S","Enhanced AX Missile Rack Large",ShipModule.ModuleTypes.EnhancedAXMissileRack) },
 
-            { "hpt_atventdisruptorpylon_fixed_medium", new ShipModule(129030049,0,0,"","Guardian Nanite Torpedo Pylon",ShipModule.ModuleTypes.TorpedoPylon) },
-            { "hpt_atventdisruptorpylon_fixed_large", new ShipModule(129030050,0,0,"","Guardian Nanite Torpedo Pylon",ShipModule.ModuleTypes.TorpedoPylon) },
+            { "hpt_atventdisruptorpylon_fixed_medium", new ShipModule(129030049,0,0,"","Guardian Nanite Torpedo Pylon Medium",ShipModule.ModuleTypes.TorpedoPylon) },
+            { "hpt_atventdisruptorpylon_fixed_large", new ShipModule(129030050,0,0,"","Guardian Nanite Torpedo Pylon Large",ShipModule.ModuleTypes.TorpedoPylon) },
 
             { "hpt_basicmissilerack_fixed_small", new ShipModule(128049492,2,0.6,"Ammo:6/6, Damage:40, Speed:625m/s, Reload:12s, ThermL:3.6","Seeker Missile Rack Fixed Small",ShipModule.ModuleTypes.SeekerMissileRack) },     // EDDI
             { "hpt_basicmissilerack_fixed_medium", new ShipModule(128049493,4,1.2,"Ammo:18/6, Damage:40, Speed:625m/s, Reload:12s, ThermL:3.6","Seeker Missile Rack Fixed Medium",ShipModule.ModuleTypes.SeekerMissileRack) },
@@ -1155,10 +1324,9 @@ namespace EliteDangerousCore
             { "hpt_dumbfiremissilerack_fixed_small_advanced", new ShipModule(128935982,1,0.4,null,"Dumbfire Missile Rack Fixed Small Advanced",ShipModule.ModuleTypes.AdvancedMissileRack) },       // EDDI
             { "hpt_dumbfiremissilerack_fixed_medium_advanced", new ShipModule(128935983,1,1.2,null,"Dumbfire Missile Rack Fixed Medium Advanced",ShipModule.ModuleTypes.AdvancedMissileRack) },
 
-            { "hpt_human_extraction_fixed_medium", new ShipModule(129028577,1,1.2,null,"Human Extraction Missile",ShipModule.ModuleTypes.MissileRack) },        // EDDI TBD CAT
+            { "hpt_human_extraction_fixed_medium", new ShipModule(129028577,1,1.2,null,"Human Extraction Missile Medium",ShipModule.ModuleTypes.MissileRack) },        // EDDI TBD CAT
 
             { "hpt_causticmissile_fixed_medium", new ShipModule(128833995,4,1.2,"Ammo:64/8, Damage:5, Speed:750m/s, Reload:5s, ThermL:1.5","Caustic Missile Fixed Medium",ShipModule.ModuleTypes.EnzymeMissileRack) },
-
 
             // Module Reinforcements
 
@@ -1181,14 +1349,14 @@ namespace EliteDangerousCore
             { "hpt_atmulticannon_turret_medium", new ShipModule(128793059,4,0.5,"Ammo:2100/90, Damage:1.7, Range:4000m, Speed:1600m/s, Reload:4s, ThermL:0.1","AX Multi Cannon Turret Medium",ShipModule.ModuleTypes.AXMulti_Cannon) }, // EDDI
             { "hpt_atmulticannon_turret_large", new ShipModule(128793060,8,0.64,"Ammo:2100/90, Damage:3.3, Range:4000m, Speed:1600m/s, Reload:4s, ThermL:0.1","AX Multi Cannon Turret Large",ShipModule.ModuleTypes.AXMulti_Cannon) },
 
-            { "hpt_atmulticannon_fixed_medium_v2", new ShipModule(129022080,4,0.48,"Damage: 10/S","Enhanced AX Multi Cannon 2D",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) }, // EDDI
-            { "hpt_atmulticannon_fixed_large_v2", new ShipModule(129022084,8,0.69,"Damage: 15.6/S","Enhanced AX Multi Cannon 3B",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) },
+            { "hpt_atmulticannon_fixed_medium_v2", new ShipModule(129022080,4,0.48,"Damage: 10/S","Enhanced AX Multi Cannon Fixed Medium",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) }, // EDDI
+            { "hpt_atmulticannon_fixed_large_v2", new ShipModule(129022084,8,0.69,"Damage: 15.6/S","Enhanced AX Multi Cannon Fixed Large",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) },
 
-            { "hpt_atmulticannon_turret_medium_v2", new ShipModule(129022086,4,0.52,"","Enhanced AX Multi Cannon 2E",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) }, // EDDI
-            { "hpt_atmulticannon_turret_large_v2", new ShipModule(129022085,8,0.69,"","Enhanced AX Multi Cannon 3D",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) },
+            { "hpt_atmulticannon_turret_medium_v2", new ShipModule(129022086,4,0.52,"","Enhanced AX Multi Cannon Turret Medium",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) }, // EDDI
+            { "hpt_atmulticannon_turret_large_v2", new ShipModule(129022085,8,0.69,"","Enhanced AX Multi Cannon Turret Large",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) },
 
-            { "hpt_atmulticannon_gimbal_medium", new ShipModule(129022089,4,0.46,"Damage: 9/6/S","Enhanced AX Multi Cannon 2E",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) }, // EDDI
-            { "hpt_atmulticannon_gimbal_large", new ShipModule(129022088,8,0.64,"Damage: 15.2/S","Enhanced AX Multi Cannon 3C",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) },
+            { "hpt_atmulticannon_gimbal_medium", new ShipModule(129022089,4,0.46,"Damage: 9/6/S","Enhanced AX Multi Cannon Gimbal Medium",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) }, // EDDI
+            { "hpt_atmulticannon_gimbal_large", new ShipModule(129022088,8,0.64,"Damage: 15.2/S","Enhanced AX Multi Cannon Gimbal Large",ShipModule.ModuleTypes.EnhancedAXMulti_Cannon) },
 
             { "hpt_multicannon_fixed_small", new ShipModule(128049455,2,0.28,"Ammo:2100/100, Damage:1.1, Range:4000m, Speed:1600m/s, Reload:4s, ThermL:0.1","Multi Cannon Fixed Small",ShipModule.ModuleTypes.Multi_Cannon) },  // EDDI
             { "hpt_multicannon_fixed_medium", new ShipModule(128049456,4,0.46,"Ammo:2100/100, Damage:2.2, Range:4000m, Speed:1600m/s, Reload:4s, ThermL:0.2","Multi Cannon Fixed Medium",ShipModule.ModuleTypes.Multi_Cannon) },
@@ -1559,11 +1727,11 @@ namespace EliteDangerousCore
             // shield shutdown neutraliser
 
             { "hpt_antiunknownshutdown_tiny", new ShipModule(128771884,1.3,0.2,"Range:3000m","Shutdown Field Neutraliser",ShipModule.ModuleTypes.ShutdownFieldNeutraliser) },   // EDDI
-            { "hpt_antiunknownshutdown_tiny_v2", new ShipModule(129022663,1.3,0.2,"Range:3000m","Shutdown Field Neutraliser V2",ShipModule.ModuleTypes.ShutdownFieldNeutraliser) },   // EDDI
+            { "hpt_antiunknownshutdown_tiny_v2", new ShipModule(129022663,1.3,0.2,"Range:3000m","Enhanced Shutdown Field Neutraliser",ShipModule.ModuleTypes.ShutdownFieldNeutraliser) },   // EDDI
 
             // weapon stabliser
-            { "int_expmodulestabiliser_size3_class3", new ShipModule(129019260,8,1.5,"","Exp Module Weapon Stabiliser 3F",ShipModule.ModuleTypes.ExperimentalWeaponStabiliser) }, //EDDI
-            { "int_expmodulestabiliser_size5_class3", new ShipModule(129019261,20,3,"","Exp Module Weapon Stabiliser 5F",ShipModule.ModuleTypes.ExperimentalWeaponStabiliser) },
+            { "int_expmodulestabiliser_size3_class3", new ShipModule(129019260,8,1.5,"","Exp Module Weapon Stabiliser Class 3 Rating F",ShipModule.ModuleTypes.ExperimentalWeaponStabiliser) }, //EDDI
+            { "int_expmodulestabiliser_size5_class3", new ShipModule(129019261,20,3,"","Exp Module Weapon Stabiliser Class 5 Rating F",ShipModule.ModuleTypes.ExperimentalWeaponStabiliser) },
 
             // supercruise
             { "int_supercruiseassist", new ShipModule(128932273,0,0.3,null,"Supercruise Assist",ShipModule.ModuleTypes.SupercruiseAssist) }, // EDDI
@@ -2243,6 +2411,7 @@ namespace EliteDangerousCore
             { "paintjob_asp_iridescenthighcolour_01", new ShipModule(-1,0,0,null,"Paint Job Asp Iridescent High Colour 1", ShipModule.ModuleTypes.VanityType) },
             { "paintjob_asp_largelogometallic_05", new ShipModule(-1,0,0,null,"Paint Job Asp Largelogometallic 5", ShipModule.ModuleTypes.VanityType) },
             { "paintjob_asp_metallic_gold", new ShipModule(-1,0,0,null,"Paint Job Asp Metallic Gold", ShipModule.ModuleTypes.VanityType) },
+            { "paintjob_asp_blackfriday2_01", new ShipModule(-1,0, "Paintjob Asp Blackfriday 2 1", ShipModule.ModuleTypes.VanityType ) },
             { "paintjob_asp_salvage_03", new ShipModule(-1,0,0,null,"Paint Job Asp Salvage 3", ShipModule.ModuleTypes.VanityType) },
             { "paintjob_asp_salvage_06", new ShipModule(-1,0,0,null,"Paint Job Asp Salvage 6", ShipModule.ModuleTypes.VanityType) },
             { "paintjob_asp_scout_blackfriday_01", new ShipModule(-1,0,0,null,"Paint Job Asp Scout Black Friday 1", ShipModule.ModuleTypes.VanityType) },
@@ -2704,6 +2873,7 @@ namespace EliteDangerousCore
             { "string_lights_coloured", new ShipModule(999999941,0,0,null,"String Lights Coloured", ShipModule.ModuleTypes.VanityType) },
             { "string_lights_thargoidprobe", new ShipModule(-1,0,0,null,"String Lights Thargoid probe", ShipModule.ModuleTypes.VanityType) },
             { "string_lights_warm_white", new ShipModule(999999944,0,0,null,"String Lights Warm White", ShipModule.ModuleTypes.VanityType) },
+            { "string_lights_skull", new ShipModule(-1,0, "String Lights Skull", ShipModule.ModuleTypes.VanityType ) },
             { "type6_shipkit1_bumper1", new ShipModule(-1,0,0,null,"Type 6 Shipkit 1 Bumper 1", ShipModule.ModuleTypes.VanityType) },
             { "type6_shipkit1_spoiler3", new ShipModule(-1,0,0,null,"Type 6 Shipkit 1 Spoiler 3", ShipModule.ModuleTypes.VanityType) },
             { "type6_shipkit1_wings1", new ShipModule(-1,0,0,null,"Type 6 Shipkit 1 Wings 1", ShipModule.ModuleTypes.VanityType) },

@@ -51,19 +51,24 @@ namespace JournalPlayer
             this.button1s = new System.Windows.Forms.Button();
             this.buttonFSDJump = new System.Windows.Forms.Button();
             this.buttonStartJump = new System.Windows.Forms.Button();
+            this.textBoxOutputFile = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.buttonSelectSourceFolder = new System.Windows.Forms.Button();
+            this.buttonSelectDestFolder = new System.Windows.Forms.Button();
+            this.checkBoxUseCurrentTime = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // textBoxSourceFolder
             // 
             this.textBoxSourceFolder.Location = new System.Drawing.Point(111, 30);
             this.textBoxSourceFolder.Name = "textBoxSourceFolder";
-            this.textBoxSourceFolder.Size = new System.Drawing.Size(687, 20);
+            this.textBoxSourceFolder.Size = new System.Drawing.Size(625, 20);
             this.textBoxSourceFolder.TabIndex = 0;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(4, 102);
+            this.label2.Location = new System.Drawing.Point(4, 105);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(92, 13);
             this.label2.TabIndex = 0;
@@ -73,12 +78,12 @@ namespace JournalPlayer
             // 
             this.textBoxDestFolder.Location = new System.Drawing.Point(111, 102);
             this.textBoxDestFolder.Name = "textBoxDestFolder";
-            this.textBoxDestFolder.Size = new System.Drawing.Size(687, 20);
+            this.textBoxDestFolder.Size = new System.Drawing.Size(625, 20);
             this.textBoxDestFolder.TabIndex = 2;
             // 
             // richTextBoxCurrentEntry
             // 
-            this.richTextBoxCurrentEntry.Location = new System.Drawing.Point(111, 448);
+            this.richTextBoxCurrentEntry.Location = new System.Drawing.Point(111, 493);
             this.richTextBoxCurrentEntry.Name = "richTextBoxCurrentEntry";
             this.richTextBoxCurrentEntry.Size = new System.Drawing.Size(781, 200);
             this.richTextBoxCurrentEntry.TabIndex = 6;
@@ -87,7 +92,7 @@ namespace JournalPlayer
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(4, 451);
+            this.label3.Location = new System.Drawing.Point(4, 496);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(105, 13);
             this.label3.TabIndex = 0;
@@ -105,7 +110,7 @@ namespace JournalPlayer
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(4, 69);
+            this.label5.Location = new System.Drawing.Point(4, 75);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(55, 13);
             this.label5.TabIndex = 0;
@@ -123,7 +128,7 @@ namespace JournalPlayer
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 228);
+            this.label1.Location = new System.Drawing.Point(4, 273);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(93, 13);
             this.label1.TabIndex = 0;
@@ -131,7 +136,7 @@ namespace JournalPlayer
             // 
             // richTextBoxNextEntry
             // 
-            this.richTextBoxNextEntry.Location = new System.Drawing.Point(111, 225);
+            this.richTextBoxNextEntry.Location = new System.Drawing.Point(111, 270);
             this.richTextBoxNextEntry.Name = "richTextBoxNextEntry";
             this.richTextBoxNextEntry.Size = new System.Drawing.Size(781, 200);
             this.richTextBoxNextEntry.TabIndex = 5;
@@ -140,7 +145,7 @@ namespace JournalPlayer
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(4, 145);
+            this.label6.Location = new System.Drawing.Point(4, 148);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(60, 13);
             this.label6.TabIndex = 0;
@@ -165,7 +170,7 @@ namespace JournalPlayer
             // 
             // buttonClearDestFolder
             // 
-            this.buttonClearDestFolder.Location = new System.Drawing.Point(805, 102);
+            this.buttonClearDestFolder.Location = new System.Drawing.Point(823, 99);
             this.buttonClearDestFolder.Name = "buttonClearDestFolder";
             this.buttonClearDestFolder.Size = new System.Drawing.Size(75, 23);
             this.buttonClearDestFolder.TabIndex = 7;
@@ -253,11 +258,60 @@ namespace JournalPlayer
             this.buttonStartJump.UseVisualStyleBackColor = true;
             this.buttonStartJump.Click += new System.EventHandler(this.buttonStartJump_Click);
             // 
-            // JournalPlayer
+            // textBoxOutputFile
+            // 
+            this.textBoxOutputFile.Location = new System.Drawing.Point(111, 224);
+            this.textBoxOutputFile.Name = "textBoxOutputFile";
+            this.textBoxOutputFile.Size = new System.Drawing.Size(625, 20);
+            this.textBoxOutputFile.TabIndex = 4;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(4, 227);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(58, 13);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "Output File";
+            // 
+            // buttonSelectSourceFolder
+            // 
+            this.buttonSelectSourceFolder.Location = new System.Drawing.Point(742, 28);
+            this.buttonSelectSourceFolder.Name = "buttonSelectSourceFolder";
+            this.buttonSelectSourceFolder.Size = new System.Drawing.Size(75, 23);
+            this.buttonSelectSourceFolder.TabIndex = 7;
+            this.buttonSelectSourceFolder.Text = "Browse";
+            this.buttonSelectSourceFolder.UseVisualStyleBackColor = true;
+            this.buttonSelectSourceFolder.Click += new System.EventHandler(this.buttonSelectSourceFolder_Click);
+            // 
+            // buttonSelectDestFolder
+            // 
+            this.buttonSelectDestFolder.Location = new System.Drawing.Point(742, 99);
+            this.buttonSelectDestFolder.Name = "buttonSelectDestFolder";
+            this.buttonSelectDestFolder.Size = new System.Drawing.Size(75, 23);
+            this.buttonSelectDestFolder.TabIndex = 7;
+            this.buttonSelectDestFolder.Text = "Browse";
+            this.buttonSelectDestFolder.UseVisualStyleBackColor = true;
+            this.buttonSelectDestFolder.Click += new System.EventHandler(this.buttonSelectDestFolder_Click);
+            // 
+            // checkBoxUseCurrentTime
+            // 
+            this.checkBoxUseCurrentTime.AutoSize = true;
+            this.checkBoxUseCurrentTime.Location = new System.Drawing.Point(755, 226);
+            this.checkBoxUseCurrentTime.Name = "checkBoxUseCurrentTime";
+            this.checkBoxUseCurrentTime.Size = new System.Drawing.Size(104, 17);
+            this.checkBoxUseCurrentTime.TabIndex = 8;
+            this.checkBoxUseCurrentTime.Text = "Use Current time";
+            this.checkBoxUseCurrentTime.UseVisualStyleBackColor = true;
+            // 
+            // JournalPlayerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(918, 682);
+            this.ClientSize = new System.Drawing.Size(918, 713);
+            this.Controls.Add(this.checkBoxUseCurrentTime);
+            this.Controls.Add(this.buttonSelectDestFolder);
+            this.Controls.Add(this.buttonSelectSourceFolder);
             this.Controls.Add(this.buttonClearDestFolder);
             this.Controls.Add(this.buttonStartJump);
             this.Controls.Add(this.buttonFSDJump);
@@ -271,16 +325,18 @@ namespace JournalPlayer
             this.Controls.Add(this.dateTimePickerStartDate);
             this.Controls.Add(this.richTextBoxNextEntry);
             this.Controls.Add(this.richTextBoxCurrentEntry);
+            this.Controls.Add(this.textBoxOutputFile);
             this.Controls.Add(this.textBoxJournalFile);
             this.Controls.Add(this.textBoxDestFolder);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBoxSourceFolder);
             this.Controls.Add(this.label3);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label5);
-            this.Name = "JournalPlayer";
+            this.Name = "JournalPlayerForm";
             this.Text = "Journal Player";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -311,5 +367,10 @@ namespace JournalPlayer
         private System.Windows.Forms.Button button1s;
         private System.Windows.Forms.Button buttonFSDJump;
         private System.Windows.Forms.Button buttonStartJump;
+        private System.Windows.Forms.TextBox textBoxOutputFile;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Button buttonSelectSourceFolder;
+        private System.Windows.Forms.Button buttonSelectDestFolder;
+        private System.Windows.Forms.CheckBox checkBoxUseCurrentTime;
     }
 }

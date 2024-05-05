@@ -225,6 +225,7 @@ namespace JournalPlayer
         private void Clear()
         {
             fileentry = -1;
+            files = null;
             stoponevent = null;
             richTextBoxCurrentEntry.Clear();
             richTextBoxNextEntry.Clear();
@@ -384,14 +385,14 @@ namespace JournalPlayer
 
         private void buttonStep_Click(object sender, EventArgs e)
         {
-            if (fileentry == -1)
+            if (files == null )
             {
                 if (Directory.Exists(DestFolder))
                 {
                     if (Directory.Exists(SourceFolder))
                     {
                         System.Diagnostics.Debug.WriteLine($"Find {Pattern} in {SourceFolder} where Date > {Starttime} < {Endtime}");
-                        files = Directory.EnumerateFiles(SourceFolder,  Pattern, SearchOption.TopDirectoryOnly)
+                        files = Directory.EnumerateFiles(SourceFolder, Pattern, SearchOption.TopDirectoryOnly)
                             .Select(f => new FileInfo(f)).Where(t => t.LastWriteTime >= Starttime && t.LastWriteTime <= Endtime).OrderBy(p => p.LastWriteTime).ToArray();
 
                         if (files.Length > 0)
@@ -399,13 +400,23 @@ namespace JournalPlayer
                             fileentry = 0;
                         }
                         else
+                        {
+                            files = null;
                             MessageBox.Show($"No log files found in {SourceFolder}");
+                            return;
+                        }
                     }
                     else
+                    {
                         MessageBox.Show("Source folder does not exist");
+                        return;
+                    }
                 }
                 else
+                {
                     MessageBox.Show("Dest folder does not exist");
+                    return;
+                }
             }
 
             while (true)

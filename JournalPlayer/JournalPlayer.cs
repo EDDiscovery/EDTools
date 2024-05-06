@@ -128,6 +128,10 @@ namespace JournalPlayer
             Endtime = dateTimePickerEndDate.Value;
         }
 
+        private void buttonRestart_Click(object sender, EventArgs e)
+        {
+            Clear();
+        }
 
         private void buttonStop_Click(object sender, EventArgs e)
         {
@@ -224,7 +228,14 @@ namespace JournalPlayer
 
         private void Clear()
         {
-            fileentry = -1;
+            if (sr != null)
+            {
+                sr.Close();
+                sr = null;
+                fs.Close();
+                fs = null;
+            }
+
             files = null;
             stoponevent = null;
             richTextBoxCurrentEntry.Clear();

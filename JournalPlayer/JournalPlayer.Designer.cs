@@ -61,6 +61,8 @@ namespace JournalPlayer
             this.label9 = new System.Windows.Forms.Label();
             this.dateTimePickerEndDate = new System.Windows.Forms.DateTimePicker();
             this.textBoxGotoLineNo = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.buttonRestart = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxSourceFolder
@@ -160,7 +162,7 @@ namespace JournalPlayer
             // 
             this.textBoxJournalFile.Location = new System.Drawing.Point(111, 187);
             this.textBoxJournalFile.Name = "textBoxJournalFile";
-            this.textBoxJournalFile.Size = new System.Drawing.Size(687, 20);
+            this.textBoxJournalFile.Size = new System.Drawing.Size(625, 20);
             this.textBoxJournalFile.TabIndex = 4;
             // 
             // buttonStep
@@ -265,7 +267,7 @@ namespace JournalPlayer
             // 
             // textBoxOutputFile
             // 
-            this.textBoxOutputFile.Location = new System.Drawing.Point(111, 298);
+            this.textBoxOutputFile.Location = new System.Drawing.Point(111, 309);
             this.textBoxOutputFile.Name = "textBoxOutputFile";
             this.textBoxOutputFile.Size = new System.Drawing.Size(625, 20);
             this.textBoxOutputFile.TabIndex = 4;
@@ -273,7 +275,7 @@ namespace JournalPlayer
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(4, 301);
+            this.label7.Location = new System.Drawing.Point(4, 312);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(58, 13);
             this.label7.TabIndex = 0;
@@ -302,7 +304,7 @@ namespace JournalPlayer
             // checkBoxUseCurrentTime
             // 
             this.checkBoxUseCurrentTime.AutoSize = true;
-            this.checkBoxUseCurrentTime.Location = new System.Drawing.Point(755, 300);
+            this.checkBoxUseCurrentTime.Location = new System.Drawing.Point(755, 311);
             this.checkBoxUseCurrentTime.Name = "checkBoxUseCurrentTime";
             this.checkBoxUseCurrentTime.Size = new System.Drawing.Size(104, 17);
             this.checkBoxUseCurrentTime.TabIndex = 8;
@@ -350,11 +352,31 @@ namespace JournalPlayer
             this.textBoxGotoLineNo.Size = new System.Drawing.Size(103, 20);
             this.textBoxGotoLineNo.TabIndex = 0;
             // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(4, 187);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(87, 13);
+            this.label10.TabIndex = 0;
+            this.label10.Text = "Current Input File";
+            // 
+            // buttonRestart
+            // 
+            this.buttonRestart.Location = new System.Drawing.Point(823, 187);
+            this.buttonRestart.Name = "buttonRestart";
+            this.buttonRestart.Size = new System.Drawing.Size(75, 23);
+            this.buttonRestart.TabIndex = 9;
+            this.buttonRestart.Text = "Restart";
+            this.buttonRestart.UseVisualStyleBackColor = true;
+            this.buttonRestart.Click += new System.EventHandler(this.buttonRestart_Click);
+            // 
             // JournalPlayerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(918, 800);
+            this.Controls.Add(this.buttonRestart);
             this.Controls.Add(this.checkBoxUseCurrentTime);
             this.Controls.Add(this.buttonSelectDestFolder);
             this.Controls.Add(this.buttonSelectSourceFolder);
@@ -382,6 +404,7 @@ namespace JournalPlayer
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
+            this.Controls.Add(this.label10);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label9);
@@ -428,5 +451,7 @@ namespace JournalPlayer
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.DateTimePicker dateTimePickerEndDate;
         private System.Windows.Forms.TextBox textBoxGotoLineNo;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Button buttonRestart;
     }
 }

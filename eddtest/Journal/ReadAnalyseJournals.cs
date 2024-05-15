@@ -512,13 +512,157 @@ namespace EDDTest
         }
     }
 
+    class ShipTypeAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+
+        void Incr(string value)
+        {
+            if (rep.ContainsKey(value))
+                rep[value]++;
+            else
+                rep[value] = 1;
+        }
+
+        public bool Process(int lineno, JObject jr, string eventname)
+        {
+            bool ret = false;
+            {
+                string bt = jr["ShipType"].StrNull();
+
+                if (bt != null)
+                {
+                    string loc = jr["ShipType_Localised"].StrNull();
+
+                    if (loc == null)
+                        Incr(eventname + " Shiptype No Loc");
+                    else
+                        Incr(eventname + " Shiptype Loc");
+                    ret = true;
+                }
+            }
+
+            {
+                string bt = jr["StoreOldShip"].StrNull();
+
+                if (bt != null)
+                {
+                    string loc = jr["StoreOldShip_Localised"].StrNull();
+
+                    if (loc == null)
+                        Incr(eventname + " StoreOldShip No Loc");
+                    else
+                        Incr(eventname + " StoreOldShip Loc");
+                    ret = true;
+                }
+            }
+            {
+                string bt = jr["SellOldShip"].StrNull();
+
+                if (bt != null)
+                {
+                    string loc = jr["SellOldShip_Localised"].StrNull();
+
+                    if (loc == null)
+                        Incr(eventname + " SellOldShip No Loc");
+                    else
+                        Incr(eventname + " SellOldShip Loc");
+                    ret = true;
+                }
+            }
+
+            return ret;
+        }
+
+        public void Report()
+        {
+            var keys = rep.Keys.ToList();
+            keys.Sort();
+
+
+            foreach (var key in keys)
+            {
+                Console.WriteLine($"[\"{key}\"] = {rep[key]},");
+            }
+        }
+    }
+
+    class LoadoutAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+
+        void Incr(string value)
+        {
+            if (rep.ContainsKey(value))
+                rep[value]++;
+            else
+                rep[value] = 1;
+        }
+
+        public bool Process(int lineno, JObject jr, string eventname)
+        {
+            bool ret = false;
+            {
+                if (eventname == "Loadout")
+                {
+                    JArray ja = jr["Modules"].Array();
+                    foreach (var m in ja.EmptyIfNull())
+                    {
+                        JObject eng = m["Engineering"].Object();
+                        if (eng != null)
+                        {
+                            JArray mods = eng["Modifiers"].Array();
+                            if (mods != null)
+                            {
+                                foreach (var mod in mods)
+                                {
+                                   // System.Diagnostics.Debug.WriteLine($"Modifier: {mod.ToString()}");
+                                    Incr(mod["Label"].Str());
+                                }
+
+                                ret = true;
+                            }
+                        }
+                    }
+                }
+            }
+            return ret;
+        }
+
+        public void Report()
+        {
+            var keys = rep.Keys.ToList();
+            keys.Sort();
+
+            foreach (var key in keys)
+            {
+                Console.WriteLine($"[\"{key}\"] = {rep[key]},");
+            }
+        }
+    }
+
+
     public static class JournalReader
     {
-        public static void ReadJournals(string path, string filename)
+        public static void ReadJournals(string path, string filename, string type)
         {
             FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
-            SlotAnalyse ja = new SlotAnalyse();
+            JournalAnalyse ja = null;
+            type = type.ToLowerInvariant();
+            if (type == "slot")
+                ja = new SlotAnalyse();
+            else if (type == "fsdLoc")
+                ja = new SlotAnalyse();
+            else if (type == "shiptype")
+                ja = new ShipTypeAnalyse();
+            else if (type == "loadout")
+                ja = new LoadoutAnalyse();
+            else
+            {
+                Console.Error.WriteLine("Not recognised analysis type");
+                return;
+            }
 
             foreach (var fi in allFiles)
             {

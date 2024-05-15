@@ -68,14 +68,15 @@ namespace EDDTest
                                   "readlog file - read a continuous log or journal file out to stdout\n" +
                                   "githubrelease - read the releases list and stat it\n" +
                                   "logs wildcard - read files for json lines and process\n" +
-                                  "readjournals path - read all .log journal files and check - need code changes\n" +
+                                  "readjournals path filename type - read all .log journal files and check - see code for type\n" +
                                   "csvtocs path - read csv and turn into a cs class\n"+
                                   "comments path\n" +
                                   "mddoc path wildcard [REMOVE]\n" +
                                   "finddoclinks path wildcard [REMOVE]\n" +
                                   "finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
                                   "insertext path wildcard find insert\n",
-                                  "outfitting file - Read outfitting.csv and compare vs item data\n"
+                                  "outfitting file - Read outfitting.csv and compare vs item data\n"+
+                                  "itemsmodules filein fileout - read itemmodules.cs and reformat\n"
 
                                   );
 
@@ -436,9 +437,9 @@ namespace EDDTest
                 }
                 else if (cmd.Equals("readjournals"))
                 {
-                    if (args.Left >= 2)
+                    if (args.Left >= 3)
                     {
-                        JournalReader.ReadJournals(args.Next(), args.Next());
+                        JournalReader.ReadJournals(args.Next(), args.Next(), args.Next());
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
@@ -1079,6 +1080,19 @@ namespace EDDTest
                     {
                         string filename = args.Next();
                         EDCDOutfitting.Process(filename);
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+
+                }
+                else if (cmd.Equals("edsy"))
+                {
+                    if (args.Left >= 3)
+                    {
+                        string infilename = args.Next();
+                        string outfilename = args.Next();
+                        string itemsmod = args.Next();
+                        ItemModulesEDSY.ReadEDSY(infilename, outfilename, itemsmod);
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

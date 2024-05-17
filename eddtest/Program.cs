@@ -1087,12 +1087,12 @@ namespace EDDTest
                 }
                 else if (cmd.Equals("edsy"))
                 {
-                    if (args.Left >= 3)
+                    if (args.Left >= 2)
                     {
                         string infilename = args.Next();
-                        string outfilename = args.Next();
                         string itemsmod = args.Next();
-                        ItemModulesEDSY.ReadEDSY(infilename, outfilename, itemsmod);
+                        var edsy = new ItemModulesEDSY();
+                        edsy.ReadEDSY(infilename, itemsmod);
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

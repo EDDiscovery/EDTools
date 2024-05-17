@@ -24,18 +24,205 @@ using System.Text;
 
 namespace EDDTest
 {
-    public static class ItemModulesEDSY
+    public class ItemModulesEDSY
     {
-        // using chrome and the inspector, open up edsy and grab edsy.js and save it as a file
-        // use this function to read edsy.js, convert to json, write a report, and check itemmodules.cs vs it, and replace itemmodules.cs if its wrong
+        // using chrome and the inspector, open up edsy and grab eddb.js and save it as a file - you need to do it this way, not from https://github.com/taleden/EDSY.git, as chrome spaces out the data
+        // use this function to read eddb.js, convert to json, write a report, and check itemmodules.cs vs it, and replace itemmodules.cs if its wrong
 
+        string[] itemmodules = null;
 
-        static public void ReadEDSY(string filename, string reportout, string fileitemmodules)
+        public void ReadEDSY(string filename, string fileitemmodules)
         {
+            itemmodules = File.ReadAllLines(fileitemmodules);
+            if (itemmodules == null)
+                return;
 
             // convert EDSY file to json
 
             StringBuilder jsontext = new StringBuilder(200000);
+
+            Dictionary<string, string> PropertiesToEDD = new Dictionary<string, string>
+            {
+                ["mtype"] = null,
+                ["name"] = null ,
+                ["fdid"] = null ,
+                ["fdname"] = null,
+                ["eddbid"] = null,
+                ["namekey"] = null,
+                ["hidden"] = null,
+                ["limit"] = null,
+                ["tag"] = null,
+                ["passive"] = null,
+                ["reserved"] = null,
+                ["noblueprints"] = null,
+                ["powerlock"] = null,
+                ["noundersize"] = null,
+                ["sco"] = null,
+                ["mlctype"] = null, // already in name (multi control type)
+                ["noexpeffects"] = null,
+                ["agzresist"] = null,
+                ["unlimit"] = null,
+                ["unlimitcount"] = null,
+
+                ["jamdur"] = "Time", // s
+                ["ecmdur"] = "Time",
+                ["hsdur"] = "Time",
+                ["duration"] = "Time",
+                ["emgcylife"] = "Time",
+
+                ["limpettime"] = "Time",
+                ["fuelxfer"] = "FuelTransfer",
+                ["missile"] = "MissileType",
+                ["cabincls"] = "CabinClass",
+                ["spinup"] = "SCBSpinUp",
+                ["scbdur"] = "SCBDuration",
+                ["shieldrnfps"] = "ShieldReinforcement",
+
+                ["thmdrain"] = "WasteHeat",
+                ["ecmpwr"] = "ActivePower", // MW/use
+                ["ecmheat"] = "WasteHeat",  //units/sec
+                ["pwrdraw"] = "Power",
+                ["brcdmg"] = "BreachDamage", // damage to target modules
+                ["minbrc"] = "BreachMin",
+                ["maxbrc"] = "BreachMax",
+                ["thmwgt"] = "ThermalProportion",
+                ["kinwgt"] = "KineticProportion",
+                ["expwgt"] = "ExplosiveProportion",
+                ["abswgt"] = "AbsolutePortionDamage",
+                ["cauwgt"] = "CausticPortionDamage",
+                ["axewgt"] = "AXPortionDamage",
+                ["maxbrc"] = "BreachMax",
+                ["distdraw"] = "DistributorDraw",
+                ["repairrtg"] = "RepairCostPerMat",
+                ["repaircon"] = "RateOfRepairConsumption",
+                ["bstrof"] = "BurstRateOfFire",
+                ["bstsize"] = "BurstSize",
+                ["mass"] = "Mass",
+                ["integ"] = "Integrity",
+                ["afmrepcap"] = "Ammo",
+                ["ammocost"] = "AmmoCost",
+                ["ammoclip"] = "Clip",
+                ["damage"] = "Damage",
+                ["dps"] = "DamagePerSecond",
+                ["maxrng"] = "Range",
+                ["timerng"] = "TargetMaxTime", // sec to intercept
+                ["dmgfall"] = "FallOff",
+                ["rof"] = "RateOfFire",
+                ["bstint"] = "BurstInterval",
+                ["dmgmul"] = "DamageMultiplierFulLCharge",
+                ["scantime"] = "Time",
+                ["ecmcool"] = "ReloadTime",
+                ["rldtime"] = "ReloadTime",
+                ["pierce"] = "Pierce",
+
+                ["fsdoptmass"] = "OptMass",
+                ["genoptmass"] = "OptMass",
+                ["engoptmass"] = "OptMass",
+
+                ["engmaxmass"] = "MaxMass",
+                ["genmaxmass"] = "MaxMass",
+                ["engmaxmass"] = "MaxMass",
+
+                ["engminmass"] = "MinMass",
+                ["genminmass"] = "MinMass",
+                ["engminmass"] = "MinMass",
+                
+                ["genpwr"] = "MWPerUnit",
+                ["barrierdur"] = "Time",
+                ["barrierpwr"] = "MWPerSec",
+                ["barriercool"] = "ReloadTime",
+
+                ["expres"] = "Explosive",
+                ["kinres"] = "Kinetic",
+                ["thmres"] = "Thermal",
+                ["axeres"] = "AXResistance",
+                ["genrate"] = "RegenRate",
+                ["bgenrate"] = "BrokenRegenRate",
+                ["genminmul"] = "MinStrength",
+                ["genoptmul"] = "OptStrength",
+                ["genmaxmul"] = "MaxStrength",
+                ["shieldrnf"] = "AdditionalStrength",
+                ["caures"] = "CausticReinforcement",
+                ["shieldbst"] = "ShieldReinforcement",
+                ["hullrnf"] = "HullReinforcement",
+                ["engoptmul"] = "EngineOptMultiplier",
+                ["engminmul"] = "EngineMinMultiplier",
+                ["engmaxmul"] = "EngineMaxMultiplier",
+                ["fuelpower"] = "PowerConstant",
+                ["fuelmul"] = "LinearConstant",
+                ["maxfuel"] = "MaxFuelPerJump",
+                ["engheat"] = "ThermL",
+                ["fsdheat"] = "ThermL",
+                ["thmload"] = "ThermL",
+                ["syschg"] = "SysMW",
+                ["pwrbst"] = "PowerBonus",
+                ["engchg"] = "EngMW",
+                ["wepchg"] = "WepMW",
+                ["syscap"] = "SysCap",
+                ["engcap"] = "EngCap",
+                ["wepcap"] = "WepCap",
+                ["vslots"] = "Size",
+                ["cargocap"] = "Size",
+                ["fuelcap"] = "Size",
+                ["scospd"] = "SCOSpeedIncrease",
+                ["scoacc"] = "SCOAccelerationRate",
+                ["scoheat"] = "SCOHeatGenerationRate",
+                ["scoconint"] = "SCOControlInterference",
+                ["maxangle"] = "Angle",
+                ["scanangle"] = "Angle",
+                ["maxangle"] = "Angle",
+                ["facinglim"] = "Angle",
+                ["typemis"] = "TypicalEmission",
+                ["vcount"] = "Rebuilds",
+                ["bins"] = "Bins",
+                ["pwrcap"] = "PowerGen",
+                ["heateff"] = "HeatEfficiency",
+                ["scooprate"] = "RefillRate",
+                ["maxlimpet"] = "Limpets",
+                ["targetrng"] = "TargetRange",
+                ["hacktime"] = "HackTime",
+                ["mincargo"] = "MinCargo",
+                ["maxcargo"] = "MaxCargo",
+                ["cabincap"] = "Passengers",
+                ["jumpbst"] = "AdditionalRange",
+                ["scbheat"] = "SCBHeat",
+                ["dmgprot"] = "Protection",
+                ["boottime"] = "BootTime",
+                ["pwrdraw"] = "Power",
+                ["integ"] = "Integrity",
+                ["ammomax"] = "Ammo",
+                ["ammoclip"] = "Clip",
+                ["shotspd"] = "Speed",
+                ["maxspd"] = "Speed",
+                ["multispd"] = "MultiTargetSpeed",
+                ["dps"] = "DPS",
+                ["maximumrng"] = "Range",
+                ["lpactrng"] = "Range",
+                ["ecmrng"] = "Range",
+                ["barrierrng"] = "Range",
+                ["scanrng"] = "Range",
+                ["maxrng"] = "Range",
+                ["dmgfall"] = "Falloff",
+                ["lmprepcap"] = "MaxRepairMaterialCapacity",
+                ["minebonus"] = "MineBonus",
+
+                ["minmulspd"] = "MinimumSpeedModifier",
+                ["optmulspd"] = "OptimalSpeedModifier",
+                ["maxmulspd"] = "MaximumSpeedModifier",
+                
+                ["minmulacc"] = "MinimumAccelerationModifier",
+                ["optmulacc"] = "OptimalAccelerationModifier",
+                ["maxmulacc"] = "MaximumAccelerationModifier",
+
+                ["minmulrot"] = "MinimumRotationModifier",
+                ["optmulrot"] = "OptimumRotationModifier",
+                ["maxmulrot"] = "MaximumRotationModifier",
+
+                ["proberad"] = "ProbeRadius"
+            };
+
+        
+            //foreach( var kvp in PropertiesToEDD) System.Diagnostics.Debug.WriteLine($"[{kvp.Value.AlwaysQuoteString()}] = {kvp.Key.AlwaysQuoteString()},");
 
             using (Stream fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -64,6 +251,10 @@ namespace EDDTest
                             int comment = linein.IndexOf("// ");
                             if (comment == -1)
                                 comment = linein.IndexOf("//\t");
+                            if (comment == -1)
+                                comment = linein.IndexOf("/* ");
+                            if (comment == -1)
+                                comment = linein.IndexOf("/*\t");
                             if (comment != -1)
                                 linein = linein.Substring(0, comment);
 
@@ -80,7 +271,7 @@ namespace EDDTest
                                 string id = sp.NextWord(": ");
                                 if (sp.IsCharMoveOn(':'))
                                 {
-                                    string lineleft = sp.LineLeft.Replace("'", "\"").Replace("NaN", "-999").Replace("1 / 0", "null");
+                                    string lineleft = sp.LineLeft.Replace("'", "\"").Replace("NaN", "-999").Replace("1 / 0", "null").Replace("1/0", "null");
                                     if (lineleft.Contains("/") && !lineleft.Contains("\""))
                                     {
                                         // System.Diagnostics.Debug.WriteLine(lineleft);
@@ -103,23 +294,50 @@ namespace EDDTest
 
             JObject jo = JObject.Parse(jsontext.ToString(), out string error, JToken.ParseOptions.AllowTrailingCommas);
 
-            // read json and compare
-
-            string[] itemmodules = File.ReadAllLines(fileitemmodules);
-
-            if ( jo != null)
+            if (jo != null)
             {
-                JObject ship = jo["ship"].Object();
-                foreach (var item in ship)
+                JObject modules = jo["module"].Object();
+                JObject shiplist = jo["ship"].Object();
+
+                foreach (var item in shiplist)
                 {
-                    long fid = item.Value["fdid"].Long();
-                    string fdname = item.Value["fdname"].Str();
-                    //System.Diagnostics.Debug.WriteLine($"fid {fid} {fdname,50}");
+                    JObject ship = item.Value.Object();
+
+                    long shipfid = ship["fdid"].Long();
+                    string shipfdname = ship["fdname"].Str();
+                    string shipname = ship["name"].Str();
+                  //  System.Diagnostics.Debug.WriteLine($"fid {shipfid} {shipfdname} {shipname}");
+
+                    JObject minship = ship["module"].Object();
+
+                    foreach (var mitem in minship)
+                    {
+                        JObject mod = mitem.Value.Object();
+                        long fid = mod["fdid"].Long();
+                        double mass = mod["mass"].Double();
+                        string armourfdname = mod["fdname"].Str();
+
+                        if (modules.Contains(mitem.Key))
+                        {
+                            JObject infoline = modules[mitem.Key].Object();
+                            string edsyname = shipname + " " + infoline["name"].Str();
+                            double kinres = infoline["kinres"].Double();
+                            double thmres = infoline["thmres"].Double();
+                            double expres = infoline["expres"].Double();
+                            double axres = infoline["axeres"].Double();
+                            double hullbst = infoline["hullbst"].Double();
+
+                            string report = $"Mass={mass}, Explosive={expres}, Kinetic={kinres}, Thermal={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
+                          //  System.Diagnostics.Debug.WriteLine($".. {fid} {armourfdname} {mass} {kinres} {thmres} {expres} {axres} {hullbst} = {report}");
+
+                            ProcessData(fid, shipfdname, edsyname, report);
+
+                        }
+                        else
+                            System.Diagnostics.Debug.WriteLine($".. ERROR!");
+                    }
                 }
 
-                Dictionary<long, string> rep = new Dictionary<long, string>();
-
-                JObject modules = jo["module"].Object();
                 foreach (var item in modules)
                 {
                     JObject mod = item.Value.Object();
@@ -128,329 +346,114 @@ namespace EDDTest
                     if (fid == 0)
                         continue;
 
-                    // we are picking out config names, and organising the output approp.  trial and error
-                    // note the json file has definitions for each parameter type (ammoclip) at the top - its all data driven
-
-
                     string fdname = mod["fdname"].Str();
-                    if (mod.Contains("ammomax") || mod.Contains("damage"))
+                    
+                    string properties = "";
+
+                    foreach( var kvp in mod)        // progamatically spit out the parameters
                     {
-                        string report = FieldBuilder.Build("Ammo:", mod["ammomax"].IntNull(),
-                            "Clip:", mod["ammoclip"].IntNull(),
-                            "Speed:", mod["shotspd"].IntNull(),
-                            "Damage:;;0.###", mod["damage"].DoubleNull(),
-                            "Range:", mod["maximumrng"].IntNull(),
-                            "FallOff:", mod["dmgfall"].IntNull(),
-                            "RateOfFire:;;0.##", mod["rof"].DoubleNull(),
-                            "BurstInterval:;;0.##", mod["bstint"].DoubleNull(),
-                            "Reload:;;0.#", mod["rldtime"].DoubleNull(),
-                            "ThermL:;;0.###", mod["thmload"].DoubleNull(),
-                            "ThermL:;;0.###", mod["scbheat"].DoubleNull()
-                            );
-
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-                    }
-                    else if (mod.Contains("ecmrng"))
-                    {
-                        string report = FieldBuilder.Build("Range:", mod["ecmrng"].IntNull(),
-                            "Time:", mod["ecmdur"].IntNull(),
-                            "Reload:", mod["ecmcool"].IntNull());
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-                    }
-                    else if (mod.Contains("barrierrng"))
-                    {
-                        string report = FieldBuilder.Build("Range:", mod["barrierrng"].IntNull(),
-                            "Time:", mod["barrierdur"].IntNull(),
-                            "Reload:", mod["barriercool"].IntNull());
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-                    }
-                    else if (mod.Contains("ecmrng"))
-                    {
-                        string report = FieldBuilder.Build("Range:", mod["ecmrng"].IntNull(),
-                            "Time:", mod["ecmdur"].IntNull(),
-                            "Reload:", mod["ecmcool"].IntNull());
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-                    }
-                    else if (mod.Contains("afmrepcap"))
-                    {
-                        string report = FieldBuilder.Build("Ammo:", mod["afmrepcap"].IntNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("genoptmass") || mod.Contains("thmres") || mod.Contains("shieldrnf") || mod.Contains("caures"))
-                    {
-                        string report = FieldBuilder.Build("OptMass:", mod["genoptmass"].IntNull(),
-                            "MaxMass:", mod["genmaxmass"].IntNull(),
-                            "MinMass:", mod["genminmass"].IntNull(),
-                            "Explosive:;;0.##", mod["expres"].DoubleNull(),
-                            "Kinetic:;;0.##", mod["kinres"].DoubleNull(),
-                            "Thermal:;;0.##", mod["thmres"].DoubleNull(),
-                            "AXResistance:;;0.##", mod["axeres"].DoubleNull(),
-                            "RegenRate:;;0.##", mod["genrate"].DoubleNull(),
-                            "BrokenRegenRate:;;0.##", mod["bgenrate"].DoubleNull(),
-                            "MinStrength:;;0.##", mod["genminmul"].DoubleNull(),
-                            "OptStrength:;;0.##", mod["genoptmul"].DoubleNull(),
-                            "MaxStrength:;;0.##", mod["genmaxmul"].DoubleNull(),
-                            "CausticReinforcement:;;0.##", mod["caures"].DoubleNull(),
-                            "ShieldReinforcement:;;0.##", mod["shieldrnf"].DoubleNull(),
-                            "ShieldReinforcement:;;0.##", mod["shieldbst"].DoubleNull(),
-                            "HullReinforcement:;;0.##", mod["hullrnf"].DoubleNull()
-
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("engminmass"))
-                    {
-                        string report = FieldBuilder.Build("OptMass:", mod["engoptmass"].IntNull(),
-                            "MaxMass:", mod["engmaxmass"].IntNull(),
-                            "MinMass:", mod["engminmass"].IntNull(),
-                            "ThermL:;;0.###", mod["engheat"].DoubleNull(),
-                            "EngineOptMultiplier:", mod["engoptmul"].DoubleNull(),
-                            "EngineMinMultiplier:", mod["engminmul"].DoubleNull(),
-                            "EngineMaxMultiplier:", mod["engmaxmul"].DoubleNull()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("fsdoptmass"))
-                    {
-                        string report = FieldBuilder.Build("OptMass:", mod["fsdoptmass"].IntNull(),
-                            "PowerConstant:;;0.###", mod["fuelpower"].DoubleNull(),
-                            "LinearConstant:;;0.###", mod["fuelmul"].Double() * 1000,
-                            "MaxFuelPerJump:;;0.###", mod["maxfuel"].DoubleNull(),
-                            "ThermL:;;0.###", mod["fsdheat"].DoubleNull(),
-                            "SCOSpeedIncrease:;;0.###", mod["scospd"].DoubleNull(),
-                            "SCOAccelerationRate:;;0.###", mod["scoacc"].DoubleNull(),
-                            "SCOHeatGenerationRate:;;0.###", mod["scoheat"].DoubleNull(),
-                            "SCOControlInterference:;;0.###", mod["scoconint"].DoubleNull()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("scanangle"))
-                    {
-                        string report = FieldBuilder.Build("FacingLimit:", mod["scanangle"].DoubleNull(),
-                            "Range:", mod["maxrng"].Double() * 1000,
-                            "TypicalEmission:;;0.###", mod["typemis"].Double()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("wepcap"))
-                    {
-                        string report = FieldBuilder.Build(
-                            "SysMW:;;0.###", mod["syschg"].DoubleNull(),
-                            "EngMW:;;0.###", mod["engchg"].DoubleNull(),
-                            "WepMW:;;0.###", mod["wepchg"].DoubleNull(),
-                            "SysCap:;;0.###", mod["syscap"].DoubleNull(),
-                            "EngCap:;;0.###", mod["engcap"].DoubleNull(),
-                            "WepCap:;;0.###", mod["wepcap"].DoubleNull()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("fuelcap"))
-                    {
-                        string report = FieldBuilder.Build(
-                            "Size:;;0.###", mod["fuelcap"].DoubleNull()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("vslots"))
-                    {
-                        string report = FieldBuilder.Build(
-                            "Size:", mod["vslots"].IntNull(),
-                            "Rebuilds:", mod["vcount"].IntNull()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("cargocap"))
-                    {
-                        string report = FieldBuilder.Build(
-                            "Size:;;0.###", mod["cargocap"].DoubleNull()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("emgcylife"))
-                    {
-                        string report = FieldBuilder.Build("Time:", mod["emgcylife"].IntNull()
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("bins"))
-                    {
-                        string report = FieldBuilder.Build("Bins:", mod["bins"].IntNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("pwrcap"))
-                    {
-                        string report = FieldBuilder.Build("PowerGen:;;0.##", mod["pwrcap"].DoubleNull(), "HeatEfficiency:;;0.##", mod["heateff"].DoubleNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("scooprate"))
-                    {
-                        string report = FieldBuilder.Build("RefillRate:;;0.###", mod["scooprate"].DoubleNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("maxlimpet"))
-                    {
-                        string report = FieldBuilder.Build("Limpets:", mod["maxlimpet"].IntNull(),
-                            "Speed:", mod["maxspd"].IntNull(),
-                            "Range:", mod["lpactrng"].IntNull(),
-                            "TargetRange:", mod["targetrng"].IntNull(),
-                            "HackTime:", mod["hacktime"].IntNull(),
-                            "MinCargo:", mod["mincargo"].IntNull(),
-                            "MaxCargo:", mod["maxcargo"].IntNull(),
-                            "Time:", mod["limpettime"].IntNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("cabincap"))
-                    {
-                        string report = FieldBuilder.Build("Passengers:", mod["cabincap"].IntNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("facinglim"))
-                    {
-                        string report = FieldBuilder.Build("FacingLimit:", mod["facinglim"].IntNull(), "Time:", mod["timerng"].IntNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("maxangle"))
-                    {
-                        string report = FieldBuilder.Build("FacingLimit:", mod["maxangle"].DoubleNull(), "Range:", mod["scanrng"].IntNull(), "Time:", mod["scantime"].IntNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("jumpbst"))
-                    {
-                        string report = FieldBuilder.Build("AdditionalRange:;;0.##", mod["jumpbst"].DoubleNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else if (mod.Contains("dmgprot"))
-                    {
-                        string report = FieldBuilder.Build("Protection:", mod["dmgprot"].DoubleNull()
-
-                            );
-                        rep[fid] = $"fid {fid} {fdname,50} :: {report} ) }},";
-
-                    }
-                    else
-                    {
-                        //   System.Diagnostics.Debug.WriteLine($"?? fid {fid} {fdname,50}");
-                        continue;
-                    }
-
-                    double? edsymass = mod["mass"].DoubleNull();
-                    double? edsypower = mod["pwrdraw"].DoubleNull();
-
-                    bool found = false;
-
-                    string fids = fid.ToStringInvariant();
-                    for(int i = 0; i < itemmodules.Length; i++ )
-                    {
-                        int pos = itemmodules[i].IndexOf(fids);
-
-                        if (pos > 0)
+                        if (!mod[kvp.Key].IsNull)   // if we want it
                         {
-                            found = true;
+                            string value = null;
+                            if (kvp.Key == "fuelmul" || kvp.Key == "maxrng")
+                                value = $"{mod[kvp.Key].Double(1000,-1):0.###}";
+                            else 
+                                value = mod[kvp.Key].IsString ? mod[kvp.Key].Str().AlwaysQuoteString() : $"{mod[kvp.Key].Double():0.###}";
 
-                            StringParser sp = new StringParser(itemmodules[i], pos);
-                            sp.NextDoubleComma(",");    // fid
-                            sp.NextWordComma();  // type
-                            int masspos = sp.Position;
-                            double? mass = sp.NextDoubleComma(",");
-                            double? power = sp.NextDoubleComma(",");
-                            string name = sp.NextQuotedWord();
-                            sp.IsCharMoveOn(',');
-
-                            sp.SkipSpace();
-
-                            System.Diagnostics.Debug.Assert(!(mass == null || power == null || name == null));
-
-                            bool diff = false;
-                            if (edsymass != null && edsymass != mass)
+                            if (PropertiesToEDD.ContainsKey(kvp.Key))
                             {
-                                System.Diagnostics.Debug.WriteLine($"Difference mass {fid} {fdname}");
-                                diff = true;
+                                if (PropertiesToEDD[kvp.Key] != null)
+                                {
+                                    properties = properties.AppendPrePad($"{PropertiesToEDD[kvp.Key]} = {value}", ", ");
+                                }
                             }
-
-                            if (edsypower != null && edsypower != power)
+                            else
                             {
-                                System.Diagnostics.Debug.WriteLine($"Difference power {fid} {fdname}");
-                                diff = true;
-                            }
+                                string nameu = char.ToUpper(kvp.Key[0]) + kvp.Key.Substring(1);
+                                properties = properties.AppendPrePad($"{nameu} = {value}", ", ");
 
-                            string left = sp.LineLeft.Trim();
-                            string repleft = rep[fid].Substring(rep[fid].IndexOf("::") + 3).Trim();
-
-                            diff |= left != repleft;
-
-                            if ( diff )
-                            {
-                                System.Diagnostics.Debug.WriteLine($"Difference {fid} {fdname} `{repleft}` vs `{left}`");
-
-                                itemmodules[i] = itemmodules[i].Left(masspos) + $"{(edsymass??0):0.###},{(edsypower??0):0.###},{name.AlwaysQuoteString()}, {repleft}";
                             }
                         }
                     }
 
-                    if ( !found )
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Can't find {fid} {fdname}");
-                    }
+                    //System.Diagnostics.Debug.WriteLine($"{fid}: {properties}");
+
+                    string edsyname = mod["name"].Str();
+
+                    ProcessData(fid, fdname, edsyname, properties);
+
+                    // free versions
+                    if (fid == 128064258)
+                        ProcessData(128666641, fdname, edsyname, properties);
+                    if (fid == 128064218)
+                        ProcessData(128666640, fdname, edsyname, properties);
+                    if (fid == 128049381)
+                        ProcessData(128049673, fdname, edsyname, properties);
+                    if (fid == 128064033)
+                        ProcessData(128666635, fdname, edsyname, properties);
+                    if (fid == 128064178)
+                        ProcessData(128666639, fdname, edsyname, properties);
+                    if (fid == 128662535)
+                        ProcessData(128666642, fdname, edsyname, properties);
+                    if (fid == 128064068)
+                        ProcessData(128666636, fdname, edsyname, properties);
+                    if (fid == 128064103)
+                        ProcessData(128666637, fdname, edsyname, properties);
+
 
                 }
-
-                List<long> keys = rep.Keys.ToList();
-                keys.Sort();
-                string reportstr = "";
-                foreach( var key in keys)
-                {
-                    reportstr += rep[key] + Environment.NewLine;
-                }
-
-                File.WriteAllText(reportout, reportstr);
 
                 File.WriteAllLines(fileitemmodules, itemmodules);
-
-
             }
             else
                 File.WriteAllText(@"c:\code\errors.txt", error);
         }
 
 
+        void ProcessData(long fid, string fdname, string edsyname, string parameters)
+        {
+            if (fid == 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"Bad FID {fdname} : {parameters}");
+                return;
+            }
 
+            string fids = fid.ToStringInvariant();
+            int i = Array.FindIndex(itemmodules, x => x.Contains(fids));
+            if (i >= 0)
+            {
+                int pos = itemmodules[i].IndexOf(fids);
 
+                StringParser sp = new StringParser(itemmodules[i], pos);
+                sp.NextLongComma(",");    // fid
+                string edtype = sp.NextWordComma();  // type
+                string name = sp.NextQuotedWord();
+                if (sp.IsCharMoveOn(')'))
+                {
+                    edsyname = edsyname.Replace("-", " ");      // Multi-Cannon
+                    name = name.Replace("-", " ");      // type-6
+
+                    if (name.Length < edsyname.Length || !edsyname.EqualsIIC(name.Substring(0, edsyname.Length)))
+                    {
+                        // don't turn diff on - human needed
+                        System.Diagnostics.Debug.WriteLine($"Difference name {fid} {fdname} EDSY: '{edsyname}' vs ItemModules.cs: '{name}'");
+                    }
+
+                    string lineshouldbe = $"{{ {parameters} }} }},";
+                    bool diff = sp.LineLeft != lineshouldbe;
+
+                    if (diff)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Difference {fid} {fdname} `{sp.LineLeft}` vs `{lineshouldbe}`");
+
+                        itemmodules[i] = itemmodules[i].Left(pos) + $"{fid},{edtype},{name.AlwaysQuoteString()}){lineshouldbe}";
+                    }
+                }
+                else
+                    System.Diagnostics.Debug.WriteLine($"Not in normalised form {fid} {fdname}");
+            }
+            else
+                System.Diagnostics.Debug.WriteLine($"Can't find {fid} {fdname}");
+        }
     }
 }

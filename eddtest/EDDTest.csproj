@@ -228,7 +228,7 @@
     <Compile Include="Misc\mergecsharp.cs" />
     <Compile Include="Translations\VerifyTranslationFormatting.cs" />
     <Compile Include="Translations\TranslationRepeats.cs" />
-    <Compile Include="Journal\ReadAnalyseJournals.cs" />
+    <Compile Include="Journal\JournalsAnalysis.cs" />
     <Compile Include="Journal\Journal.cs" />
     <Compile Include="Journal\Journalhelperfuncs.cs" />
     <Compile Include="Program.cs" />

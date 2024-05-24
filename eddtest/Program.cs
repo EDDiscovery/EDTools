@@ -34,7 +34,13 @@ namespace EDDTest
 
             if ( args.Left == 0)
             {
-                Console.WriteLine("Journal - write journal, run for help\n"+
+                Console.WriteLine("Journal: Journal - write journal, run for help\n"+
+                                  "         journalindented file - read lines from file in journal format and output indented\n" +
+                                  "         journalplay file file - read journal file and play into another file line by line\n" +
+                                  "         journalanalyse path filenamewildcard type - read all .log journal files and check - see code for type\n" +
+                                  "JSON:    jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
+                                  "         json - read a json from file and output indented\n" +
+
                                   "Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
                                   "Voicerecon <filename> -  Consol read a elite bindings file and output action script lines\n" +
                                   "DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
@@ -52,10 +58,6 @@ namespace EDDTest
                                   "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
                                   "normalisetranslate- process language files and normalise, run to see options\n" +
                                   "scanforenums enumssemicolonlist path wildcard\n" +
-                                  "journalindented file - read lines from file in journal format and output indented\n" +
-                                  "journalplay file file - read journal file and play into another file line by line\n" + 
-                                  "jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
-                                  "json - read a json from file and output indented\n" +
                                   "@json <verbose1/0> <@string1/0> -read json lines from file and output text in verbose or not. Optionally @ the strings. Non verbose has 132 line length limit\n" +
                                   "jsontofluent file - read a json from file and output fluent code\n" +
                                   "journaltofluent file - read a journal file and output fluent code\n" +
@@ -68,7 +70,6 @@ namespace EDDTest
                                   "readlog file - read a continuous log or journal file out to stdout\n" +
                                   "githubrelease - read the releases list and stat it\n" +
                                   "logs wildcard - read files for json lines and process\n" +
-                                  "readjournals path filename type - read all .log journal files and check - see code for type\n" +
                                   "csvtocs path - read csv and turn into a cs class\n"+
                                   "comments path\n" +
                                   "mddoc path wildcard [REMOVE]\n" +
@@ -435,11 +436,11 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
-                else if (cmd.Equals("readjournals"))
+                else if (cmd.Equals("journalanalyse"))
                 {
                     if (args.Left >= 3)
                     {
-                        JournalReader.ReadJournals(args.Next(), args.Next(), args.Next());
+                        JournalAnalysis.Analyse(args.Next(), args.Next(), args.Next());
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

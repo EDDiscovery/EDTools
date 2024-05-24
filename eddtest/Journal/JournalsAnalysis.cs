@@ -26,7 +26,7 @@ namespace EDDTest
     interface JournalAnalyse
     {
         bool Process(int lineno, JObject jr, string eventname);
-        void Report();
+        string Report();
     }
 
     class ScanAnalyse : JournalAnalyse
@@ -45,8 +45,9 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            return "";
         }
     }
 
@@ -68,12 +69,14 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report() 
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"{kvp.Key} {kvp.Value}");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
         }
     }
 
@@ -104,12 +107,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"{kvp.Key} {kvp.Value}");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -137,12 +143,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = \"{kvp.Key}\",");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -166,12 +175,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = \"{kvp.Key}\",");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -194,12 +206,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -224,12 +239,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
     class FactionsAnalyse : JournalAnalyse
@@ -251,12 +269,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -280,12 +301,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -314,12 +338,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -410,12 +437,15 @@ namespace EDDTest
             return false;
         }
 
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.WriteLine($"[\"{kvp.Key}\"] = {kvp.Value},");
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
             }
+            return str;
+
         }
     }
 
@@ -424,6 +454,10 @@ namespace EDDTest
     {
         void Incr(string value, string entry)
         {
+            if ( value.Contains("Shield"))
+            {
+
+            }
             if (rep.ContainsKey(value))
             {
                 if (!rep[value].Contains(entry))
@@ -494,21 +528,23 @@ namespace EDDTest
 
             return ok;
         }
-        public void Report()
+        public string Report()
         {
+            string str = "";
             foreach (var kvp in rep)
             {
-                Console.Write($"[Slot.{kvp.Key}] = new HashSet {{");
+                str += $"[Slot.{kvp.Key}] = new HashSet {{";
                 foreach (var x in kvp.Value)
-                    Console.Write($"ItemData.{x},");
-                Console.WriteLine($"}},");
+                    str += $"ItemData.{x},";
+                str += $"}}," + Environment.NewLine;
             }
 
             var values = rep.Keys.ToList();
             values.Sort();
             foreach (var x in values)
-                Console.WriteLine($"{x},");
+                str += $"{x}," + Environment.NewLine;
 
+            return str;
         }
     }
 
@@ -574,16 +610,16 @@ namespace EDDTest
             return ret;
         }
 
-        public void Report()
+        public string Report()
         {
             var keys = rep.Keys.ToList();
             keys.Sort();
-
-
+            string str = "";
             foreach (var key in keys)
             {
-                Console.WriteLine($"[\"{key}\"] = {rep[key]},");
+                str += $"{key} {rep[key]}" + Environment.NewLine;
             }
+            return str;
         }
     }
 
@@ -611,16 +647,20 @@ namespace EDDTest
                         JObject eng = m["Engineering"].Object();
                         if (eng != null)
                         {
-                            JArray mods = eng["Modifiers"].Array();
-                            if (mods != null)
+                            string name = eng["BlueprintName"].Str();
+                            if (name != null)
                             {
-                                foreach (var mod in mods)
+                                JArray mods = eng["Modifiers"].Array();
+                                if (mods != null)
                                 {
-                                   // System.Diagnostics.Debug.WriteLine($"Modifier: {mod.ToString()}");
-                                    Incr(mod["Label"].Str());
-                                }
+                                    foreach (var mod in mods)
+                                    {
+                                        // System.Diagnostics.Debug.WriteLine($"Modifier: {mod.ToString()}");
+                                        Incr(name + ":" + mod["Label"].Str());
+                                    }
 
-                                ret = true;
+                                    ret = true;
+                                }
                             }
                         }
                     }
@@ -629,22 +669,27 @@ namespace EDDTest
             return ret;
         }
 
-        public void Report()
+        public string Report()
         {
             var keys = rep.Keys.ToList();
             keys.Sort();
 
+            string str = "";
             foreach (var key in keys)
             {
-                Console.WriteLine($"[\"{key}\"] = {rep[key]},");
+                str += $"[\"{key}\"] = {rep[key]}," + Environment.NewLine;
             }
+
+            return str;
         }
     }
 
+    //  journalanalyse "c:\users\rk\saved games\frontier developments\elite dangerous" *.log loadout
 
-    public static class JournalReader
+
+    public static class JournalAnalysis
     {
-        public static void ReadJournals(string path, string filename, string type)
+        public static void Analyse(string path, string filename, string type)
         {
             FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
@@ -708,7 +753,9 @@ namespace EDDTest
 
             }
 
-            ja.Report();
+            string rep = ja.Report();
+            Console.WriteLine(rep);
+            File.WriteAllText("report.txt", rep);
         }
     }
 }

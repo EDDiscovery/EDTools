@@ -29,6 +29,8 @@ namespace EDDTest
         // using chrome and the inspector, open up edsy and grab eddb.js and save it as a file - you need to do it this way, not from https://github.com/taleden/EDSY.git, as chrome spaces out the data
         // use this function to read eddb.js, convert to json, write a report, and check itemmodules.cs vs it, and replace itemmodules.cs if its wrong
 
+        // edsy c:\code\eddb.js "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
+
         string[] itemmodules = null;
 
         public void ReadEDSY(string filename, string fileitemmodules)
@@ -64,57 +66,39 @@ namespace EDDTest
                 ["unlimit"] = null,
                 ["unlimitcount"] = null,
 
+                ["integ"] = "Integrity",
+                ["mass"] = "Mass",
+                ["boottime"] = "BootTime",
+                ["pwrdraw"] = "Power",
+                ["distdraw"] = "DistributorDraw",
+
                 ["jamdur"] = "Time", // s
                 ["ecmdur"] = "Time",
                 ["hsdur"] = "Time",
                 ["duration"] = "Time",
                 ["emgcylife"] = "Time",
-
                 ["limpettime"] = "Time",
-                ["fuelxfer"] = "FuelTransfer",
-                ["missile"] = "MissileType",
-                ["cabincls"] = "CabinClass",
-                ["spinup"] = "SCBSpinUp",
-                ["scbdur"] = "SCBDuration",
-                ["shieldrnfps"] = "ShieldReinforcement",
-
-                ["thmdrain"] = "WasteHeat",
-                ["ecmpwr"] = "ActivePower", // MW/use
-                ["ecmheat"] = "WasteHeat",  //units/sec
-                ["pwrdraw"] = "Power",
-                ["brcdmg"] = "BreachDamage", // damage to target modules
-                ["minbrc"] = "BreachMin",
-                ["maxbrc"] = "BreachMax",
-                ["thmwgt"] = "ThermalProportion",
-                ["kinwgt"] = "KineticProportion",
-                ["expwgt"] = "ExplosiveProportion",
-                ["abswgt"] = "AbsolutePortionDamage",
-                ["cauwgt"] = "CausticPortionDamage",
-                ["axewgt"] = "AXPortionDamage",
-                ["maxbrc"] = "BreachMax",
-                ["distdraw"] = "DistributorDraw",
-                ["repairrtg"] = "RepairCostPerMat",
-                ["repaircon"] = "RateOfRepairConsumption",
-                ["bstrof"] = "BurstRateOfFire",
-                ["bstsize"] = "BurstSize",
-                ["mass"] = "Mass",
-                ["integ"] = "Integrity",
-                ["afmrepcap"] = "Ammo",
-                ["ammocost"] = "AmmoCost",
-                ["ammoclip"] = "Clip",
-                ["damage"] = "Damage",
-                ["dps"] = "DamagePerSecond",
-                ["maxrng"] = "Range",
-                ["timerng"] = "TargetMaxTime", // sec to intercept
-                ["dmgfall"] = "FallOff",
-                ["rof"] = "RateOfFire",
-                ["bstint"] = "BurstInterval",
-                ["dmgmul"] = "DamageMultiplierFulLCharge",
                 ["scantime"] = "Time",
-                ["ecmcool"] = "ReloadTime",
-                ["rldtime"] = "ReloadTime",
-                ["pierce"] = "Pierce",
+                ["barrierdur"] = "Time",
 
+                ["maximumrng"] = "Range",
+                ["lpactrng"] = "Range",
+                ["ecmrng"] = "Range",
+                ["barrierrng"] = "Range",
+                ["scanrng"] = "Range",
+                ["maxrng"] = "Range",
+
+                ["cargocap"] = "Size",      // t
+                ["fuelcap"] = "Size",       // t
+
+                ["bins"] = "Capacity",
+                ["vslots"] = "Capacity",
+
+                ["vcount"] = "Rebuilds",
+
+                ["shotspd"] = "Speed",      // m/s
+                ["maxspd"] = "Speed",
+//here
                 ["fsdoptmass"] = "OptMass",
                 ["genoptmass"] = "OptMass",
                 ["engoptmass"] = "OptMass",
@@ -126,55 +110,109 @@ namespace EDDTest
                 ["engminmass"] = "MinMass",
                 ["genminmass"] = "MinMass",
                 ["engminmass"] = "MinMass",
-                
-                ["genpwr"] = "MWPerUnit",
-                ["barrierdur"] = "Time",
-                ["barrierpwr"] = "MWPerSec",
+
+                ["ecmcool"] = "ReloadTime",     // s
+                ["rldtime"] = "ReloadTime",
                 ["barriercool"] = "ReloadTime",
 
-                ["expres"] = "Explosive",
-                ["kinres"] = "Kinetic",
-                ["thmres"] = "Thermal",
-                ["axeres"] = "AXResistance",
-                ["genrate"] = "RegenRate",
-                ["bgenrate"] = "BrokenRegenRate",
-                ["genminmul"] = "MinStrength",
-                ["genoptmul"] = "OptStrength",
-                ["genmaxmul"] = "MaxStrength",
-                ["shieldrnf"] = "AdditionalStrength",
-                ["caures"] = "CausticReinforcement",
-                ["shieldbst"] = "ShieldReinforcement",
-                ["hullrnf"] = "HullReinforcement",
-                ["engoptmul"] = "EngineOptMultiplier",
-                ["engminmul"] = "EngineMinMultiplier",
-                ["engmaxmul"] = "EngineMaxMultiplier",
-                ["fuelpower"] = "PowerConstant",
-                ["fuelmul"] = "LinearConstant",
-                ["maxfuel"] = "MaxFuelPerJump",
+                ["maxangle"] = "Angle",     // deg
+                ["scanangle"] = "Angle",
+                ["maxangle"] = "Angle",
+                ["facinglim"] = "Angle",
+
                 ["engheat"] = "ThermL",
                 ["fsdheat"] = "ThermL",
                 ["thmload"] = "ThermL",
-                ["syschg"] = "SysMW",
+
+                ["afmrepcap"] = "Ammo",
+                ["ammomax"] = "Ammo",
+
+                ["ammocost"] = "AmmoCost",
+                ["ammoclip"] = "Clip",
+                ["damage"] = "Damage",
+                ["dps"] = "DPS",
+                ["dmgfall"] = "Falloff",
+
+                ["fuelxfer"] = "FuelTransfer",
+                ["missile"] = "MissileType",
+                ["cabincls"] = "CabinClass",
+
+                ["scbheat"] = "SCBHeat",
+                ["spinup"] = "SCBSpinUp",
+                ["scbdur"] = "SCBDuration",
+                ["shieldrnfps"] = "ShieldReinforcement",
+
+                ["genminmul"] = "MinStrength",      // shields
+                ["genoptmul"] = "OptStrength",
+                ["genmaxmul"] = "MaxStrength",
+                ["genrate"] = "RegenRate",
+                ["genpwr"] = "MWPerUnit",
+
+                ["ecmpwr"] = "ActivePower", // MW/use
+
+                ["ecmheat"] = "WasteHeat",  //units/sec
+                ["thmdrain"] = "WasteHeat",
+
+                ["brcdmg"] = "BreachDamage", // damage to target modules
+                ["minbrc"] = "BreachMin",
+                ["maxbrc"] = "BreachMax",
+
+                ["thmwgt"] = "ThermalProportion",
+                ["kinwgt"] = "KineticProportion",
+                ["expwgt"] = "ExplosiveProportion",
+                ["abswgt"] = "AbsolutePortionDamage",
+                ["cauwgt"] = "CausticPortionDamage",
+                ["axewgt"] = "AXPortionDamage",
+
+                ["repairrtg"] = "RepairCostPerMat",
+                ["repaircon"] = "RateOfRepairConsumption",
+                ["bstrof"] = "BurstRateOfFire",
+                ["bstsize"] = "BurstSize",
+                ["timerng"] = "TargetMaxTime", // sec to intercept
+                ["rof"] = "RateOfFire",
+                ["bstint"] = "BurstInterval",
+                ["dmgmul"] = "DamageMultiplierFulLCharge",
+                ["pierce"] = "Pierce",
+
+                ["barrierpwr"] = "MWPerSec",
+
+                ["expres"] = "ExplosiveResistance",           // shield booster, hull reinforcer, shields (also used armour)
+                ["kinres"] = "KineticResistance",
+                ["thmres"] = "ThermalResistance",
+                ["caures"] = "CausticResistance",
+                ["axeres"] = "AXResistance",
+
+                ["bgenrate"] = "BrokenRegenRate",
+                ["shieldrnf"] = "AdditionalReinforcement",
+                ["shieldbst"] = "ShieldReinforcement",
+                ["hullrnf"] = "HullReinforcement",
+
+                ["engoptmul"] = "EngineOptMultiplier",
+                ["engminmul"] = "EngineMinMultiplier",
+                ["engmaxmul"] = "EngineMaxMultiplier",
+
+                ["fuelpower"] = "PowerConstant",
+                ["fuelmul"] = "LinearConstant",
+                ["maxfuel"] = "MaxFuelPerJump",
+
                 ["pwrbst"] = "PowerBonus",
-                ["engchg"] = "EngMW",
-                ["wepchg"] = "WepMW",
-                ["syscap"] = "SysCap",
-                ["engcap"] = "EngCap",
-                ["wepcap"] = "WepCap",
-                ["vslots"] = "Size",
-                ["cargocap"] = "Size",
-                ["fuelcap"] = "Size",
+
+                ["syschg"] = "SystemsRechargeRate",
+                ["syscap"] = "SystemsCapacity",
+
+                ["engchg"] = "EngineRechargeRate",
+                ["engcap"] = "EngineCapacity",
+
+                ["wepchg"] = "WeaponsRechargeRate",
+                ["wepcap"] = "WeaponsCapacity",
+
+
                 ["scospd"] = "SCOSpeedIncrease",
                 ["scoacc"] = "SCOAccelerationRate",
                 ["scoheat"] = "SCOHeatGenerationRate",
                 ["scoconint"] = "SCOControlInterference",
-                ["maxangle"] = "Angle",
-                ["scanangle"] = "Angle",
-                ["maxangle"] = "Angle",
-                ["facinglim"] = "Angle",
+
                 ["typemis"] = "TypicalEmission",
-                ["vcount"] = "Rebuilds",
-                ["bins"] = "Bins",
                 ["pwrcap"] = "PowerGen",
                 ["heateff"] = "HeatEfficiency",
                 ["scooprate"] = "RefillRate",
@@ -185,24 +223,10 @@ namespace EDDTest
                 ["maxcargo"] = "MaxCargo",
                 ["cabincap"] = "Passengers",
                 ["jumpbst"] = "AdditionalRange",
-                ["scbheat"] = "SCBHeat",
                 ["dmgprot"] = "Protection",
-                ["boottime"] = "BootTime",
-                ["pwrdraw"] = "Power",
                 ["integ"] = "Integrity",
-                ["ammomax"] = "Ammo",
-                ["ammoclip"] = "Clip",
-                ["shotspd"] = "Speed",
-                ["maxspd"] = "Speed",
                 ["multispd"] = "MultiTargetSpeed",
-                ["dps"] = "DPS",
-                ["maximumrng"] = "Range",
-                ["lpactrng"] = "Range",
-                ["ecmrng"] = "Range",
-                ["barrierrng"] = "Range",
-                ["scanrng"] = "Range",
-                ["maxrng"] = "Range",
-                ["dmgfall"] = "Falloff",
+
                 ["lmprepcap"] = "MaxRepairMaterialCapacity",
                 ["minebonus"] = "MineBonus",
 
@@ -299,6 +323,8 @@ namespace EDDTest
                 JObject modules = jo["module"].Object();
                 JObject shiplist = jo["ship"].Object();
 
+                string shipdatatext = "";
+
                 foreach (var item in shiplist)
                 {
                     JObject ship = item.Value.Object();
@@ -306,7 +332,37 @@ namespace EDDTest
                     long shipfid = ship["fdid"].Long();
                     string shipfdname = ship["fdname"].Str();
                     string shipname = ship["name"].Str();
-                  //  System.Diagnostics.Debug.WriteLine($"fid {shipfid} {shipfdname} {shipname}");
+                    //  System.Diagnostics.Debug.WriteLine($"fid {shipfid} {shipfdname} {shipname}");
+
+                    string pad = "        ";
+                    string shipdata = pad + $"private static ShipProperties {shipfdname.ToLowerInvariant().Replace(" ","_")} = new ShipProperties()" + Environment.NewLine;
+                    shipdata += pad + "{" + Environment.NewLine;
+                    shipdata += pad + $"    FDID = \"{shipfdname}\"," + Environment.NewLine;
+                    shipdata += pad + $"    EDCDID = \"{shipfdname}\"," + Environment.NewLine;
+                    shipdata += pad + $"    Manufacturer = \"<code>\"," + Environment.NewLine;
+                    shipdata += pad + $"    HullMass = {ship["mass"].Int()}F," + Environment.NewLine;
+                    shipdata += pad + $"    Name = \"{ship["name"].Str()}\"," + Environment.NewLine;
+                    shipdata += pad + $"    Speed = {ship["topspd"].Int()}," + Environment.NewLine;
+                    shipdata += pad + $"    Boost = {ship["bstspd"].Int()}," + Environment.NewLine;
+                    shipdata += pad + $"    HullCost = {ship["cost"].Int()}," + Environment.NewLine;
+                    shipdata += pad + $"    Class = {ship["class"].Int()}," + Environment.NewLine;
+                    shipdata += pad+$"    Shields = {ship["shields"].Double()}," + Environment.NewLine;
+                    shipdata += pad+$"    Armour = {ship["armour"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    MinThrust = {ship["minthrust"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    BoostCost = {ship["boostcost"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    FuelReserve = {ship["fuelreserve"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    HeatCap = {ship["heatcap"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    HeatDispMin = {ship["heatdismin"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    HeatDispMax = {ship["heatdismax"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    FuelCost = {ship["fuelcost"].Double()}," + Environment.NewLine;
+                    shipdata += pad+$"    Hardness = {ship["hardness"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    Crew = {ship["crew"].Int()}," + Environment.NewLine;
+                    shipdata += pad + $"    FwdAcc = {ship["fwdacc"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    RevAcc = {ship["revacc"].Double()}," + Environment.NewLine;
+                    shipdata += pad + $"    LatAcc = {ship["latacc"].Double()}" + Environment.NewLine;
+                    shipdata += pad + "};" + Environment.NewLine + Environment.NewLine;
+
+                    shipdatatext += shipdata;
 
                     JObject minship = ship["module"].Object();
 
@@ -327,7 +383,7 @@ namespace EDDTest
                             double axres = infoline["axeres"].Double();
                             double hullbst = infoline["hullbst"].Double();
 
-                            string report = $"Mass={mass}, Explosive={expres}, Kinetic={kinres}, Thermal={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
+                            string report = $"Mass={mass}, ExplosiveResistance={expres}, KineticResistance={kinres}, ThermalResistance={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
                           //  System.Diagnostics.Debug.WriteLine($".. {fid} {armourfdname} {mass} {kinres} {thmres} {expres} {axres} {hullbst} = {report}");
 
                             ProcessData(fid, shipfdname, edsyname, report);
@@ -337,6 +393,8 @@ namespace EDDTest
                             System.Diagnostics.Debug.WriteLine($".. ERROR!");
                     }
                 }
+
+                File.WriteAllText("ships.txt", shipdatatext);
 
                 foreach (var item in modules)
                 {

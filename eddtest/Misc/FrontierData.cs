@@ -588,6 +588,8 @@ namespace EDDTest
                 CSVFile filesd = new CSVFile();
                 CSVFile filemats = new CSVFile();
 
+                List<string> modtext = new List<string>();
+
                 if (filesd.Read(Path.Combine(rootpath, "SpecialData" + Version + ".csv"), FileShare.ReadWrite) && filemats.Read(Path.Combine(rootpath, "Materials" + Version + ".csv"), FileShare.ReadWrite))
                 {
                     Console.WriteLine("******************** Check Special Data");
@@ -655,16 +657,16 @@ namespace EDDTest
                         var find = sf.Find(x => x.IngredientsString.Replace(" ", "") == ilist);
                         if (find == null)
                         {
-                            Console.WriteLine($"Missing Special effects EngineeringRecipe({ukname.AlwaysQuoteString()},{ fdname.AlwaysQuoteString()}");
-
-                            //"\"" + ukname + "\",\"" + modules + "\",\"" + ilist + "\")," + Environment.NewLine);
+                            Console.WriteLine($"Missing Special effects EngineeringRecipe {ukname.AlwaysQuoteString()},{ fdname.AlwaysQuoteString()}");
                         }
                         else
                         {
-                            Console.WriteLine($" new EngineeringRecipe({ukname.AlwaysQuoteString()},{fdname.AlwaysQuoteString()},{modules.AlwaysQuoteString()},{modules.AlwaysQuoteString()},{ilist.AlwaysQuoteString()}),");
+                            modtext.Add($"            new EngineeringRecipe({ukname.AlwaysQuoteString()}, {fdname.AlwaysQuoteString()}, {modules.AlwaysQuoteString()}, {ilist.AlwaysQuoteString()}),");
                         }
                     }
 
+                    modtext.Sort();
+                    FileHelpers.TryWriteToFile(@"c:\code\frontierspecialeffects.log", string.Join(Environment.NewLine,modtext));
                 }
                 else
                     Console.WriteLine("No Special data CSV and/or Materials.csv");

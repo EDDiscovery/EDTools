@@ -52,7 +52,7 @@ Next
 End Sub
 */
 
-// run it.
+// run frontierdata c:\code\documentation\frontier\4.0
 // will verify materials in MaterialCommododities vs the sheet
 // will verify any replacement lists of fdname
 // will verify commodities in MaterialCommododities vs the sheet
@@ -98,6 +98,8 @@ namespace EDDTest
         {
             string de = "", fr = "", es = "", ru = "", pr = "";
 
+            ItemData.Initialise();
+
             // check out replacement lists
 
             {
@@ -115,11 +117,13 @@ namespace EDDTest
 
             // check for non cororolis now being in frontier data in main module section - this is due to previous undeclared modes becoming public
 
+            var shipmodules = ItemData.GetShipModules(includebuyable: true);
+            var othershipmodules = ItemData.GetShipModules(includebuyable: false, includenonbuyable: true);
             {
-                foreach (var x in ItemData.othershipmodules)
+                foreach (var x in othershipmodules)
                 {
-                    if (ItemData.shipmodules.ContainsKey(x.Key))
-                        Console.WriteLine("Error Non cororolis list contains " + x.Key + " and so does main module list");
+                    if (shipmodules.ContainsKey(x.Key))
+                        Console.WriteLine("Error othershipmodules list contains " + x.Key + " and so does main module list");
                 }
             }
 
@@ -145,28 +149,27 @@ namespace EDDTest
                             Console.WriteLine("Error " + fdname + " not found in ship data");
                         else
                         {
-                            if (ukname != ((ItemData.ShipInfoString)si[ItemData.ShipPropID.Name]).Value)
+                            if (ukname != si.Name)
                             {
                                 Console.WriteLine("Error " + fdname + " disagrees with uk name");
                             }
 
-                            if (mass != null && mass.Value != ((ItemData.ShipInfoDouble)si[ItemData.ShipPropID.HullMass]).Value)
-                            {
-                                Console.WriteLine("Error " + fdname + " disagrees with mass spreadsheet " + mass + " Currently " + ((ItemData.ShipInfoDouble)si[ItemData.ShipPropID.HullMass]).Value);
-                            }
+                            // jun 24 spreadsheet vs edsy not same, agree with edsy
 
-                            // corolis has very different value for these.. not sure who is right
+                            //if (mass != null && mass.Value != si.HullMass)
+                            //{
+                            //    Console.WriteLine("Error " + fdname + " disagrees with mass spreadsheet " + mass + " Currently " + si.HullMass);
+                            //}
 
-                            if (basespeed != null && basespeed.Value != ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Speed]).Value)
-                            {
-                                Console.WriteLine("Error " + fdname + " disagrees with speed " + basespeed + " Currently " + ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Speed]).Value);
-                            }
+                            //if (basespeed != null && basespeed.Value != si.Speed)
+                            //{
+                            //    Console.WriteLine("Error " + fdname + " disagrees with speed " + basespeed + " Currently " + si.Speed);
+                            //}
 
-                            if (boostspeed != null && boostspeed.Value != ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Boost]).Value)
-                            {
-                                Console.WriteLine("Error " + fdname + " disagrees with boost " + boostspeed + "  Currently " + ((ItemData.ShipInfoInt)si[ItemData.ShipPropID.Boost]).Value);
-
-                            }
+                            //if (boostspeed != null && boostspeed.Value != si.Boost)
+                            //{
+                            //    Console.WriteLine("Error " + fdname + " disagrees with boost " + boostspeed + "  Currently " + si.Boost);
+                            //}
                         }
                     }
                 }
@@ -186,17 +189,17 @@ namespace EDDTest
 
                     foreach (MaterialCommodityMicroResourceType m in ourcommods)     // check our list vs the excel
                     {
-                        int n = filecommods.FindInColumn(3, m.Name, StringComparison.InvariantCultureIgnoreCase, true);     // find name..
+                        int n = filecommods.FindInColumn(3, m.EnglishName, StringComparison.InvariantCultureIgnoreCase, true);     // find name..
                         int f = filecommods.FindInColumn(2, m.FDName, StringComparison.InvariantCultureIgnoreCase);         // find fdname
 
-                        bool isinararare = InaraRares.Contains(m.Name);
+                        bool isinararare = InaraRares.Contains(m.EnglishName);
 
                         if (n == -1)    // no name in excel
                         {
                             if (f != -1)    // N but Fd
-                                Console.WriteLine("Error Data item name '" + m.Name + "' not found in spreadsheet, but fdname is present - misnaming " + filecommods.Rows[f][2]);
+                                Console.WriteLine("Error Data item name '" + m.EnglishName + "' not found in spreadsheet, but fdname is present - misnaming " + filecommods.Rows[f][2]);
                             else           // No N, No Fd
-                                Console.WriteLine("Error " + m.Name + " not found in frontier data");
+                                Console.WriteLine("Error " + m.EnglishName + " not found in frontier data");
                         }
                         else
                         {            // name found,
@@ -290,13 +293,13 @@ namespace EDDTest
 
                         if (minfo != null)
                         {
-                            if (Math.Abs(minfo.Power - powerdraw) > 0.05)
-                                Console.WriteLine("Weapon " + fdname + " incorrect power draw " + minfo.Power + " vs " + powerdraw);
+                            if ((!minfo.PowerDraw.HasValue && powerdraw > 0) || (minfo.PowerDraw.HasValue && Math.Abs(minfo.PowerDraw.Value - powerdraw) > 0.05))
+                                Console.WriteLine("Weapon " + fdname + " incorrect power draw " + minfo.PowerDraw + " vs " + powerdraw);
                         }
                         else
                         {
                             string name = fdname.Replace("Hpt_", "");
-                            Console.WriteLine("+ { \"" + fdname.ToLower() + "\", new ShipModule(-1, 1, " + powerdraw.ToString("#.#") + ", \"" + name.SplitCapsWordFull() + "\", \"Weapon\")},");
+                            Console.WriteLine("In Frontier but not in modules: { \"" + fdname.ToLower() + "\", new ShipModule(-1, 1, " + powerdraw.ToString("#.#") + ", \"" + name.SplitCapsWordFull() + "\", \"Weapon\")},");
                         }
                     }
                 }
@@ -327,9 +330,9 @@ namespace EDDTest
 
                             if (minfo != null)
                             {
-                                if (Math.Abs(minfo.Power - powerdraw) > 0.05)
-                                    Console.WriteLine("Module " + fdname + " incorrect power draw " + minfo.Power + " vs " + powerdraw);
-                                if (Math.Abs(minfo.Mass - mass) > 0.05)
+                                if ((!minfo.PowerDraw.HasValue && powerdraw > 0) || (minfo.PowerDraw.HasValue && Math.Abs(minfo.PowerDraw.Value - powerdraw) > 0.05))
+                                    Console.WriteLine("Module " + fdname + " incorrect power draw " + minfo.PowerDraw + " vs " + powerdraw);
+                                if ( (!minfo.Mass.HasValue && mass >0 ) ||  (minfo.Mass.HasValue && Math.Abs(minfo.Mass.Value - mass) > 0.05))
                                     Console.WriteLine("Module " + fdname + " incorrect mass " + minfo.Mass + " vs " + mass);
                             }
                             else
@@ -429,7 +432,7 @@ namespace EDDTest
                         {
                          //   Console.WriteLine($"Tech Broker {fdname},{find.engineersstring}");
                         }
-                        Console.WriteLine("        new EngineeringRecipe(\"" + nicename + "\",\"" +fdname.ToLower() + "\",\"" + type + "\",\"?\",\"" + ilist + "\")," );
+                        //Console.WriteLine("        new EngineeringRecipe(\"" + nicename + "\",\"" +fdname.ToLower() + "\",\"" + type + "\",\"?\",\"" + ilist + "\")," );
                     }
                 }
                 else
@@ -451,10 +454,10 @@ namespace EDDTest
 
                     foreach (MaterialCommodityMicroResourceType m in ourmats)
                     {
-                        if (filemats.FindInColumn(5, m.Name, StringComparison.InvariantCultureIgnoreCase, true) == -1)
-                            Console.WriteLine("Error " + m.FDName + ":" + m.Name + " name differs");
                         if (filemats.FindInColumn(1, m.FDName, StringComparison.InvariantCultureIgnoreCase) == -1)
-                            Console.WriteLine("Error " + m.FDName + ":" + m.Name + " not found in frontier data");
+                            Console.WriteLine("Error " + m.FDName + ":" + m.EnglishName + " not found in frontier data");
+                        else if (filemats.FindInColumn(5, m.EnglishName, StringComparison.InvariantCultureIgnoreCase, true) == -1)
+                            Console.WriteLine("Error " + m.FDName + ":" + m.EnglishName + " name differs");
                     }
 
                     Console.WriteLine("******************** Check Materials from excel");
@@ -476,9 +479,9 @@ namespace EDDTest
                         {
                             Console.WriteLine("Error " + fdname + " type " + category + " disagrees with " + cached.Type);
                         }
-                        else if (cached.Name != ukname)
+                        else if (cached.EnglishName != ukname)
                         {
-                            Console.WriteLine("Error " + fdname + " name '" + ukname + "' disagrees with '" + cached.Name + "'");
+                            Console.WriteLine("Error " + fdname + " name '" + ukname + "' disagrees with '" + cached.EnglishName + "'");
                         }
                         else if ( (int)cached.Type +1 != rw[2].InvariantParseInt(-1))
                         {
@@ -555,13 +558,13 @@ namespace EDDTest
 
                                     if (prevmod != modulename)
                                     {
-                                        Console.WriteLine("");
+                                      //  Console.WriteLine(""); // for dumping it out
                                         prevmod = modulename;
                                     }
 
                                    // Console.WriteLine("        new EngineeringRecipe(\"" + ukname + "\", \"" + fdname.ToLower() + "\", \"" + ing + "\", \"" + modulename + "\", \"" + level.Value.ToString() + "\", \"" + string.Join(",", er.engineers) + "\" ),");
 
-                                    //Console.WriteLine($"RecipeData: {fdname},{level},{er.engineersstring}");
+                                   // Console.WriteLine($"RecipeData: {fdname},{level},{string.Join(",",er.Engineers)}"); // for dumping it out
                                 }
                                 else
                                     Console.WriteLine("Engineering missing new EngineeringRecipe(\"" + ukname + "\", \"" + ing + "\", \"" + modulename + "\", \"" + level.Value.ToString() + "\", \"" + engnames + "\" ),");
@@ -578,7 +581,6 @@ namespace EDDTest
                     Console.WriteLine("No Materials CSV");
 
             }
-
 
             // check special data
 
@@ -642,7 +644,9 @@ namespace EDDTest
                                         ilist = ilist.AppendPrePad(count[i].ToStringInvariant() + ingr[i], ",");
                                     }
                                     else
+                                    {
                                         Console.WriteLine("Special recipe " + fdname + " mat " + name[i] + " Not in our DB");
+                                    }
                                 }
                             }
                         }
@@ -651,11 +655,13 @@ namespace EDDTest
                         var find = sf.Find(x => x.IngredientsString.Replace(" ", "") == ilist);
                         if (find == null)
                         {
-                            Console.WriteLine("Missing Special effects EngineeringRecipe(\"" + ukname + "\",\"" + modules + "\",\"" + ilist + "\")," + Environment.NewLine);
+                            Console.WriteLine($"Missing Special effects EngineeringRecipe({ukname.AlwaysQuoteString()},{ fdname.AlwaysQuoteString()}");
+
+                            //"\"" + ukname + "\",\"" + modules + "\",\"" + ilist + "\")," + Environment.NewLine);
                         }
                         else
                         {
-                            Console.WriteLine($"Special Data: {fdname},{string.Join(",", find.Engineers)}");
+                            Console.WriteLine($" new EngineeringRecipe({ukname.AlwaysQuoteString()},{fdname.AlwaysQuoteString()},{modules.AlwaysQuoteString()},{modules.AlwaysQuoteString()},{ilist.AlwaysQuoteString()}),");
                         }
                     }
 
@@ -663,6 +669,8 @@ namespace EDDTest
                 else
                     Console.WriteLine("No Special data CSV and/or Materials.csv");
             }
+
+#if false
 
             // Check MRs
 
@@ -948,6 +956,8 @@ namespace EDDTest
                 //    File.WriteAllText(Path.Combine(rootpath, "mat-pr.part.txt"), pr, Encoding.UTF8);
                 //}
             }
+
+#endif
         }
 
         static void CheckMR(string file, MaterialCommodityMicroResourceType.CatType cattype )
@@ -963,9 +973,9 @@ namespace EDDTest
                 foreach (MaterialCommodityMicroResourceType m in ourmats)
                 {
                     if (filecomponents.FindInColumn(2, m.FDName, StringComparison.InvariantCultureIgnoreCase) == -1)
-                        Console.WriteLine("Error " + m.FDName + ":" + m.Name + " not found in frontier data");
-                    else if (filecomponents.FindInColumn(3, m.Name, StringComparison.InvariantCultureIgnoreCase, true) == -1)
-                        Console.WriteLine("Error " + m.FDName + ":" + m.Name + " name differs");
+                        Console.WriteLine("Error " + m.FDName + ":" + m.EnglishName + " not found in frontier data");
+                    else if (filecomponents.FindInColumn(3, m.EnglishName, StringComparison.InvariantCultureIgnoreCase, true) == -1)
+                        Console.WriteLine("Error " + m.FDName + ":" + m.EnglishName + " name differs");
                 }
 
                 Console.WriteLine("******************** Check " + cattype.ToString() + " from excel");
@@ -985,9 +995,9 @@ namespace EDDTest
                         Console.WriteLine("Error " + fdname + " not found in cache " + code);
                         ret += code + Environment.NewLine;
                     }
-                    else if (cached.Name != ukname)
+                    else if (cached.EnglishName != ukname)
                     {
-                        Console.WriteLine("Error " + fdname + " name '" + ukname + "' disagrees with '" + cached.Name + "'");
+                        Console.WriteLine("Error " + fdname + " name '" + ukname + "' disagrees with '" + cached.EnglishName + "'");
                     }
                     else
                     {

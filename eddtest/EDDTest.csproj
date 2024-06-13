@@ -222,7 +222,7 @@
     <Compile Include="Coriolis\CorolisShips.cs" />
     <Compile Include="Coriolis\CorolisModules.cs" />
     <Compile Include="Misc\FrontierData.cs" />
-    <Compile Include="Misc\ItemModulesEDSY.cs" />
+    <Compile Include="EDSY\ItemModulesEDSY.cs" />
     <Compile Include="Translations\Enums.cs" />
     <Compile Include="Misc\InsertText.cs" />
     <Compile Include="Misc\mergecsharp.cs" />

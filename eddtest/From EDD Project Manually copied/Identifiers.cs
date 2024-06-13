@@ -37,7 +37,7 @@ namespace EliteDangerousCore
             {
                 string nid = id.ToLowerInvariant().Trim();
 
-                // lock (identifiers)    // since only changed by HistoryList accumulate, and accessed by foreground, no need I think for a lock
+               // lock (identifiers)    // since only changed by HistoryList accumulate, and accessed by foreground, no need I think for a lock
                 {
                     text = text.Replace("&NBSP;", " ");
                     //System.Diagnostics.Debug.WriteLine($"Identifier {id} -> {nid} -> {text}");
@@ -47,7 +47,7 @@ namespace EliteDangerousCore
             }
             else
             {
-                // System.Diagnostics.Debug.WriteLine($"Rejected adding {id} vs {text}");
+               // System.Diagnostics.Debug.WriteLine($"Rejected adding {id} vs {text}");
             }
 
         }
@@ -57,7 +57,7 @@ namespace EliteDangerousCore
         {
             string nid = id.ToLowerInvariant().Trim();
 
-            //  lock (identifiers)
+          //  lock (identifiers)
             {
                 if (Items.TryGetValue(nid, out string str))
                 {

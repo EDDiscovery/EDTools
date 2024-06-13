@@ -119,7 +119,7 @@ namespace EliteDangerousCore
 
             // jan 9 2024
             UnknownMineral, UnknownRefinedMineral,
-            // march 15 24
+            // march 15 2024
             ThargoidTitanDriveComponent, ThargoidCystSpecimen, ThargoidBoneFragments, ThargoidOrganSample,
 
             //---------------------------------------------------------- Raw
@@ -183,7 +183,7 @@ namespace EliteDangerousCore
         public MCMR FDType { get; private set; }                    // the enum
         public string FDName { get; private set; }                  // fdname, lower case..
 
-        public string Name { get; private set; }                    // name of it in nice text. This gets translated
+        public string TranslatedName { get; private set; }          // name of it in nice text. This gets translated
         public string EnglishName { get; private set; }             // name of it in English
 
         public string Shortname { get; private set; }               // short abv. name
@@ -260,10 +260,10 @@ namespace EliteDangerousCore
             return mcmrlist.ContainsKey(fdname) ? mcmrlist[fdname] : null;
         }
 
-        public static string GetNameByFDName(string fdname) // if we have it, give name, else give alt or splitcaps.  
+        public static string GetTranslatedNameByFDName(string fdname) // if we have it, give name, else give alt or splitcaps.  
         {
             fdname = fdname.ToLowerInvariant();
-            return mcmrlist.ContainsKey(fdname) ? mcmrlist[fdname].Name : fdname.SplitCapsWordFull();
+            return mcmrlist.ContainsKey(fdname) ? mcmrlist[fdname].TranslatedName : fdname.SplitCapsWordFull();
         }
 
         public static MaterialCommodityMicroResourceType GetByShortName(string shortname)
@@ -304,22 +304,22 @@ namespace EliteDangerousCore
                         if (left.IsRareCommodity)
                         {
                             if (right.IsRareCommodity)
-                                return left.Name.CompareTo(right.Name.ToString());
+                                return left.TranslatedName.CompareTo(right.TranslatedName.ToString());
                             else
                                 return 1;
                         }
                         else if (right.IsRareCommodity)
                         {
                             if (left.IsRareCommodity)
-                                return left.Name.CompareTo(right.Name.ToString());
+                                return left.TranslatedName.CompareTo(right.TranslatedName.ToString());
                             else
                                 return -1;
                         }
                         else
-                            return left.Name.CompareTo(right.Name.ToString());
+                            return left.TranslatedName.CompareTo(right.TranslatedName.ToString());
                     }
                     else
-                        return left.Name.CompareTo(right.Name.ToString());
+                        return left.TranslatedName.CompareTo(right.TranslatedName.ToString());
                 });
 
             }
@@ -380,7 +380,7 @@ namespace EliteDangerousCore
         public static string[] GetMembersOfType(ItemType typename, bool sorted)
         {
             MaterialCommodityMicroResourceType[] mcs = GetAll();
-            var members = mcs.Where(x => x.Type == typename).Select(x => x.Name).ToArray();
+            var members = mcs.Where(x => x.Type == typename).Select(x => x.TranslatedName).ToArray();
             if (sorted)
                 Array.Sort(members);
             return members;
@@ -419,7 +419,7 @@ namespace EliteDangerousCore
 
         public static int fakeid = 20000;
 
-        public static MaterialCommodityMicroResourceType EnsurePresent(CatType cat, string fdname, string locname = null) 
+        public static MaterialCommodityMicroResourceType EnsurePresent(CatType cat, string fdname, string locname = null)
         {
             if (!mcmrlist.ContainsKey(fdname.ToLowerInvariant()))
             {
@@ -438,15 +438,15 @@ namespace EliteDangerousCore
 
         #region Initial setup
 
-        private static void Add(CatType catname, ItemType typeofit, MCMR id, string englishtext, bool rare = false) 
+        private static void Add(CatType catname, ItemType typeofit, MCMR id, string englishtext, bool rare = false)
         {
             Add(catname, typeofit, MaterialGroupType.NA, id, id.ToString(), englishtext, "", rare);
         }
-        private static void Add(CatType catname, MCMR id, string englishtext, string shortname) 
+        private static void Add(CatType catname, MCMR id, string englishtext, string shortname)
         {
             Add(catname, ItemType.Unknown, MaterialGroupType.NA, id, id.ToString(), englishtext, shortname);
         }
-        private static void Add(CatType catname, ItemType typeofit, MCMR id, string englishtext, string shortname, bool rare = false) 
+        private static void Add(CatType catname, ItemType typeofit, MCMR id, string englishtext, string shortname, bool rare = false)
         {
             Add(catname, typeofit, MaterialGroupType.NA, id, id.ToString(), englishtext, shortname, rare);
         }
@@ -458,7 +458,7 @@ namespace EliteDangerousCore
         {
             if (shortname.HasChars() && mcmrlist.Values.ToList().Find(x => x.Shortname.Equals(shortname, StringComparison.InvariantCultureIgnoreCase)) != null)
             {
-                System.Diagnostics.Debug.WriteLine("**** Shortname repeat for " + id);
+                System.Diagnostics.Trace.WriteLine("**** Shortname repeat for " + id);
             }
 
             Color colour = Color.Green;
@@ -475,13 +475,13 @@ namespace EliteDangerousCore
                 colour = Color.SandyBrown;
 
             MaterialCommodityMicroResourceType m = new MaterialCommodityMicroResourceType(catname, englishtext, id, fdname, typeofit, mtg, shortname, colour, rare);
-            mcmrlist.Add(m.FDName,m);
+            mcmrlist.Add(m.FDName, m);
         }
         public MaterialCommodityMicroResourceType(CatType cs, string englishtext, MCMR fdtype, string fdname, ItemType t, MaterialGroupType mtg, string shortn, Color cl, bool rare)
         {
             Category = cs;
             TranslatedCategory = (Category == CatType.Item) ? "Goods" : (Category == CatType.Component) ? "Assets" : Category.ToString();      // name is as the game does
-            EnglishName = Name = englishtext;
+            EnglishName = TranslatedName = englishtext;
             FDType = fdtype;
             FDName = fdname.ToLowerInvariant();
             Type = t;
@@ -1335,9 +1335,9 @@ namespace EliteDangerousCore
 
             foreach (var x in mcmrlist.Values)
             {
-                x.Name = x.Name.TxID(typeof(MaterialCommodityMicroResourceType), x.FDName);
+                x.TranslatedName = x.TranslatedName.TxID(typeof(MaterialCommodityMicroResourceType), x.FDName);
             }
-          
+
         }
 
 
@@ -1407,7 +1407,7 @@ namespace EliteDangerousCore
                 return old;
         }
 
-#endregion
+        #endregion
     }
 }
 

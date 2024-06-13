@@ -68,7 +68,7 @@ namespace EliteDangerousCore
             {
                 get
                 {
-                    var ing = (from x in Ingredients select Amount[Array.IndexOf(Ingredients, x)].ToString() + " " + x.Name).ToArray();
+                    var ing = (from x in Ingredients select Amount[Array.IndexOf(Ingredients, x)].ToString() + " " + x.TranslatedName).ToArray();
                     return string.Join(", ", ing);
                 }
             }
@@ -176,7 +176,10 @@ namespace EliteDangerousCore
         {
             var lfdname = fdname.ToLowerInvariant();
             var f = EngineeringRecipes.Find(x => x.FDName == lfdname);
-            return f == null ? fdname : f.Name;
+            if (f == null)
+                return fdname.SplitCapsWordFull();
+            else
+                return f.Name;
         }
 
         public static SynthesisRecipe FindSynthesis(string recipename, string level)

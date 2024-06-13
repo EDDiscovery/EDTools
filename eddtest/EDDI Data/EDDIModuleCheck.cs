@@ -28,18 +28,10 @@ namespace EDDTest
                 {
                     if (edm.ModuleID != mod.id)
                     {
-                        string i = edm.Info == null ? "null" : $"\"{edm.Info}\"";
-
-                        System.Diagnostics.Debug.WriteLine($"!!{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, {edm.Mass}, {edm.Power}, {i}, \"{edm.EnglishModName}\", \"{edm.ModType}\" ) }},");
+                        System.Diagnostics.Debug.WriteLine($"Module {mod.fdname} id different");
                         edm.ModuleID = (int)mod.id;
                     }
                 }
-                else
-                {
-
-                    System.Diagnostics.Debug.WriteLine($"{{ \"{mod.fdname.ToLowerInvariant()}\", new ShipModule({mod.id}, 0, 0, \"\", \"{mod.descr.SplitCapsWordFull()}\", \"\" ) }},");
-                }
-
             }
 
 

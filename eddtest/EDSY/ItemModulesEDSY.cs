@@ -69,7 +69,7 @@ namespace EDDTest
                 ["integ"] = "Integrity",
                 ["mass"] = "Mass",
                 ["boottime"] = "BootTime",
-                ["pwrdraw"] = "Power",
+                ["pwrdraw"] = "PowerDraw",
                 ["distdraw"] = "DistributorDraw",
 
                 ["jamdur"] = "Time", // s
@@ -117,12 +117,11 @@ namespace EDDTest
 
                 ["maxangle"] = "Angle",     // deg
                 ["scanangle"] = "Angle",
-                ["maxangle"] = "Angle",
                 ["facinglim"] = "Angle",
 
-                ["engheat"] = "ThermL",
-                ["fsdheat"] = "ThermL",
-                ["thmload"] = "ThermL",
+                ["engheat"] = "ThermalLoad",
+                ["fsdheat"] = "ThermalLoad",
+                ["thmload"] = "ThermalLoad",
 
                 ["afmrepcap"] = "Ammo",
                 ["ammomax"] = "Ammo",
@@ -157,12 +156,12 @@ namespace EDDTest
                 ["minbrc"] = "BreachMin",
                 ["maxbrc"] = "BreachMax",
 
-                ["thmwgt"] = "ThermalProportion",
-                ["kinwgt"] = "KineticProportion",
-                ["expwgt"] = "ExplosiveProportion",
-                ["abswgt"] = "AbsolutePortionDamage",
-                ["cauwgt"] = "CausticPortionDamage",
-                ["axewgt"] = "AXPortionDamage",
+                ["thmwgt"] = "ThermalProportionDamage",
+                ["kinwgt"] = "KineticProportionDamage",
+                ["expwgt"] = "ExplosiveProportionDamage",
+                ["abswgt"] = "AbsolutePorportionDamage",
+                ["cauwgt"] = "CausticPorportionDamage",
+                ["axewgt"] = "AXPorportionDamage",
 
                 ["repairrtg"] = "RepairCostPerMat",
                 ["repaircon"] = "RateOfRepairConsumption",
@@ -171,8 +170,8 @@ namespace EDDTest
                 ["timerng"] = "TargetMaxTime", // sec to intercept
                 ["rof"] = "RateOfFire",
                 ["bstint"] = "BurstInterval",
-                ["dmgmul"] = "DamageMultiplierFulLCharge",
-                ["pierce"] = "Pierce",
+                ["dmgmul"] = "DamageMultiplierFullCharge",
+                ["pierce"] = "ArmourPiercing",
 
                 ["barrierpwr"] = "MWPerSec",
 

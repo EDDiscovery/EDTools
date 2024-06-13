@@ -89,19 +89,19 @@ namespace EliteDangerousCore
         public List<MaterialCommodityMicroResource> GetMaterialsSorted(uint gen)
         {
             var list = items.GetValues(gen, x => x.Details.IsMaterial);
-            return list.OrderBy(x => x.Details.Type).ThenBy(x => x.Details.Name).ToList();
+            return list.OrderBy(x => x.Details.Type).ThenBy(x => x.Details.TranslatedName).ToList();
         }
 
         public List<MaterialCommodityMicroResource> GetCommoditiesSorted(uint gen)
         {
             var list = items.GetValues(gen, x => x.Details.IsCommodity);
-            return list.OrderBy(x => x.Details.Type).ThenBy(x => x.Details.Name).ToList();
+            return list.OrderBy(x => x.Details.Type).ThenBy(x => x.Details.TranslatedName).ToList();
         }
 
         public List<MaterialCommodityMicroResource> GetMicroResourcesSorted(uint gen)
         {
             var list = items.GetValues(gen, x => x.Details.IsMicroResources);
-            return list.OrderBy(x => x.Details.Type).ThenBy(x => x.Details.Name).ToList();
+            return list.OrderBy(x => x.Details.Type).ThenBy(x => x.Details.TranslatedName).ToList();
         }
 
         public List<MaterialCommodityMicroResource> GetSorted(uint gen, bool commodityormaterial)       // true = commodity
@@ -110,9 +110,9 @@ namespace EliteDangerousCore
             List<MaterialCommodityMicroResource> ret = null;
 
             if (commodityormaterial)
-                ret = list.Where(x => x.Details.IsCommodity).OrderBy(x => x.Details.Type).ThenBy(x => x.Details.Name).ToList();
+                ret = list.Where(x => x.Details.IsCommodity).OrderBy(x => x.Details.Type).ThenBy(x => x.Details.TranslatedName).ToList();
             else
-                ret = list.Where(x => x.Details.IsMaterial).OrderBy(x => x.Details.Name).ToList();
+                ret = list.Where(x => x.Details.IsMaterial).OrderBy(x => x.Details.TranslatedName).ToList();
 
             return ret;
         }
@@ -272,5 +272,47 @@ namespace EliteDangerousCore
             return changed;
         }
 
+#if !TESTHARNESS
+        public uint Process(JournalEntry je, JournalEntry lastentry, bool insrv )
+        {
+            if (je is ICommodityJournalEntry || je is IMaterialJournalEntry || je is IMicroResourceJournalEntry)
+            {
+                items.NextGeneration();     // increment number, its cheap operation even if nothing gets changed
+
+                //System.Diagnostics.Debug.WriteLine("***********************" + je.EventTimeUTC + " GENERATION " + items.Generation);
+
+                if (je is ICommodityJournalEntry)
+                {
+                    ICommodityJournalEntry e = je as ICommodityJournalEntry;
+                    e.UpdateCommodities(this,insrv);
+                }
+
+                if (je is IMaterialJournalEntry)
+                {
+                    IMaterialJournalEntry e = je as IMaterialJournalEntry;
+                    e.UpdateMaterials(this);
+                }
+
+                if (je is IMicroResourceJournalEntry)
+                {
+                    IMicroResourceJournalEntry e = je as IMicroResourceJournalEntry;
+                    e.UpdateMicroResource(this, lastentry);
+                }
+
+                if (items.UpdatesAtThisGeneration == 0)         // if nothing changed, abandon it.
+                {
+                   // System.Diagnostics.Debug.WriteLine("*********************** {0} {1} No changes for Generation {2} Abandon", je.EventTimeUTC.ToString(), je.EventTypeStr, items.Generation);
+                    items.AbandonGeneration();
+                }
+                else
+                {
+                 //   System.Diagnostics.Debug.WriteLine("*********************** {0} {1} Generation {2} Changes {3}",je.EventTimeUTC.ToString(), je.EventTypeStr, items.Generation,items.UpdatesAtThisGeneration);
+                }
+            }
+
+            return items.Generation;        // return the generation we are on.
+        }
+
+#endif
     }
 }

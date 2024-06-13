@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2016-2021 EDDiscovery development team
+ * Copyright 2022-2024 EDDiscovery development team
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -10,11 +10,8 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
  * ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
- * 
- * EDDiscovery is not affiliated with Frontier Developments plc.
- *
- * Data courtesy of Coriolis.IO https://github.com/EDCD/coriolis , data is intellectual property and copyright of Frontier Developments plc ('Frontier', 'Frontier Developments') and are subject to their terms and conditions.
  */
+
 
 using System;
 using System.Collections.Generic;
@@ -36,12 +33,12 @@ namespace EliteDangerousCore
                 return var;
             else
             {
-                System.Diagnostics.Debug.WriteLine("*********** Unknown Actor: {{ \"{0}\", new Actor(\"{1}\") }},", fdname, locname ?? fdname.SplitCapsWordFull());
+                System.Diagnostics.Trace.WriteLine($"*** Unknown Actor: {{ \"{fdname}\", new Actor(\"{locname ?? fdname.SplitCapsWordFull()}\") }},");
                 return null;
             }
         }
 
-        public class Actor : IModuleInfo
+        public class Actor
         {
             public string Name;
             public Actor(string name) { Name = name; }
@@ -51,6 +48,13 @@ namespace EliteDangerousCore
         {
              { "skimmerdrone", new Actor("Skimmer Drone") },
              { "skimmer", new Actor("Skimmer Drone") },
+             { "tg_skimmer_01", new Actor("Thargoid Scavenger") },   // seen
+             { "tg_skimmer_02", new Actor("Thargoid Scavenger") },
+             { "tg_skimmer_03", new Actor("Thargoid Scavenger") },
+             { "titan_hardpoint01", new Actor("Thargoid Titan") },
+             { "titan_hardpoint02", new Actor("Thargoid Titan") },   // seen
+             { "titan_hardpoint03", new Actor("Thargoid Titan") },
+             { "glaive", new Actor("Thargoid Glaive") },        // seen
              { "ps_turretbasemedium02_6m", new Actor("Turret medium 2-6-M") },
              { "ps_turretbasesmall_3m", new Actor("Turret Small 3 M") },
              { "ps_turretbasemedium_skiff_6m", new Actor("Turret Medium 6 M") },
@@ -73,8 +77,13 @@ namespace EliteDangerousCore
              { "outpostcivilian", new Actor("Civilian Outpost") },
              { "asteroidbase", new Actor("Asteroid Base") },
              { "unknownsaucer", new Actor("Thargoid") },
-             { "unknownsaucer_f", new Actor("Thargoid") },
-             { "unknownsaucer_h", new Actor("Thargoid") },
+             { "unknownsaucer_a", new Actor("Thargoid") },
+             { "unknownsaucer_b", new Actor("Thargoid") },
+             { "unknownsaucer_c", new Actor("Thargoid") },
+             { "unknownsaucer_d", new Actor("Thargoid") },
+             { "unknownsaucer_e", new Actor("Thargoid") },  // seen
+             { "unknownsaucer_f", new Actor("Thargoid") },  
+             { "unknownsaucer_h", new Actor("Thargoid") },  // seen
              { "thargon", new Actor("Thargon") },
              { "coriolis", new Actor("Coriolis Station") },
              { "carrierdocka", new Actor("Carrier Dock A") },

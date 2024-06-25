@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EDDStatusDisplay", "EDDStat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JournalPlayer", "JournalPlayer\JournalPlayer.csproj", "{CF2581E7-2D7E-47E9-9BA1-2EB6A3195785}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertToAtString", "ConvertToAtString\ConvertToAtString.csproj", "{875799AF-52FF-4D05-AFFA-868D85FC92D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{CF2581E7-2D7E-47E9-9BA1-2EB6A3195785}.Release|x64.Build.0 = Release|Any CPU
 		{CF2581E7-2D7E-47E9-9BA1-2EB6A3195785}.Release|x86.ActiveCfg = Release|Any CPU
 		{CF2581E7-2D7E-47E9-9BA1-2EB6A3195785}.Release|x86.Build.0 = Release|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Debug|x64.Build.0 = Debug|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Debug|x86.Build.0 = Debug|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Release|x64.ActiveCfg = Release|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Release|x64.Build.0 = Release|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Release|x86.ActiveCfg = Release|Any CPU
+		{875799AF-52FF-4D05-AFFA-868D85FC92D5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

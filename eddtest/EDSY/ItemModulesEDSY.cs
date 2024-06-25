@@ -65,12 +65,21 @@ namespace EDDTest
                 ["agzresist"] = null,
                 ["unlimit"] = null,
                 ["unlimitcount"] = null,
+                ["mats"] = null,
+                ["special"] = null,
 
                 ["integ"] = "Integrity",
+                ["cost"] = "Cost",
+                ["mount"] = "Mount",
+                ["class"] = "Class",
+                ["rating"] = "Rating",
                 ["mass"] = "Mass",
                 ["boottime"] = "BootTime",
                 ["pwrdraw"] = "PowerDraw",
                 ["distdraw"] = "DistributorDraw",
+                ["rounds"] = "Rounds",
+                ["jitter"] = "Jitter",
+                ["hullbst"] = "HullStrengthBonus",
 
                 ["jamdur"] = "Time", // s
                 ["ecmdur"] = "Time",
@@ -122,6 +131,9 @@ namespace EDDTest
                 ["engheat"] = "ThermalLoad",
                 ["fsdheat"] = "ThermalLoad",
                 ["thmload"] = "ThermalLoad",
+                ["scbheat"] = "ThermalLoad",
+                ["ecmheat"] = "ThermalLoad",  //units/sec
+                ["thmdrain"] = "ThermalDrain",
 
                 ["afmrepcap"] = "Ammo",
                 ["ammomax"] = "Ammo",
@@ -136,7 +148,6 @@ namespace EDDTest
                 ["missile"] = "MissileType",
                 ["cabincls"] = "CabinClass",
 
-                ["scbheat"] = "SCBHeat",
                 ["spinup"] = "SCBSpinUp",
                 ["scbdur"] = "SCBDuration",
                 ["shieldrnfps"] = "ShieldReinforcement",
@@ -149,8 +160,6 @@ namespace EDDTest
 
                 ["ecmpwr"] = "ActivePower", // MW/use
 
-                ["ecmheat"] = "WasteHeat",  //units/sec
-                ["thmdrain"] = "WasteHeat",
 
                 ["brcdmg"] = "BreachDamage", // damage to target modules
                 ["minbrc"] = "BreachMin",
@@ -159,7 +168,7 @@ namespace EDDTest
                 ["thmwgt"] = "ThermalProportionDamage",
                 ["kinwgt"] = "KineticProportionDamage",
                 ["expwgt"] = "ExplosiveProportionDamage",
-                ["abswgt"] = "AbsolutePorportionDamage",
+                ["abswgt"] = "AbsoluteProportionDamage",
                 ["cauwgt"] = "CausticPorportionDamage",
                 ["axewgt"] = "AXPorportionDamage",
 
@@ -238,7 +247,7 @@ namespace EDDTest
                 ["maxmulacc"] = "MaximumAccelerationModifier",
 
                 ["minmulrot"] = "MinimumRotationModifier",
-                ["optmulrot"] = "OptimumRotationModifier",
+                ["optmulrot"] = "OptimalRotationModifier",
                 ["maxmulrot"] = "MaximumRotationModifier",
 
                 ["proberad"] = "ProbeRadius"
@@ -421,14 +430,27 @@ namespace EDDTest
                             {
                                 if (PropertiesToEDD[kvp.Key] != null)
                                 {
+                                    if ( fdname.StartsWith("Hpt_Railgun_Fixed"))
+                                    {
+                                        if (kvp.Key == "dps")
+                                        {
+                                            value = fdname.Contains("Small") ? 14.319.ToString() : fdname.Contains("Burst") ? 23.28.ToString() : 20.46.ToString();
+                                        }
+                                        else if (kvp.Key == "rof")
+                                        {
+                                            value = fdname.Contains("Small") ? 0.6135.ToString() : fdname.Contains("Burst") ? 0.4926.ToString() : 1.5517.ToString();
+                                        }
+                                        else if (kvp.Key == "bstint")
+                                        {
+                                            value = fdname.Contains("Small") ? 0.63.ToString() : fdname.Contains("Burst") ? 0.4.ToString() : 0.63.ToString();
+                                        }
+                                    }
                                     properties = properties.AppendPrePad($"{PropertiesToEDD[kvp.Key]} = {value}", ", ");
                                 }
                             }
                             else
                             {
-                                string nameu = char.ToUpper(kvp.Key[0]) + kvp.Key.Substring(1);
-                                properties = properties.AppendPrePad($"{nameu} = {value}", ", ");
-
+                                System.Diagnostics.Debug.Assert(false,$"*** ERROR unknown property {kvp.Key}");
                             }
                         }
                     }
@@ -461,6 +483,70 @@ namespace EDDTest
                 }
 
                 File.WriteAllLines(fileitemmodules, itemmodules);
+
+
+                // now process special effects and write out ship modules with delta values to debug
+                JObject speff = jo["expeffect"].Object();
+                foreach (KeyValuePair<string, JToken> sp in speff)
+                {
+                    string sline = $"[{sp.Value["fdname"]}] = new ShipModule(0,ShipModule.ModuleTypes.SpecialEffect,{sp.Value["special"].Str().AlwaysQuoteString()}) {{";
+                    bool prop = false;
+                    foreach (KeyValuePair<string, JToken> para in (JObject)sp.Value)
+                    {
+                        if (PropertiesToEDD.ContainsKey(para.Key))
+                        {
+                            if (PropertiesToEDD[para.Key] != null)
+                            {
+                                if (prop)
+                                    sline += ", ";
+                                sline += $"{PropertiesToEDD[para.Key]}={para.Value}";
+                                prop = true;
+                            }
+                        }
+                        else
+                            System.Diagnostics.Debug.Assert(false, $"*** ERROR unknown property {para.Key}");
+                    }
+
+                    sline += "},";
+                    System.Diagnostics.Debug.WriteLine($"{sline}");
+
+                }
+
+                string modstring = $"Dictionary<string, double> modifiercontrolvalue = new Dictionary<string, double> {{\r\n";
+                string fdmapping = $"Dictionary<string, string> modifierfokdmapping = new Dictionary<string, string> {{\r\n";
+
+                JArray attr = jo["attributes"].Array();
+                foreach (JObject at in attr)
+                {
+                    string name = at["attr"].Str();
+                    if (name.HasChars() && PropertiesToEDD.ContainsKey(name))
+                    {
+                        var modset = at.Contains("modset");
+                        var modadd = at.Contains("modadd");
+                        double? modmod = at["modmod"].DoubleNull();
+
+                        name = PropertiesToEDD[name];
+
+                        if (modset)
+                            modstring += $"    [{name.AlwaysQuoteString()}]=0,\r\n";
+                        else if (modadd)
+                            modstring += $"    [{name.AlwaysQuoteString()}]=1,\r\n";
+                        else if ( modmod.HasValue)
+                            modstring += $"    [{name.AlwaysQuoteString()}]={modmod},\r\n";
+
+                        string fdattr = at["fdattr"].StrNull();
+                        if ( fdattr != null )
+                        {
+                            fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = {name.AlwaysQuoteString()},\r\n";
+                        }
+                    }
+
+                }
+
+                modstring += $"}};\r\n";
+                fdmapping += $"}};\r\n";
+                System.Diagnostics.Debug.WriteLine(modstring);
+                System.Diagnostics.Debug.WriteLine(fdmapping);
             }
             else
                 File.WriteAllText(@"c:\code\errors.txt", error);

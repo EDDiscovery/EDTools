@@ -413,7 +413,39 @@ namespace EDDTest
                         continue;
 
                     string fdname = mod["fdname"].Str();
-                    
+
+                    if ( !mod.Contains("jitter") && (fdname.StartsWithIIC("hpt_pulselaserburst_")       // EDSY does not include jitter in some modules but its engineerable. based on mtype, add jitter
+                                                || fdname.StartsWithIIC("hpt_beamlaser_") 
+                                                || fdname.StartsWithIIC("hpt_cannon_")
+                                                || fdname.StartsWithIIC("hpt_guardian_shardcannon_")
+                                                || fdname.StartsWithIIC("hpt_slugshot_")
+                                                || fdname.StartsWithIIC("hpt_minelauncher_")
+                                                
+                                                || fdname.StartsWithIIC("hpt_atdumbfiremissile_")
+                                                || fdname.StartsWithIIC("hpt_dumbfiremissilerack_")
+                                                || fdname.StartsWithIIC("hpt_atventdisruptorpylon_")
+                                                || fdname.StartsWithIIC("hpt_basicmissilerack_")
+                                                || fdname.StartsWithIIC("hpt_advancedtorppylon_")
+                                                || fdname.StartsWithIIC("hpt_drunkmissilerack_")
+                                                || fdname.StartsWithIIC("hpt_causticmissile_")
+
+                                                || fdname.StartsWithIIC("hpt_atmulticannon_")
+                                                || fdname.StartsWithIIC("hpt_multicannon_")
+                                                || fdname.StartsWithIIC("hpt_plasmaaccelerator_")
+                                                || fdname.StartsWithIIC("hpt_railgun_")
+                                                || fdname.StartsWithIIC("hpt_plasmapointdefence_")
+                                                || fdname.StartsWithIIC("hpt_plasmashockcannon_")
+                                ))
+                    {
+                        mod["jitter"] = 0;
+                    }
+
+                    // note detailedsurface scanner is the only one without a power draw but we have seen a engineering recipe with it in
+                    //if ( !mod.Contains("pwrdraw") && !fdname.ContainsIIC("powerplant") && !fdname.ContainsIIC("fueltank") && !fdname.ContainsIIC("cargorack") && !fdname.ContainsIIC("reinforcement") && !fdname.ContainsIIC("passengercabin"))
+                    //{
+                    //    System.Diagnostics.Debug.WriteLine($"Module {fdname} no power draw");
+                    //}
+
                     string properties = "";
 
                     foreach( var kvp in mod)        // progamatically spit out the parameters
@@ -489,10 +521,15 @@ namespace EDDTest
                 JObject speff = jo["expeffect"].Object();
                 foreach (KeyValuePair<string, JToken> sp in speff)
                 {
-                    string sline = $"[{sp.Value["fdname"]}] = new ShipModule(0,ShipModule.ModuleTypes.SpecialEffect,{sp.Value["special"].Str().AlwaysQuoteString()}) {{";
+                    string fdname = sp.Value["fdname"].Str();
+                    string name = sp.Value["special"].Str();
+                    string sline = $"[{fdname.AlwaysQuoteString()}] = new ShipModule(0,ShipModule.ModuleTypes.SpecialEffect,{name.AlwaysQuoteString()}) {{";
                     bool prop = false;
                     foreach (KeyValuePair<string, JToken> para in (JObject)sp.Value)
                     {
+                        if (fdname == "special_thermalshock" && para.Key == "damage")       // does not seem to work
+                            continue;
+                        
                         if (PropertiesToEDD.ContainsKey(para.Key))
                         {
                             if (PropertiesToEDD[para.Key] != null)
@@ -513,12 +550,15 @@ namespace EDDTest
                 }
 
                 string modstring = $"Dictionary<string, double> modifiercontrolvalue = new Dictionary<string, double> {{\r\n";
-                string fdmapping = $"Dictionary<string, string> modifierfokdmapping = new Dictionary<string, string> {{\r\n";
+                string fdmapping = $"Dictionary<string, string> modifierfdmapping = new Dictionary<string, string> {{\r\n";
 
                 JArray attr = jo["attributes"].Array();
+
                 foreach (JObject at in attr)
                 {
                     string name = at["attr"].Str();
+                    string fdattr = at["fdattr"].StrNull();
+
                     if (name.HasChars() && PropertiesToEDD.ContainsKey(name))
                     {
                         var modset = at.Contains("modset");
@@ -534,14 +574,45 @@ namespace EDDTest
                         else if ( modmod.HasValue)
                             modstring += $"    [{name.AlwaysQuoteString()}]={modmod},\r\n";
 
-                        string fdattr = at["fdattr"].StrNull();
-                        if ( fdattr != null )
+                        if (fdattr != null)
                         {
-                            fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = {name.AlwaysQuoteString()},\r\n";
+                            // known complex variables we need to manually craft
+
+                            if (fdattr != "DamagePerSecond" && fdattr != "Damage" && fdattr != "RateOfFire" && fdattr != "ShieldGenStrength" && fdattr != ""
+                                            && fdattr != "ShieldGenOptimalMass" && fdattr != "EngineOptimalMass" && fdattr != "EngineOptPerformance" && fdattr != "Range")
+                            {
+                                fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = new string[] {{ {name.AlwaysQuoteString()}, }},\r\n";
+                            }
+                            else
+                            {
+                             //   fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = ??? complex,\r\n";
+                            }
                         }
+                    }
+                    else if ( fdattr != null )
+                    {
+                        // many have fdattr but we don't have an attribute to match
+
+                        fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = new string[] {{}},\r\n";
                     }
 
                 }
+
+                fdmapping += "Triage these:" + Environment.NewLine;
+
+                JObject fattr = jo["fdfieldattr"].Object();
+
+                foreach( var fo in fattr)
+                {
+                    if ( !fo.Value.IsNull)
+                    {
+                        fdmapping += $"    [{fo.Key.AlwaysQuoteString()}] = new string[] {{ {PropertiesToEDD[fo.Value.Str()].AlwaysQuoteString()} }},\r\n";
+                    }
+                    else
+                        fdmapping += $"    [{fo.Key.AlwaysQuoteString()}] = new string[] {{}},\r\n";
+                }
+
+
 
                 modstring += $"}};\r\n";
                 fdmapping += $"}};\r\n";
@@ -555,17 +626,22 @@ namespace EDDTest
 
         void ProcessData(long fid, string fdname, string edsyname, string parameters)
         {
+            if (fdname.StartsWithIIC("hpt_railgun_fixed_medium_burst"))
+            {
+
+            }
+
             if (fid == 0)
             {
                 System.Diagnostics.Debug.WriteLine($"Bad FID {fdname} : {parameters}");
                 return;
             }
 
-            string fids = fid.ToStringInvariant();
+            string fids = "(" + fid.ToStringInvariant() + ",";
             int i = Array.FindIndex(itemmodules, x => x.Contains(fids));
             if (i >= 0)
             {
-                int pos = itemmodules[i].IndexOf(fids);
+                int pos = itemmodules[i].IndexOf(fids)+1;
 
                 StringParser sp = new StringParser(itemmodules[i], pos);
                 sp.NextLongComma(",");    // fid

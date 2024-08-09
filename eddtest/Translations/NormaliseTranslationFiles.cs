@@ -25,8 +25,8 @@ namespace EDDTest
     public static class NormaliseTranslationFiles
     {
         // usage:
-        // report on example state: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex - "NS NoOutput" c:\code\renames.lst stdenums
-        // normalise normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex francais-fr "NS"
+        // report on example state: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex deutsch
+        // normalise normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex francais-fr
 
         // you can scan for enums scanforenums  stdenums . *.cs to check if enums are in use
 
@@ -152,6 +152,9 @@ namespace EDDTest
                             if (res != null)
                             {
                                 System.Diagnostics.Debug.WriteLine(res);
+                                Console.WriteLine(res);
+                                Console.WriteLine("Press key to continue");
+                                Console.ReadKey();
                                 reporttext += res + Environment.NewLine;
                             }
 

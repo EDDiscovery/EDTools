@@ -1,6 +1,5 @@
 ﻿/*
- * Copyright © 2015 - 2021 robbyxp @ github.com
- *
+ * Copyright © 2015 - 2024 robbyxp @ github.com
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
  *
@@ -10,8 +9,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
  * ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
- * 
- * EDDiscovery is not affiliated with Frontier Developments plc.
  */
 
 using BaseUtils;
@@ -24,24 +21,29 @@ using System.Text;
 
 namespace EDDTest
 {
+    // EDSY Debugging and extracting eddb info
+    // check out EDSY, then copy the SLN from the lower folder
+    //to remove the error: edsy.js: 7084
+    //	var updateUIFitHash = function(buildhash) {
+    //		return true;
+    //        
+    //to get eddb JSON out: edsy.js: 12234
+    //        var onDOMContentLoaded = function(e) {
+    //        ... at end
+    //        var out = JSON.stringify(eddb);
+    //		console.log(out);
+
+    // usage
+    // edsy c:\code\eddb.js "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
+    // edsy c:\code\edsyoutput.txt "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
+
     public class ItemModulesEDSY
     {
-        // using chrome and the inspector, open up edsy and grab eddb.js and save it as a file - you need to do it this way, not from https://github.com/taleden/EDSY.git, as chrome spaces out the data
-        // use this function to read eddb.js, convert to json, write a report, and check itemmodules.cs vs it, and replace itemmodules.cs if its wrong
-
-        // edsy c:\code\eddb.js "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
-
         string[] itemmodules = null;
 
-        public void ReadEDSY(string filename, string fileitemmodules)
+        public void ReadEDSY(string jsoneddbfilepath, string itemmodulesfilepath)
         {
-            itemmodules = File.ReadAllLines(fileitemmodules);
-            if (itemmodules == null)
-                return;
-
             // convert EDSY file to json
-
-            StringBuilder jsontext = new StringBuilder(200000);
 
             Dictionary<string, string> PropertiesToEDD = new Dictionary<string, string>
             {
@@ -62,7 +64,6 @@ namespace EDDTest
                 ["sco"] = null,
                 ["mlctype"] = null, // already in name (multi control type)
                 ["noexpeffects"] = null,
-                ["agzresist"] = null,
                 ["unlimit"] = null,
                 ["unlimitcount"] = null,
                 ["mats"] = null,
@@ -172,6 +173,8 @@ namespace EDDTest
                 ["cauwgt"] = "CausticPorportionDamage",
                 ["axewgt"] = "AXPorportionDamage",
 
+                ["agzresist"] = "GuardianModuleResistance",
+
                 ["repairrtg"] = "RepairCostPerMat",
                 ["repaircon"] = "RateOfRepairConsumption",
                 ["bstrof"] = "BurstRateOfFire",
@@ -253,81 +256,16 @@ namespace EDDTest
                 ["proberad"] = "ProbeRadius"
             };
 
-        
-            //foreach( var kvp in PropertiesToEDD) System.Diagnostics.Debug.WriteLine($"[{kvp.Value.AlwaysQuoteString()}] = {kvp.Key.AlwaysQuoteString()},");
+            string jsontext = File.ReadAllText(jsoneddbfilepath);
 
-            using (Stream fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (StreamReader sr = new StreamReader(fs))
-                {
-                    string linein;
-                    bool inlongcomment = false;
-
-                    // massage javascript to json
-
-                    while ((linein = sr.ReadLine()) != null)
-                    {
-                        string trimmed = linein.Trim();
-                        if (inlongcomment)
-                        {
-                            if (trimmed.Contains("*/"))
-                                inlongcomment = false;
-                        }
-                        else if (trimmed.StartsWith("/*"))
-                        {
-                            if (!trimmed.Contains("*/"))
-                                inlongcomment = true;
-                        }
-                        else if (!trimmed.StartsWith("//") && !trimmed.StartsWith("'use"))
-                        {
-                            int comment = linein.IndexOf("// ");
-                            if (comment == -1)
-                                comment = linein.IndexOf("//\t");
-                            if (comment == -1)
-                                comment = linein.IndexOf("/* ");
-                            if (comment == -1)
-                                comment = linein.IndexOf("/*\t");
-                            if (comment != -1)
-                                linein = linein.Substring(0, comment);
-
-                            string outstr = linein;
-
-                            if (trimmed.StartsWith("var eddb = {"))
-                                outstr = "{";
-                            else if (trimmed == "};")
-                                outstr = "}";
-                            else
-                            {
-                                StringParser sp = new StringParser(linein);
-
-                                string id = sp.NextWord(": ");
-                                if (sp.IsCharMoveOn(':'))
-                                {
-                                    string lineleft = sp.LineLeft.Replace("'", "\"").Replace("NaN", "-999").Replace("1 / 0", "null").Replace("1/0", "null");
-                                    if (lineleft.Contains("/") && !lineleft.Contains("\""))
-                                    {
-                                        // System.Diagnostics.Debug.WriteLine(lineleft);
-                                        Eval evt = new Eval(lineleft, allowfp: true);
-                                        if (evt.TryEvaluateDouble(false, false, out double value))
-                                            lineleft = value.ToStringInvariant() + ",";
-                                    }
-
-                                    outstr = $"    {id.AlwaysQuoteString()}:{lineleft}";
-                                }
-                                else
-                                    outstr = outstr.Replace("'", "\"");
-                            }
-
-                            jsontext.AppendLine(outstr);
-                        }
-                    }
-                }
-            }
-
-            JObject jo = JObject.Parse(jsontext.ToString(), out string error, JToken.ParseOptions.AllowTrailingCommas);
+            JObject jo = JObject.Parse(jsontext, out string error, JToken.ParseOptions.AllowTrailingCommas);
 
             if (jo != null)
             {
+                itemmodules = File.ReadAllLines(itemmodulesfilepath);
+                if (itemmodules == null)
+                    return;
+
                 JObject modules = jo["module"].Object();
                 JObject shiplist = jo["ship"].Object();
 
@@ -435,10 +373,48 @@ namespace EDDTest
                                                 || fdname.StartsWithIIC("hpt_railgun_")
                                                 || fdname.StartsWithIIC("hpt_plasmapointdefence_")
                                                 || fdname.StartsWithIIC("hpt_plasmashockcannon_")
+                                                || fdname.StartsWithIIC("hpt_pulselaser_")
                                 ))
                     {
                         mod["jitter"] = 0;
                     }
+
+                    if (fdname.StartsWithIIC("int_hullreinforcement") && !mod.Contains("hullbst"))
+                    {
+                        mod["hullbst"] = 0;
+                    }
+
+                    if (fdname.StartsWithIIC("hpt_slugshot") || fdname.StartsWithIIC("hpt_guardian_gausscannon"))
+                    {
+                        if (!mod.Contains("bstrof"))
+                        {
+                            mod["bstrof"] = 1;
+                        }
+
+                        if (!mod.Contains("bstsize"))
+                        {
+                            mod["bstsize"] = 1;
+                        }
+                    }
+
+                    if (fdname.EqualsIIC("hpt_guardian_gausscannon_fixed_small"))       // these in the file do not match the edsy view on screen...
+                    {
+                        mod["dps"] = 19.7;
+                        mod["rof"] = 0.4926;
+                    }
+
+                    if (fdname.EqualsIIC("hpt_guardian_gausscannon_fixed_medium"))      // these in the file do not match the edsy view on screen...
+                    {
+                        mod["dps"] = 34.46;
+                        mod["rof"] = 0.4926;
+                    }
+
+                    if ( fdname.EqualsIIC("int_detailedsurfacescanner_tiny"))       // older engineering changed its mass and powerdraw, so lets add it in so it does not crash it
+                    {
+                        mod["mass"] = 0;
+                        mod["pwrdraw"] = 0;
+                    }
+
 
                     // note detailedsurface scanner is the only one without a power draw but we have seen a engineering recipe with it in
                     //if ( !mod.Contains("pwrdraw") && !fdname.ContainsIIC("powerplant") && !fdname.ContainsIIC("fueltank") && !fdname.ContainsIIC("cargorack") && !fdname.ContainsIIC("reinforcement") && !fdname.ContainsIIC("passengercabin"))
@@ -514,7 +490,7 @@ namespace EDDTest
 
                 }
 
-                File.WriteAllLines(fileitemmodules, itemmodules);
+                File.WriteAllLines(itemmodulesfilepath, itemmodules);
 
 
                 // now process special effects and write out ship modules with delta values to debug
@@ -631,23 +607,33 @@ namespace EDDTest
 
             }
 
-            if (fid == 0)
+            int lineno = -1;
+
+            if (fid > 0)       // find by fid if its there
             {
-                System.Diagnostics.Debug.WriteLine($"Bad FID {fdname} : {parameters}");
-                return;
+                string fids = "(" + fid.ToStringInvariant() + ",";
+                lineno = Array.FindIndex(itemmodules, x => x.Contains(fids));
+            }
+            else
+            {
+                string fdnamef = fdname.AlwaysQuoteString();
+                lineno = Array.FindIndex(itemmodules, x => x.ContainsIIC(fdnamef));     // try fdname quoted
+
+                if ( lineno == -1 )
+                {
+                    lineno = Array.FindIndex(itemmodules, x => x.ContainsIIC(edsyname));    // else try text
+                }
             }
 
-            string fids = "(" + fid.ToStringInvariant() + ",";
-            int i = Array.FindIndex(itemmodules, x => x.Contains(fids));
-            if (i >= 0)
-            {
-                int pos = itemmodules[i].IndexOf(fids)+1;
+            int pos = lineno >= 0 ? itemmodules[lineno].IndexOf("new ShipModule(") + 15 : -1;
 
-                StringParser sp = new StringParser(itemmodules[i], pos);
-                sp.NextLongComma(",");    // fid
+            if (lineno >= 0 && pos > 0)
+            {
+                StringParser sp = new StringParser(itemmodules[lineno], pos);
+                long? fidread = sp.NextLongComma(",");    // fid
                 string edtype = sp.NextWordComma();  // type
                 string name = sp.NextQuotedWord();
-                if (sp.IsCharMoveOn(')'))
+                if (fidread.HasValue && edtype != null && name != null && sp.IsCharMoveOn(')'))
                 {
                     edsyname = edsyname.Replace("-", " ");      // Multi-Cannon
                     name = name.Replace("-", " ");      // type-6
@@ -665,14 +651,95 @@ namespace EDDTest
                     {
                         System.Diagnostics.Debug.WriteLine($"Difference {fid} {fdname} `{sp.LineLeft}` vs `{lineshouldbe}`");
 
-                        itemmodules[i] = itemmodules[i].Left(pos) + $"{fid},{edtype},{name.AlwaysQuoteString()}){lineshouldbe}";
+                        itemmodules[lineno] = itemmodules[lineno].Left(pos) + $"{fidread.Value},{edtype},{name.AlwaysQuoteString()}){lineshouldbe}";
                     }
                 }
                 else
-                    System.Diagnostics.Debug.WriteLine($"Not in normalised form {fid} {fdname}");
-            }
+                    System.Diagnostics.Debug.WriteLine($"Not in normalised form (front part) {fid} {fdname} : {itemmodules[lineno]}");
+            }   
             else
-                System.Diagnostics.Debug.WriteLine($"Can't find {fid} {fdname}");
+                System.Diagnostics.Debug.WriteLine($"Can't find {fid} {fdname} {edsyname}");
         }
     }
 }
+
+
+
+
+// older convert EDDB taken from chrome
+
+//foreach( var kvp in PropertiesToEDD) System.Diagnostics.Debug.WriteLine($"[{kvp.Value.AlwaysQuoteString()}] = {kvp.Key.AlwaysQuoteString()},");
+
+//StringBuilder jsontext = new StringBuilder(200000);
+//using (Stream fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+//{
+//    using (StreamReader sr = new StreamReader(fs))
+//    {
+//        string linein;
+//        bool inlongcomment = false;
+
+//        // massage javascript to json
+
+//        while ((linein = sr.ReadLine()) != null)
+//        {
+//            string trimmed = linein.Trim();
+//            if (inlongcomment)
+//            {
+//                if (trimmed.Contains("*/"))
+//                    inlongcomment = false;
+//            }
+//            else if (trimmed.StartsWith("/*"))
+//            {
+//                if (!trimmed.Contains("*/"))
+//                    inlongcomment = true;
+//            }
+//            else if (!trimmed.StartsWith("//") && !trimmed.StartsWith("'use"))
+//            {
+//                int comment = linein.IndexOf("// ");
+//                if (comment == -1)
+//                    comment = linein.IndexOf("//\t");
+//                if (comment == -1)
+//                    comment = linein.IndexOf("/* ");
+//                if (comment == -1)
+//                    comment = linein.IndexOf("/*\t");
+//                if (comment != -1)
+//                    linein = linein.Substring(0, comment);
+
+//                string outstr = linein;
+
+//                if (trimmed.StartsWith("var eddb = {"))
+//                    outstr = "{";
+//                else if (trimmed == "};")
+//                    outstr = "}";
+//                else
+//                {
+//                    StringParser sp = new StringParser(linein);
+
+//                    string id = sp.NextWord(": ");
+//                    if (sp.IsCharMoveOn(':'))
+//                    {
+//                        string lineleft = sp.LineLeft.Replace("'", "\"").Replace("NaN", "-999").Replace("1 / 0", "null").Replace("1/0", "null");
+//                        if (lineleft.Contains("/") && !lineleft.Contains("\""))
+//                        {
+//                            // System.Diagnostics.Debug.WriteLine(lineleft);
+//                            Eval evt = new Eval(lineleft, allowfp: true);
+//                            if (evt.TryEvaluateDouble(false, false, out double value))
+//                                lineleft = value.ToStringInvariant() + ",";
+//                        }
+
+//                        need to decode it out
+
+
+//                        outstr = $"    {id.AlwaysQuoteString()}:{lineleft}";
+//                    }
+//                    else
+//                        outstr = outstr.Replace("'", "\"");
+//                }
+
+//                jsontext.AppendLine(outstr);
+//            }
+//        }
+//    }
+//}
+
+// BaseUtils.FileHelpers.TryWriteToFile(@"c:\code\convertout.json", jsontext.ToString());

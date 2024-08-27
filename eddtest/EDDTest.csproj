@@ -198,6 +198,8 @@
     <Compile Include="EDDI Data\EDDISignalCheck.cs" />
     <Compile Include="EDDI Data\EDDISignalSources.cs" />
     <Compile Include="From EDD Project Manually copied\Identifiers.cs" />
+    <Compile Include="From EDD Project Manually copied\MaterialCommoditiesRecipes.cs" />
+    <Compile Include="Frontier\ArtieData.cs" />
     <Compile Include="Misc\OutfittingCSV.cs" />
     <Compile Include="From EDD Project Manually copied\ItemActors.cs" />
     <Compile Include="From EDD Project Manually copied\ItemData.cs" />
@@ -216,7 +218,7 @@
     <Compile Include="Coriolis\CorolisEng.cs" />
     <Compile Include="Coriolis\CorolisShips.cs" />
     <Compile Include="Coriolis\CorolisModules.cs" />
-    <Compile Include="Misc\FrontierData.cs" />
+    <Compile Include="Frontier\FrontierData.cs" />
     <Compile Include="EDSY\ItemModulesEDSY.cs" />
     <Compile Include="Translations\Enums.cs" />
     <Compile Include="Misc\InsertText.cs" />

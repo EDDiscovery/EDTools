@@ -122,7 +122,7 @@ namespace EDDTest
 
     class ServicesAnalyse : JournalAnalyse
     {
-        Dictionary<string, int> rep = new Dictionary<string, int>();
+        SortedDictionary<string, int> rep = new SortedDictionary<string, int>();
         public bool Process(int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("StationServices"))
@@ -135,9 +135,9 @@ namespace EDDTest
                         rep[bt]++;
                     else
                         rep[bt] = 1;
-                    return true;
 
                 }
+                return true;
             }
 
             return false;
@@ -703,6 +703,8 @@ namespace EDDTest
                 ja = new ShipTypeAnalyse();
             else if (type == "loadout")
                 ja = new LoadoutAnalyse();
+            else if (type == "services")
+                ja = new ServicesAnalyse();
             else
             {
                 Console.Error.WriteLine("Not recognised analysis type");

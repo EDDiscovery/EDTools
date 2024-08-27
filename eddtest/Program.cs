@@ -426,6 +426,16 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
+                else if (cmd.Equals("artiedata"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
+                        ArtieData.Process(args.Next());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
                 else if (cmd.Equals("fdevids"))
                 {
                     if (args.Left >= 1)

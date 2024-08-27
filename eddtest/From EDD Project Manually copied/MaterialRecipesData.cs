@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2016-2023 EDDiscovery development team
+ * Copyright © 2016-2024 EDDiscovery development team
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -22,15 +22,15 @@ namespace EliteDangerousCore
     {
         public class Recipe
         {
-            public string Name { get; private set; }
+            public string Name { get; private set; }        // name of receipe ie "Lightweight Hull Reinforcement"
             public MaterialCommodityMicroResourceType[] Ingredients { get; private set; }
             public int[] Amount { get; private set; }
             public int Count { get { return Ingredients.Length; } }
             public int Amounts { get { return Amount.Sum(); } }     // number of items
 
-            public Recipe(string n, string ingredientsstring)
+            public Recipe(string name, string ingredientsstring)
             {
-                Name = n;
+                Name = name;
                 string[] ilist = ingredientsstring.Split(',');
                 Ingredients = new MaterialCommodityMicroResourceType[ilist.Length];
                 Amount = new int[ilist.Length];
@@ -43,7 +43,7 @@ namespace EliteDangerousCore
                     System.Diagnostics.Debug.Assert(Ingredients[i] != null, "Not found ingredient " + Name + " " + ingredientsstring + " i=" + i + " " + Ingredients[i]);
 
                     // if (Ingredients[i].Category == MaterialCommodityMicroResourceType.CatType.Commodity) System.Diagnostics.Debug.WriteLine($"Recipe {Name} {ingredientsstring} has a commodity {Ingredients[i].Name}");
-                   // if (Ingredients[i].IsMicroResources) System.Diagnostics.Debug.WriteLine($"Recipe {Name} {ingredientsstring} has a MR {Ingredients[i].Name} {Ingredients[i].Category}");
+                    // if (Ingredients[i].IsMicroResources) System.Diagnostics.Debug.WriteLine($"Recipe {Name} {ingredientsstring} has a MR {Ingredients[i].Name} {Ingredients[i].Category}");
 
                     bool countsuccess = int.TryParse(s, out Amount[i]);
                     System.Diagnostics.Debug.Assert(countsuccess, "Count missing from ingredient");
@@ -87,56 +87,56 @@ namespace EliteDangerousCore
         }
 
 
-        [System.Diagnostics.DebuggerDisplay("Rec {FDName} {Level} {ModulesString} {string.Join(\",\",Engineers)}")]
+        [System.Diagnostics.DebuggerDisplay("Rec {FDName} {Level} {ModuleList} {string.Join(\",\",Engineers)}")]
         public class EngineeringRecipe : Recipe
         {
             public string Level { get; private set; }       // may be NA or 1 to 5
             public int LevelInt { get { return Level.InvariantParseInt(-1); } }     // -1 or 1 to 5
-            public string ModuleList { get; private set; }
+            public string ModuleList { get; private set; }  // comma separ list of module type names (although we don't use this feature now)
             public string[] Modules { get { return ModuleList.Split(','); } }
-            public string[] Engineers { get ; private set; }
+            public string[] Engineers { get; private set; }
             public string FDName { get; private set; }       // only certain types have a fdname
 
-            public EngineeringRecipe(string n, string fdname, string indg, string mod, string lvl, string engnrs)
-                : base(n, indg)
+            public EngineeringRecipe(string name, string fdname, string ingredientlist, string moduletypelist, string lvl, string engnrs)   // normal recipes
+                : base(name, ingredientlist)
             {
                 this.FDName = fdname;
                 Level = lvl;
-                ModuleList = mod;
+                ModuleList = moduletypelist;
                 Engineers = engnrs.Split(',');
             }
 
-            public EngineeringRecipe(string n, string fdname, string type, string mod, string indg)        // for tech broker
-                : base(n, indg)
+            public EngineeringRecipe(string name, string fdname, string type, string moduletypelist, string ingredientlist)        // for tech broker
+                : base(name, ingredientlist)
             {
                 Level = "NA";
                 this.FDName = fdname;
-                ModuleList = mod;
+                ModuleList = moduletypelist;
                 Engineers = type.Split(',');
             }
 
-            public EngineeringRecipe(string n, string fdname, string mod, string indg)        // for special effects
-                : base(n, indg)
+            public EngineeringRecipe(string n, string fdname, string moduletypelist, string ingredientlist)        // for special effects
+                : base(n, ingredientlist)
             {
                 Level = "NA";
                 this.FDName = fdname;
-                ModuleList = mod;
+                ModuleList = moduletypelist;
                 Engineers = new string[] { "Special Effect" };
             }
 
-            public EngineeringRecipe(string type, string manu, int lvl, string indg)        // for suit/weapon upgrades
-                : base(manu, indg)
+            public EngineeringRecipe(string type, string manu, int lvl, string ingredientlist)        // for suit/weapon upgrades
+                : base(manu, ingredientlist)
             {
                 Level = lvl.ToString();
                 ModuleList = type;
                 Engineers = type.Split(',');
             }
 
-            public EngineeringRecipe(string type, string fdname, string manu, string n, int cost, string indg, string eng)        // for suit/weapon engineer mods
-                : base(n + (manu != "All" ? (": " + manu) : ""), indg)
+            public EngineeringRecipe(string moduletypelist, string fdname, string manu, string name, int cost, string ingredientlist, string eng)        // for suit/weapon engineer mods
+                : base(name + (manu != "All" ? (": " + manu) : ""), ingredientlist)
             {
                 Level = "NA";
-                ModuleList = type;
+                ModuleList = moduletypelist;
                 this.FDName = fdname;
                 Engineers = eng.Split(',');
             }
@@ -166,7 +166,7 @@ namespace EliteDangerousCore
             MaterialCommodityMicroResourceType mc = MaterialCommodityMicroResourceType.GetByFDName(fdname);
             if (mc != null && EngineeringRecipesByMaterial.ContainsKey(mc))
             {
-                string str = String.Join(join, EngineeringRecipesByMaterial[mc].Select(x => x.ModuleList + " " + x.Name + (x.Level!="NA" ? ("-" + x.Level):"") + ": " + x.IngredientsStringLong + " @ " + string.Join(",", x.Engineers)));
+                string str = String.Join(join, EngineeringRecipesByMaterial[mc].Select(x => x.ModuleList + " " + x.Name + (x.Level != "NA" ? ("-" + x.Level) : "") + ": " + x.IngredientsStringLong + " @ " + string.Join(",", x.Engineers)));
                 return str;
             }
             else
@@ -188,8 +188,15 @@ namespace EliteDangerousCore
             return SynthesisRecipes.Find(x => x.Name.Equals(recipename, StringComparison.InvariantCultureIgnoreCase) && x.Level.Equals(level, StringComparison.InvariantCultureIgnoreCase));
         }
 
+        // find by fdname, may be null
+        public static EngineeringRecipe FindRecipe(string fdname)
+        {
+            fdname = fdname.ToLowerInvariant();
+            return EngineeringRecipes.Find(x => x.FDName != null && x.FDName.Equals(fdname));
+        }
+
         public static List<SynthesisRecipe> SynthesisRecipes = new List<SynthesisRecipe>()
-        {            
+        {
             new SynthesisRecipe( "AFM Refill", "Premium","6V,4Cr,2Zn,2Zr,1Te,1Ru" ),
             new SynthesisRecipe( "AFM Refill", "Standard","6V,2Mn,1Mo,1Zr,1Sn" ),
             new SynthesisRecipe( "AFM Refill", "Basic","3V,2Ni,2Cr,2Zn" ),
@@ -302,10 +309,11 @@ namespace EliteDangerousCore
                             .GroupBy(a => a.mat)
                             .ToDictionary(g => g.Key, g => g.Select(a => a.recipe).ToList());
 
+
         public static List<EngineeringRecipe> EngineeringRecipes = new List<EngineeringRecipe>()
         {
 
-#region Engineering Recipes
+        #region Engineering Recipes
 
         new EngineeringRecipe("Shielded", "misc_shielded", "1WSE", "AFM", "1", "Bill Turner,Lori Jameson,Petra Olmanova" ),
         new EngineeringRecipe("Shielded", "misc_shielded", "1C,1SHE", "AFM", "2", "Bill Turner,Lori Jameson,Petra Olmanova" ),

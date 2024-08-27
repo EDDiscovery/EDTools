@@ -19,7 +19,7 @@ using System.Linq;
 
 namespace EliteDangerousCore
 {
-    [System.Diagnostics.DebuggerDisplay("Mat {Category} {Type} {MaterialGroup} {Name} {FDName} {Shortname}")]
+    [System.Diagnostics.DebuggerDisplay("Mat {Category} {Type} {MaterialGroup} {EnglishName} {FDName} {Shortname}")]
     public class MaterialCommodityMicroResourceType
     {
         public enum CatType

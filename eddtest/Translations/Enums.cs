@@ -23,7 +23,8 @@ namespace EDDTest
 {
     public static class Enums
     {
-        // EDD: scanforenums stdenums   . *.cs  located at c:\code\eddiscovery
+        // EDD: scanforenums enumfile;enumfile;..  c:\code\eddiscovery *.cs  
+        // EDD: scanforenums eddiscoveryrootfolder c:\code\eddiscovery *.cs     - uses std enum translator files
         static public void ScanForEnums(string enums, FileInfo[] files)
         {
             var elist = ReadEnums(enums,true);
@@ -56,7 +57,7 @@ namespace EDDTest
 
                     foreach( var x in update)
                     {
-                        elist[x] = new Tuple<string, int>(elist[x].Item1, elist[x].Item2 + 1);
+                        elist[x] = new Tuple<string,string, int>(elist[x].Item1, elist[x].Item2, elist[x].Item3 + 1);
 
                     }
                 }
@@ -66,29 +67,32 @@ namespace EDDTest
 
             foreach (var kvp in elist)
             {
-                if ( kvp.Value.Item2 == 0 )
+                if ( kvp.Value.Item3 == 0 )
                 {
-                    retlist += $"Enum symbol {kvp.Key} {kvp.Value.Item1}  : Referenced {kvp.Value.Item2}" + Environment.NewLine;
+                    retlist += $"Enum symbol {kvp.Key} {kvp.Value.Item1}:{kvp.Value.Item2}  : Referenced {kvp.Value.Item3}" + Environment.NewLine;
                 }
             }
 
             File.WriteAllText("report.txt", retlist);
         }
 
-        static public Dictionary<string, Tuple<string,int>> ReadEnums(string enums, bool returnid = false)
+        static public Dictionary<string, Tuple<string,string,int>> ReadEnums(string enums, bool returnid = false)
         {
             if (enums != null)
             {
-                if (enums == "stdenums")
+                if (Directory.Exists(enums))
                 {
-                    enums = @"c:\code\eddiscovery\eddiscovery\translations\eddiscoverytranslations.cs;" +
-                        @"c:\code\eddiscovery\elitedangerouscore\elitedangerous\elitedangerous\translations.cs;" +
-                        @"c:\code\eddiscovery\extendedcontrols\extendedcontrols\forms\translationids.cs;" +
-                        @"C:\Code\EDDiscovery\ActionLanguage\ActionLanguage\ActionEditing\TranslationIDs.cs;" +
-                        @"C:\Code\EDDiscovery\ExtendedControls\ExtendedForms\TranslationIDs.cs";
+                    enums = 
+                        enums + @"\eddiscovery\translations\eddiscoverytranslations.cs;" +
+                        enums + @"\elitedangerouscore\elitedangerous\elitedangerous\translations.cs;" +
+                        enums + @"\extendedcontrols\extendedcontrols\forms\translationids.cs;" +
+                        enums + @"\ActionLanguage\ActionLanguage\ActionEditing\TranslationIDs.cs;" +
+                        enums + @"\ExtendedControls\ExtendedForms\TranslationIDs.cs;" +
+                        enums + @"\ActionLanguage\ActionLanguage\AddOnManager\EDDiscoveryTranslations.cs";
                 }
 
-                var enumerations = new Dictionary<string, Tuple<string,int>>();
+
+                var enumerations = new Dictionary<string, Tuple<string, string, int>>();
                 string[] files = enums.Split(";");
                 string classname = "";
 
@@ -112,7 +116,7 @@ namespace EDDTest
                             string e = s.NextWord(",\\");
                             if (returnid)
                                 e = classname + "." + e;
-                            enumerations[e] = new Tuple<string,int>(s.LineLeft,0);
+                            enumerations[e] = new Tuple<string,string,int>(f, s.LineLeft,0);
                         }
                     }
                 }

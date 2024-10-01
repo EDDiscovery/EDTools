@@ -63,6 +63,12 @@ namespace JournalPlayer
             this.textBoxGotoLineNo = new System.Windows.Forms.TextBox();
             this.label10 = new System.Windows.Forms.Label();
             this.buttonRestart = new System.Windows.Forms.Button();
+            this.buttonViewInput = new System.Windows.Forms.Button();
+            this.buttonMarketBuy = new System.Windows.Forms.Button();
+            this.textBoxGotoEntry = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.buttonLocation = new System.Windows.Forms.Button();
+            this.buttonScan = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxSourceFolder
@@ -90,7 +96,7 @@ namespace JournalPlayer
             // 
             // richTextBoxCurrentEntry
             // 
-            this.richTextBoxCurrentEntry.Location = new System.Drawing.Point(111, 567);
+            this.richTextBoxCurrentEntry.Location = new System.Drawing.Point(111, 575);
             this.richTextBoxCurrentEntry.Name = "richTextBoxCurrentEntry";
             this.richTextBoxCurrentEntry.Size = new System.Drawing.Size(781, 200);
             this.richTextBoxCurrentEntry.TabIndex = 6;
@@ -99,7 +105,7 @@ namespace JournalPlayer
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(4, 570);
+            this.label3.Location = new System.Drawing.Point(4, 578);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(105, 13);
             this.label3.TabIndex = 0;
@@ -135,7 +141,7 @@ namespace JournalPlayer
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 347);
+            this.label1.Location = new System.Drawing.Point(4, 355);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(93, 13);
             this.label1.TabIndex = 0;
@@ -143,7 +149,7 @@ namespace JournalPlayer
             // 
             // richTextBoxNextEntry
             // 
-            this.richTextBoxNextEntry.Location = new System.Drawing.Point(111, 344);
+            this.richTextBoxNextEntry.Location = new System.Drawing.Point(111, 352);
             this.richTextBoxNextEntry.Name = "richTextBoxNextEntry";
             this.richTextBoxNextEntry.Size = new System.Drawing.Size(781, 200);
             this.richTextBoxNextEntry.TabIndex = 5;
@@ -152,7 +158,7 @@ namespace JournalPlayer
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(4, 260);
+            this.label6.Location = new System.Drawing.Point(3, 288);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(56, 13);
             this.label6.TabIndex = 0;
@@ -167,7 +173,7 @@ namespace JournalPlayer
             // 
             // buttonStep
             // 
-            this.buttonStep.Location = new System.Drawing.Point(7, 228);
+            this.buttonStep.Location = new System.Drawing.Point(7, 219);
             this.buttonStep.Name = "buttonStep";
             this.buttonStep.Size = new System.Drawing.Size(75, 23);
             this.buttonStep.TabIndex = 3;
@@ -187,7 +193,7 @@ namespace JournalPlayer
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(111, 228);
+            this.buttonStop.Location = new System.Drawing.Point(111, 219);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 3;
@@ -197,7 +203,7 @@ namespace JournalPlayer
             // 
             // button100ms
             // 
-            this.button100ms.Location = new System.Drawing.Point(273, 228);
+            this.button100ms.Location = new System.Drawing.Point(273, 219);
             this.button100ms.Name = "button100ms";
             this.button100ms.Size = new System.Drawing.Size(75, 23);
             this.button100ms.TabIndex = 3;
@@ -207,7 +213,7 @@ namespace JournalPlayer
             // 
             // button250ms
             // 
-            this.button250ms.Location = new System.Drawing.Point(354, 228);
+            this.button250ms.Location = new System.Drawing.Point(354, 219);
             this.button250ms.Name = "button250ms";
             this.button250ms.Size = new System.Drawing.Size(75, 23);
             this.button250ms.TabIndex = 3;
@@ -217,7 +223,7 @@ namespace JournalPlayer
             // 
             // button500ms
             // 
-            this.button500ms.Location = new System.Drawing.Point(435, 228);
+            this.button500ms.Location = new System.Drawing.Point(435, 219);
             this.button500ms.Name = "button500ms";
             this.button500ms.Size = new System.Drawing.Size(75, 23);
             this.button500ms.TabIndex = 3;
@@ -227,7 +233,7 @@ namespace JournalPlayer
             // 
             // button50ms
             // 
-            this.button50ms.Location = new System.Drawing.Point(192, 228);
+            this.button50ms.Location = new System.Drawing.Point(192, 219);
             this.button50ms.Name = "button50ms";
             this.button50ms.Size = new System.Drawing.Size(75, 23);
             this.button50ms.TabIndex = 3;
@@ -237,7 +243,7 @@ namespace JournalPlayer
             // 
             // button1s
             // 
-            this.button1s.Location = new System.Drawing.Point(516, 228);
+            this.button1s.Location = new System.Drawing.Point(516, 219);
             this.button1s.Name = "button1s";
             this.button1s.Size = new System.Drawing.Size(75, 23);
             this.button1s.TabIndex = 3;
@@ -247,7 +253,7 @@ namespace JournalPlayer
             // 
             // buttonFSDJump
             // 
-            this.buttonFSDJump.Location = new System.Drawing.Point(597, 228);
+            this.buttonFSDJump.Location = new System.Drawing.Point(309, 248);
             this.buttonFSDJump.Name = "buttonFSDJump";
             this.buttonFSDJump.Size = new System.Drawing.Size(90, 23);
             this.buttonFSDJump.TabIndex = 3;
@@ -257,7 +263,7 @@ namespace JournalPlayer
             // 
             // buttonStartJump
             // 
-            this.buttonStartJump.Location = new System.Drawing.Point(695, 228);
+            this.buttonStartJump.Location = new System.Drawing.Point(405, 248);
             this.buttonStartJump.Name = "buttonStartJump";
             this.buttonStartJump.Size = new System.Drawing.Size(90, 23);
             this.buttonStartJump.TabIndex = 3;
@@ -267,7 +273,7 @@ namespace JournalPlayer
             // 
             // textBoxOutputFile
             // 
-            this.textBoxOutputFile.Location = new System.Drawing.Point(111, 309);
+            this.textBoxOutputFile.Location = new System.Drawing.Point(111, 317);
             this.textBoxOutputFile.Name = "textBoxOutputFile";
             this.textBoxOutputFile.Size = new System.Drawing.Size(625, 20);
             this.textBoxOutputFile.TabIndex = 4;
@@ -275,7 +281,7 @@ namespace JournalPlayer
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(4, 312);
+            this.label7.Location = new System.Drawing.Point(4, 320);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(58, 13);
             this.label7.TabIndex = 0;
@@ -304,7 +310,7 @@ namespace JournalPlayer
             // checkBoxUseCurrentTime
             // 
             this.checkBoxUseCurrentTime.AutoSize = true;
-            this.checkBoxUseCurrentTime.Location = new System.Drawing.Point(755, 311);
+            this.checkBoxUseCurrentTime.Location = new System.Drawing.Point(755, 319);
             this.checkBoxUseCurrentTime.Name = "checkBoxUseCurrentTime";
             this.checkBoxUseCurrentTime.Size = new System.Drawing.Size(104, 17);
             this.checkBoxUseCurrentTime.TabIndex = 8;
@@ -347,7 +353,7 @@ namespace JournalPlayer
             // 
             // textBoxGotoLineNo
             // 
-            this.textBoxGotoLineNo.Location = new System.Drawing.Point(111, 257);
+            this.textBoxGotoLineNo.Location = new System.Drawing.Point(110, 285);
             this.textBoxGotoLineNo.Name = "textBoxGotoLineNo";
             this.textBoxGotoLineNo.Size = new System.Drawing.Size(103, 20);
             this.textBoxGotoLineNo.TabIndex = 0;
@@ -363,7 +369,7 @@ namespace JournalPlayer
             // 
             // buttonRestart
             // 
-            this.buttonRestart.Location = new System.Drawing.Point(823, 187);
+            this.buttonRestart.Location = new System.Drawing.Point(742, 67);
             this.buttonRestart.Name = "buttonRestart";
             this.buttonRestart.Size = new System.Drawing.Size(75, 23);
             this.buttonRestart.TabIndex = 9;
@@ -371,17 +377,77 @@ namespace JournalPlayer
             this.buttonRestart.UseVisualStyleBackColor = true;
             this.buttonRestart.Click += new System.EventHandler(this.buttonRestart_Click);
             // 
+            // buttonViewInput
+            // 
+            this.buttonViewInput.Location = new System.Drawing.Point(742, 185);
+            this.buttonViewInput.Name = "buttonViewInput";
+            this.buttonViewInput.Size = new System.Drawing.Size(59, 23);
+            this.buttonViewInput.TabIndex = 3;
+            this.buttonViewInput.Text = "View";
+            this.buttonViewInput.UseVisualStyleBackColor = true;
+            this.buttonViewInput.Click += new System.EventHandler(this.buttonViewInput_Click);
+            // 
+            // buttonMarketBuy
+            // 
+            this.buttonMarketBuy.Location = new System.Drawing.Point(501, 248);
+            this.buttonMarketBuy.Name = "buttonMarketBuy";
+            this.buttonMarketBuy.Size = new System.Drawing.Size(90, 23);
+            this.buttonMarketBuy.TabIndex = 3;
+            this.buttonMarketBuy.Text = ">>MarketBuy";
+            this.buttonMarketBuy.UseVisualStyleBackColor = true;
+            this.buttonMarketBuy.Click += new System.EventHandler(this.buttonMarketBuy_Click);
+            // 
+            // textBoxGotoEntry
+            // 
+            this.textBoxGotoEntry.Location = new System.Drawing.Point(338, 285);
+            this.textBoxGotoEntry.Name = "textBoxGotoEntry";
+            this.textBoxGotoEntry.Size = new System.Drawing.Size(103, 20);
+            this.textBoxGotoEntry.TabIndex = 0;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(257, 285);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(60, 13);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "Go to Entry";
+            // 
+            // buttonLocation
+            // 
+            this.buttonLocation.Location = new System.Drawing.Point(111, 248);
+            this.buttonLocation.Name = "buttonLocation";
+            this.buttonLocation.Size = new System.Drawing.Size(90, 23);
+            this.buttonLocation.TabIndex = 3;
+            this.buttonLocation.Text = ">>Location";
+            this.buttonLocation.UseVisualStyleBackColor = true;
+            this.buttonLocation.Click += new System.EventHandler(this.buttonLocation_Click);
+            // 
+            // buttonScan
+            // 
+            this.buttonScan.Location = new System.Drawing.Point(207, 248);
+            this.buttonScan.Name = "buttonScan";
+            this.buttonScan.Size = new System.Drawing.Size(90, 23);
+            this.buttonScan.TabIndex = 3;
+            this.buttonScan.Text = ">>Scan";
+            this.buttonScan.UseVisualStyleBackColor = true;
+            this.buttonScan.Click += new System.EventHandler(this.buttonScan_Click);
+            // 
             // JournalPlayerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(918, 800);
+            this.ClientSize = new System.Drawing.Size(918, 788);
             this.Controls.Add(this.buttonRestart);
             this.Controls.Add(this.checkBoxUseCurrentTime);
             this.Controls.Add(this.buttonSelectDestFolder);
             this.Controls.Add(this.buttonSelectSourceFolder);
             this.Controls.Add(this.buttonClearDestFolder);
+            this.Controls.Add(this.buttonMarketBuy);
             this.Controls.Add(this.buttonStartJump);
+            this.Controls.Add(this.buttonViewInput);
+            this.Controls.Add(this.buttonLocation);
+            this.Controls.Add(this.buttonScan);
             this.Controls.Add(this.buttonFSDJump);
             this.Controls.Add(this.button1s);
             this.Controls.Add(this.button500ms);
@@ -398,11 +464,13 @@ namespace JournalPlayer
             this.Controls.Add(this.textBoxJournalFile);
             this.Controls.Add(this.textBoxDestFolder);
             this.Controls.Add(this.label1);
+            this.Controls.Add(this.textBoxGotoEntry);
             this.Controls.Add(this.textBoxGotoLineNo);
             this.Controls.Add(this.textBoxPattern);
             this.Controls.Add(this.textBoxSourceFolder);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label7);
+            this.Controls.Add(this.label11);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label10);
             this.Controls.Add(this.label2);
@@ -453,5 +521,11 @@ namespace JournalPlayer
         private System.Windows.Forms.TextBox textBoxGotoLineNo;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Button buttonRestart;
+        private System.Windows.Forms.Button buttonViewInput;
+        private System.Windows.Forms.Button buttonMarketBuy;
+        private System.Windows.Forms.TextBox textBoxGotoEntry;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Button buttonLocation;
+        private System.Windows.Forms.Button buttonScan;
     }
 }

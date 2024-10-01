@@ -25,10 +25,14 @@ namespace EDDTest
     public static class NormaliseTranslationFiles
     {
         // usage:
-        // report on example state: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex deutsch
-        // normalise normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex francais-fr
+        // report on example state: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex
+        // compare translations: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex francais-fr
+        // with a rename file: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex francais-fr renamefile.txt
+        // compare vs enumerations: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex - - c:\code\eddiscovery
 
-        // you can scan for enums scanforenums  stdenums . *.cs to check if enums are in use
+        // best to first check enums: scanforenums c:\code\eddiscovery  c:\code\eddiscovery *.cs
+        // then check enums vs example: normalisetranslate c:\code\eddiscovery\eddiscovery\translations 2 example-ex - - c:\code\eddiscovery
+
 
         static public string ProcessNew(string language, string txpath, int searchdepth,
                                     string language2,
@@ -62,7 +66,7 @@ namespace EDDTest
 
             string[] renamesfrom = null;
             string[] renamesto = null;
-            if (renamefile != null)
+            if (renamefile != null && renamefile != "-")
             {
                 if (File.Exists(renamefile))
                 {
@@ -77,42 +81,55 @@ namespace EDDTest
                 }
             }
 
-            var enumerations = Enums.ReadEnums(enums);
-
+            List<string> primarykeys = primary.EnumerateKeys.ToList();
             //List<string> secondarykeys = secondary.EnumerateKeys.ToList();    foreach( var k in secondarykeys) {  System.Diagnostics.Debug.WriteLine($"Secondary {k} = {secondary.GetTranslation(k)}"); }
 
-            List<string> primarykeys = primary.EnumerateKeys.ToList();
+            string[] secondaryfilelist = secondary.Translating ? secondary.FileList() : null;
 
-            string[] secondaryfilelist = secondary?.FileList();
+            var enumerations = Enums.ReadEnums(enums);
 
-            foreach (string id in primarykeys)
+            if (enumerations != null)
             {
-                //System.Diagnostics.Debug.WriteLine($"Primary  {primary.GetOriginalFile(id)}:{primary.GetOriginalLine(id)}: {id} `{primary.GetOriginalEnglish(id)}` `{primary.GetTranslation(id)}`");
-
-                if (id.Contains("DataGridViewStarResults"))
+                foreach (string id in primarykeys)
                 {
+                    string idenum = id.Replace(".", "_");       // only safe direction, as some names have _ in them so can't go the other way
 
-                }
-
-                if (enumerations != null)
-                {
-                    string idenum = id.Replace(".", "_");
                     if (enumerations.ContainsKey(idenum))
                     {
-                        System.Diagnostics.Debug.WriteLine($"Found {id} in enumerations");
-                        enumerations[idenum] = new Tuple<string, int>(enumerations[idenum].Item1, enumerations[idenum].Item2 + 1);
+                        if (enumerations[idenum].Item3 > 0)     // should always be zero, but if there is a typo on _ or . meaning it looks the same, it may repeat
+                        {
+                            reporttext += $"In primarykeys {id} is repeated" + Environment.NewLine;
+                        }
+
+                        enumerations[idenum] = new Tuple<string,string, int>(enumerations[idenum].Item1, enumerations[idenum].Item2, enumerations[idenum].Item3 + 1);
                     }
                     else
                     {
                         // these are not as enums, knock them out
-                        if (id.Contains("PopOutInfo.") || id.Contains("JournalTypeEnum.") || id.Contains("MaterialCommodityMicroResourceType."))
+                        if (id.Contains("PopOutInfo.") || id.Contains("JournalTypeEnum.") || id.Contains("MaterialCommodityMicroResourceType.") ||
+                            id.Contains("ShipSlots.") || id.Contains("StationServices.") || id.Contains("ModuleTypeNames.") || id.Contains("ModulePartNames.") ||
+                            id.Contains("PowerPlayStates.") || id.Contains("GovernmentTypes.") || id.Contains("Allegiances.") ||
+                            id.Contains("FactionStates.") || id.Contains("Crimes.") || id.Contains("Services.") ||
+                            id.Contains("StarportStates.") || id.Contains("StarportTypes.") || id.Contains("SecurityTypes.") || id.Contains("EconomyTypes."))
                         {
 
                         }
                         else
-                            reporttext += $"Enumerations files do not contain {id}" + Environment.NewLine;
+                            reporttext += $"Enumerations files do not contain {id} from primary key {idenum}" + Environment.NewLine;
                     }
                 }
+
+                foreach (var kvp in enumerations)       // see if any enumerations are not used
+                {
+                    if (kvp.Value.Item3 == 0)
+                        reporttext += $"Enum symbol {kvp.Value.Item1}:{kvp.Key} is not present in translation file" + Environment.NewLine;
+                }
+            }
+
+
+            foreach (string id in primarykeys)
+            {
+                //System.Diagnostics.Debug.WriteLine($"Primary  {primary.GetOriginalFile(id)}:{primary.GetOriginalLine(id)}: {id} `{primary.GetOriginalEnglish(id)}` `{primary.GetTranslation(id)}`");
 
                 if (primary.GetTranslation(id) != null && primary.GetTranslation(id) != primary.GetOriginalEnglish(id))        // not @, and not the same
                 {
@@ -197,17 +214,6 @@ namespace EDDTest
                         reporttext += $"Secondary {secid} not found" + Environment.NewLine;
                         //System.Diagnostics.Debug.WriteLine($".. not found in secondary");
                     }
-                }
-            }
-
-
-            // dump any enums not found
-            if (enumerations != null)
-            {
-                foreach (var kvp in enumerations)
-                {
-                    if (kvp.Value.Item2 == 0)
-                        reporttext += $"Enum symbol {kvp.Key} is not present in translation file" + Environment.NewLine;
                 }
             }
 

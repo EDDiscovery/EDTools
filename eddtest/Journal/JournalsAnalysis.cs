@@ -414,6 +414,7 @@ namespace EDDTest
                             string state = o1["State"].StrNull();
                             Incr("Factions-ActiveStates-", state);
                         }
+
                     }
 
                 }
@@ -440,9 +441,11 @@ namespace EDDTest
         public string Report()
         {
             string str = "";
-            foreach (var kvp in rep)
+            var keys = rep.Keys.ToList();
+            keys.Sort();
+            foreach (var key in keys)
             {
-                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
+                str += $"{key} {rep[key]}" + Environment.NewLine;
             }
             return str;
 
@@ -685,7 +688,7 @@ namespace EDDTest
     }
 
     //  journalanalyse "c:\users\rk\saved games\frontier developments\elite dangerous" *.log loadout
-
+    //  journalanalyse "c:\code\logs" *.log loadout
 
     public static class JournalAnalysis
     {
@@ -705,6 +708,8 @@ namespace EDDTest
                 ja = new LoadoutAnalyse();
             else if (type == "services")
                 ja = new ServicesAnalyse();
+            else if (type == "fsdloc")
+                ja = new FSDLocAnalyse();
             else
             {
                 Console.Error.WriteLine("Not recognised analysis type");
@@ -744,8 +749,8 @@ namespace EDDTest
 
                 if (found > 0)
                 {
-                    Console.Error.WriteLine($"Found {found} : {fi.FullName}");
-                    Console.WriteLine($"Found {found} : {fi.FullName}");
+                //    Console.Error.WriteLine($"Found {found} : {fi.FullName}");
+                  //  Console.WriteLine($"Found {found} : {fi.FullName}");
                 }
                 else
                 {

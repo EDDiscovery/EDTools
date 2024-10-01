@@ -66,6 +66,7 @@ namespace JournalPlayer
             this.dateTimePickerEndDate.ValueChanged += new System.EventHandler(this.dateTimePickerEndDate_ValueChanged);
             this.checkBoxUseCurrentTime.CheckedChanged += new System.EventHandler(this.checkboxUseCurrentTime_ValueChanged);
             this.textBoxGotoLineNo.KeyDown += TextBoxGotoLineNo_KeyDown;
+            this.textBoxGotoEntry.KeyDown +=  TextBoxGotoEntry_KeyDown;
 
             Clear();
 
@@ -138,53 +139,78 @@ namespace JournalPlayer
             tme.Stop();
         }
 
+        private void Goto(string s)
+        {
+            tme.Stop();
+            tme.Interval = 100;
+            stoponevent = s;
+            tme.Start();
+        }
+        private void StepAt(int v)
+        {
+            tme.Stop();
+            tme.Interval = v;
+            stoponevent = null;
+            tme.Start();
+        }
+
         private void button50ms_Click(object sender, EventArgs e)
         {
             tme.Stop();
-            tme.Interval = 50;
+            StepAt( 50 );
             tme.Start();
         }
 
         private void button100ms_Click(object sender, EventArgs e)
         {
             tme.Stop();
-            tme.Interval = 100;
+            StepAt( 100 );
             tme.Start();
         }
 
         private void button250ms_Click(object sender, EventArgs e)
         {
             tme.Stop();
-            tme.Interval = 250;
+            StepAt( 250 );
             tme.Start();
         }
 
         private void button500ms_Click(object sender, EventArgs e)
         {
             tme.Stop();
-            tme.Interval = 500;
+            StepAt( 500 );
             tme.Start();
         }
         private void button1s_Click(object sender, EventArgs e)
         {
             tme.Stop();
-            tme.Interval = 1000;
+            StepAt( 1000 );
             tme.Start();
         }
+
+        private void buttonLocation_Click(object sender, EventArgs e)
+        {
+            Goto( "Location");
+        }
+
+        private void buttonScan_Click(object sender, EventArgs e)
+        {
+            Goto("Scan");
+        }
+
         private void buttonFSDJump_Click(object sender, EventArgs e)
         {
-            tme.Stop();
-            tme.Interval = 100;
-            stoponevent = "FSDJump";
-            tme.Start();
+            Goto("FSDJump");
         }
 
         private void buttonStartJump_Click(object sender, EventArgs e)
         {
-            tme.Stop();
-            tme.Interval = 100;
-            stoponevent = "StartJump";
-            tme.Start();
+            Goto( "StartJump");
+        }
+
+        private void buttonMarketBuy_Click(object sender, EventArgs e)
+        {
+            Goto( "MarketBuy");
         }
 
         private void TextBoxGotoLineNo_KeyDown(object sender, KeyEventArgs e)
@@ -200,6 +226,16 @@ namespace JournalPlayer
                     tme.Interval = 50;
                     tme.Start();
                 }
+            }
+        }
+
+        private void TextBoxGotoEntry_KeyDown(object sender, KeyEventArgs e)
+        {
+            tme.Stop();     // stop all anyway
+
+            if (e.KeyCode == Keys.Enter)
+            {
+                Goto(textBoxGotoEntry.Text);
             }
         }
 
@@ -225,6 +261,13 @@ namespace JournalPlayer
 
         }
 
+        private void buttonViewInput_Click(object sender, EventArgs e)
+        {
+            if (textBoxJournalFile.Text.HasChars() && textBoxJournalFile.Text != "None")
+            {
+                System.Diagnostics.Process.Start(textBoxJournalFile.Text);
+            }
+        }
 
         private void Clear()
         {

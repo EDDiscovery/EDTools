@@ -737,15 +737,19 @@ namespace EDDTest
             #endregion
             #region  Scans
 
-            else if (eventtype.Equals("scanplanet") && args.Left >= 2)
+            else if (eventtype.Equals("scanplanet") && args.Left >= 3)
             {
-                string name = args.Next();
+                string sysname = args.Next();
+                long systemid = args.Long();
+                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
                 int bodyid = args.Int();
-                qj.Object().UTC("timestamp").V("event", "Scan").V("ScanType", "Detailed").V("BodyName", name).V("BodyID", bodyid)
-                .Array("Parents")
-                .Object().V("Star", 0).Close()
-                .Close()
-                .V("StarSystem", "Hypua Prao FN-K b54-0").V("SystemAddress", 1060721544657).V("DistanceFromArrivalLS", 2577.332838).V("TidalLock", false).V("TerraformState", "").V("PlanetClass", "Icy body").V("Atmosphere", "helium atmosphere").V("AtmosphereType", "Helium")
+                qj.Object().UTC("timestamp")
+                .V("event", "Scan").V("ScanType", "Detailed")
+                .V("BodyName", name).V("BodyID", bodyid)
+                .Array("Parents").Object().V("Star", 0).Close().Close()
+                .V("StarSystem", sysname).V("SystemAddress", systemid)
+                .V("DistanceFromArrivalLS", 2577.332838).V("TidalLock", false)
+                .V("TerraformState", "").V("PlanetClass", "Icy body").V("Atmosphere", "helium atmosphere").V("AtmosphereType", "Helium")
                 .Array("AtmosphereComposition")
                 .Object().V("Name", "Helium").V("Percent", 91.379318).Close()
                 .Object().V("Name", "Hydrogen").V("Percent", 8.620689).Close()
@@ -755,23 +759,48 @@ namespace EDDTest
                 .V("SemiMajorAxis", 773089993000.03052).V("Eccentricity", 0.000988).V("OrbitalInclination", 0.002952).V("Periapsis", 280.393599).V("OrbitalPeriod", 792438870.668411).V("AscendingNode", -34.748208).V("MeanAnomaly", 303.857509).V("RotationPeriod", 45822.369767).V("AxialTilt", 0.380244)
                 .V("WasDiscovered", false).V("WasMapped", false);
             }
+            else if (eventtype.Equals("scanwaterworld") && args.Left >= 3)
+            {
+                string sysname = args.Next();
+                long systemid = args.Long();
+                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
+                int bodyid = args.Int();
+
+                qj.Object().UTC("timestamp").V("event", "Scan").V("ScanType", "Detailed").V("BodyName", name).V("BodyID", bodyid)
+                .Array("Parents")
+                .Object().V("Star", 0).Close()
+                .Close()
+                .V("StarSystem", sysname).V("SystemAddress", systemid)
+                .V("DistanceFromArrivalLS", 2998.730075).V("TidalLock", false)
+                .V("TerraformState", "").V("PlanetClass", "Water world").V("Atmosphere", "").V("AtmosphereType", "None")
+                .V("Volcanism", "").V("MassEM", 6.011815).V("Radius", 11553491.0).V("SurfaceGravity", 17.950995).V("SurfaceTemperature", 161.07634).V("SurfacePressure", 0.0).V("Landable", false)
+                .Object("Composition").V("Ice", 0.001184).V("Rock", 0.634009).V("Metal", 0.307875).Close()
+                .V("SemiMajorAxis", 884778648614.88342).V("Eccentricity", 0.032729).V("OrbitalInclination", -0.303275)
+                .V("Periapsis", 239.702562).V("OrbitalPeriod", 357116180.65834)
+                .V("AscendingNode", 11.513124).V("MeanAnomaly", 117.771439).V("RotationPeriod", 43413.389817)
+                .V("AxialTilt", 0.063492)
+                .V("WasDiscovered", false).V("WasMapped", false).Close();
+            }
             else if (eventtype.Equals("scanstar") && args.Left >= 2)
             {
+                string sysname = args.Next();
+                long systemid = args.Long();
                 string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
                 int bodyid = args.Int();
-                //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":0.000000, \"StarType\":\"B\", \"StellarMass\":8.597656, \"Radius\":2854249728.000000, \"AbsoluteMagnitude\":1.023468, \"Age_MY\":182, \"SurfaceTemperature\":23810.000000, \"Luminosity\":\"IV\", \"SemiMajorAxis\":12404761034752.000000, \"Eccentricity\":0.160601, \"OrbitalInclination\":18.126791, \"Periapsis\":49.512009, \"OrbitalPeriod\":54231617536.000000, \"RotationPeriod\":110414.359375, \"AxialTilt\":0.000000");
-            }
-            else if (eventtype.Equals("scanearth") && args.Left >= 2)
-            {
-                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                int bodyid = args.Int();
-                //qj.Object().UTC("timestamp").V("event", "Scan").V("BodyName", name).Literal("\"DistanceFromArrivalLS\":901.789856, \"TidalLock\":false, \"TerraformState\":\"Terraformed\", \"PlanetClass\":\"Earthlike body\", \"Atmosphere\":\"\", \"AtmosphereType\":\"EarthLike\", \"AtmosphereComposition\":[ { \"Name\":\"Nitrogen\", \"Percent\":92.386833 }, { \"Name\":\"Oxygen\", \"Percent\":7.265749 }, { \"Name\":\"Water\", \"Percent\":0.312345 } ], \"Volcanism\":\"\", \"MassEM\":0.840000, \"Radius\":5821451.000000, \"SurfaceGravity\":9.879300, \"SurfaceTemperature\":316.457062, \"SurfacePressure\":209183.453125, \"Landable\":false, \"SemiMajorAxis\":264788426752.000000, \"Eccentricity\":0.021031, \"OrbitalInclination\":13.604733, \"Periapsis\":73.138206, \"OrbitalPeriod\":62498732.000000, \"RotationPeriod\":58967.023438, \"AxialTilt\":-0.175809");
-            }
-            else if (eventtype.Equals("ring"))
-            {
-                string name = args.Next() + (repeatcount > 0 ? "x" + repeatcount : "");
-                int bodyid = args.Int();
-                //qj.Object().UTC("timestamp").Literal("\"event\": \"Scan\",  \"ScanType\": \"AutoScan\",  \"BodyName\": \"Merope 9 Ring\",  \"DistanceFromArrivalLS\": 1883.233643,  \"SemiMajorAxis\": 70415976.0,  \"Eccentricity\": 0.0,  \"OrbitalInclination\": 0.0,  \"Periapsis\": 0.0,  \"OrbitalPeriod\": 100994.445313}");
+
+                qj.Object().UTC("timestamp").V("event", "Scan").V("ScanType", "AutoScan")
+                .V("BodyName", name).V("BodyID", bodyid)
+                .V("StarSystem", sysname).V("SystemAddress", systemid)
+                .V("DistanceFromArrivalLS", 0.0).V("StarType", "K").V("Subclass", 1).V("StellarMass", 0.699219)
+                .V("Radius", 540175552.0).V("AbsoluteMagnitude", 6.084351).V("Age_MY", 4410).V("SurfaceTemperature", 4912.0).V("Luminosity", "Vab")
+                .V("RotationPeriod", 337094.129722).V("AxialTilt", 0.0)
+                .Array("Rings")
+                .Object().V("Name", name + " A Belt").V("RingClass", "eRingClass_MetalRich").V("MassMT", 108980000000000.0).V("InnerRad", 943510000.0).V("OuterRad", 2141800000.0).Close()
+                .Object().V("Name", name + " B Belt").V("RingClass", "eRingClass_MetalRich").V("MassMT", 7.1479E+15).V("InnerRad", 2279200000.0).V("OuterRad", 231550000000.0).Close()
+                .Close()
+                .V("WasDiscovered", false).V("WasMapped", false).Close();
+
+
             }
             else if (eventtype.Equals("fsssignaldiscovered") && args.Left >= 2)
             {
@@ -1584,7 +1613,7 @@ namespace EDDTest
             s += helpout("", "propectedasteroid", eventtype);
             s += helpout("", "MiningRefined fdname", eventtype);
 
-            s += helpout("Scans", "ScanPlanet/ScanStar/ScanEarth/Ring name bodyid", eventtype);
+            s += helpout("Scans", "ScanPlanet/Scanwaterworld/Scanstar sysname sysid name bodyid", eventtype);
             s += helpout("", "fsssignaldiscovered name systemid [spawingstate spawingfaction]", eventtype);
             s += helpout("", "fssallbodiesfound count", eventtype);
             s += helpout("", "saascancomplete name", eventtype);

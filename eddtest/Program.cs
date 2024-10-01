@@ -183,11 +183,11 @@ namespace EDDTest
                         if (primarypath == null || primarylanguage == null)
                         {
                             Console.WriteLine("Usage:\n" +
-                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none] [renamefile] [semicolon-list-of-enum-files]\n" +
+                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none] [renamefile or -] [semicolon-list-of-enum-files]\n" +
                                                 "Read the language-to-use and check it\n" +
                                                 "secondary-language: Read this language and overwrite the secondary files with normalised versions against the first, but carrying over the translations\n" +
-                                                "Rename file: List of lines with orgID | RenamedID to note renaming of existing IDs (if does not exist won't stop)\n" +
-                                                "semicolon-list-of-enums-files: give list of enumerations to cross check against. Use stdenums for built in EDD list\n" +
+                                                "Rename file: List of lines with orgID | RenamedID to note renaming of existing IDs\n" +
+                                                "semicolon-list-of-enums-files: give list of enumerations to cross check against. Use c:\\code\\eddiscovery for built in EDD list of translator enums\n" +
                                                 "Always write report.txt\n" +
                                                 "Example:\n" +
                                                 "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n"

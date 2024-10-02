@@ -14,25 +14,13 @@ namespace JournalPlayer
 {
     public partial class JournalPlayerForm : Form
     {
-        string datafile;
-        JObject settings;
         string SourceFolder { get { return settings["Source"].Str(@"C:\Users\RK\Saved Games\Frontier Developments\Elite Dangerous"); } set { settings["Source"] = value; } }
         string DestFolder { get { return settings["Dest"].Str(@"c:\code\logs\test"); } set { settings["Dest"] = value; } }
         string Pattern { get { return settings["Pattern"].Str("journal*.log"); } set { settings["Pattern"] = value; } }
+        string AutoSkip { get { return settings["AutoSkip"].Str("Music;ReservoirReplenished;ShipLocker;SuitLoadout;Backpack;Loadout"); } set { settings["AutoSkip"] = value; } }
         DateTime Starttime { get { return settings["Starttime"].DateTime(new DateTime(2014, 1, 1, 1, 1, 1, 0, DateTimeKind.Utc), System.Globalization.CultureInfo.InvariantCulture); } set { settings["Starttime"] = value.ToStringZulu(); } }
         DateTime Endtime { get { return settings["Endtime"].DateTime(new DateTime(2049, 1, 1, 1, 1, 1, 0, DateTimeKind.Utc), System.Globalization.CultureInfo.InvariantCulture); } set { settings["Endtime"] = value.ToStringZulu(); } }
         bool UseCurrentTime { get { return settings["UseCurrentTime"].Bool(); } set { settings["UseCurrentTime"] = value; } }
-
-        FileInfo[] files;
-        int fileentry;
-        int curlineno;
-        Stream fs;
-        StreamReader sr;
-        string outfilename;
-        string outfilepath;
-        Timer tme = new Timer();
-        string stoponevent;
-        int stoponline;
 
         public JournalPlayerForm()
         {
@@ -41,7 +29,6 @@ namespace JournalPlayer
             string dpath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"JournalPlayer");
             BaseUtils.FileHelpers.CreateDirectoryNoError(dpath);
             datafile = Path.Combine(dpath,"settings.json");
-
 
             settings = new JObject();
 
@@ -58,6 +45,7 @@ namespace JournalPlayer
             dateTimePickerStartDate.Value = Starttime;
             dateTimePickerEndDate.Value = Endtime;
             checkBoxUseCurrentTime.Checked = UseCurrentTime;
+            textBoxAutoSkip.Text = AutoSkip;
 
             this.textBoxSourceFolder.TextChanged += new System.EventHandler(this.textBoxSourceFolder_TextChanged);
             this.textBoxDestFolder.TextChanged += new System.EventHandler(this.textBoxDestFolder_TextChanged);
@@ -67,12 +55,12 @@ namespace JournalPlayer
             this.checkBoxUseCurrentTime.CheckedChanged += new System.EventHandler(this.checkboxUseCurrentTime_ValueChanged);
             this.textBoxGotoLineNo.KeyDown += TextBoxGotoLineNo_KeyDown;
             this.textBoxGotoEntry.KeyDown +=  TextBoxGotoEntry_KeyDown;
+            this.textBoxAutoSkip.TextChanged += TextBoxAutoSkip_TextChanged;
 
             Clear();
 
             tme.Tick += Tme_Tick;
         }
-
 
         protected override void OnLoad(EventArgs e)
         {
@@ -84,6 +72,7 @@ namespace JournalPlayer
             File.WriteAllText(datafile,settings.ToString(true));
             base.OnClosed(e);
         }
+
         private void Tme_Tick(object sender, EventArgs e)
         {
             buttonStep_Click(null, null);
@@ -106,6 +95,12 @@ namespace JournalPlayer
             Clear();
             Pattern = textBoxPattern.Text;
         }
+
+        private void TextBoxAutoSkip_TextChanged(object sender, EventArgs e)
+        {
+            AutoSkip = textBoxAutoSkip.Text;
+        }
+
         private void checkboxUseCurrentTime_ValueChanged(object sender, EventArgs e)
         {
             Clear();
@@ -289,12 +284,13 @@ namespace JournalPlayer
             tme.Stop();
         }
 
-        private void WriteLast()
+        private void WriteEntryInNextBox()
         {
             if (richTextBoxNextEntry.Text.Length > 0)        // if we have a previous next entry
             {
                 string outdir = Path.GetDirectoryName(outfilepath);
-                JObject json = richTextBoxNextEntry.Tag as JObject;
+
+                JObject json = richTextBoxNextEntry.Tag as JObject;     // pick up next JSON to play
 
                 if (json!=null)
                 {
@@ -477,7 +473,7 @@ namespace JournalPlayer
             {
                 if (fileentry >= files.Length)
                 {
-                    WriteLast();
+                    WriteEntryInNextBox();
                     Clear();
                     MessageBox.Show("No more log files");
                     return;
@@ -515,12 +511,14 @@ namespace JournalPlayer
                 }
                 else
                 {
-                    WriteLast();
+                    WriteEntryInNextBox();
 
                     JObject jo = JObject.Parse(line);
+                    string eventname = "????????????";
 
                     if (jo != null)
                     {
+                        eventname = jo["event"].Str();
                         if ( UseCurrentTime )
                         {
                             jo["timestamp"] = DateTime.UtcNow.StartOfSecond().ToStringZuluInvariant();
@@ -535,9 +533,15 @@ namespace JournalPlayer
                     
                     textBoxOutputFile.Text = outfilepath;
 
-                    if (stoponevent != null && jo != null)
+                    string[] skips = AutoSkip.Split(';');
+
+                    if ( Array.IndexOf(skips,eventname) >= 0)       // if autoskip event, do another one
                     {
-                        string eventname = jo["event"].Str();
+                        continue;
+                    }
+
+                    if (stoponevent != null )
+                    {
                         if ( eventname == stoponevent )
                         {
                             tme.Stop();
@@ -549,10 +553,25 @@ namespace JournalPlayer
                         tme.Stop();
                         stoponline = 0;
                     }
+
                     break;
                 }
             }
         }
+
+
+        string datafile;
+        JObject settings;
+        FileInfo[] files;
+        int fileentry;
+        int curlineno;
+        Stream fs;
+        StreamReader sr;
+        string outfilename;
+        string outfilepath;
+        Timer tme = new Timer();
+        string stoponevent;
+        int stoponline;
 
     }
 }

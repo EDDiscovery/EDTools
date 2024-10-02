@@ -69,6 +69,8 @@ namespace JournalPlayer
             this.label11 = new System.Windows.Forms.Label();
             this.buttonLocation = new System.Windows.Forms.Button();
             this.buttonScan = new System.Windows.Forms.Button();
+            this.label12 = new System.Windows.Forms.Label();
+            this.textBoxAutoSkip = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // textBoxSourceFolder
@@ -92,11 +94,11 @@ namespace JournalPlayer
             this.textBoxDestFolder.Location = new System.Drawing.Point(111, 144);
             this.textBoxDestFolder.Name = "textBoxDestFolder";
             this.textBoxDestFolder.Size = new System.Drawing.Size(625, 20);
-            this.textBoxDestFolder.TabIndex = 2;
+            this.textBoxDestFolder.TabIndex = 4;
             // 
             // richTextBoxCurrentEntry
             // 
-            this.richTextBoxCurrentEntry.Location = new System.Drawing.Point(111, 575);
+            this.richTextBoxCurrentEntry.Location = new System.Drawing.Point(110, 603);
             this.richTextBoxCurrentEntry.Name = "richTextBoxCurrentEntry";
             this.richTextBoxCurrentEntry.Size = new System.Drawing.Size(781, 200);
             this.richTextBoxCurrentEntry.TabIndex = 6;
@@ -105,7 +107,7 @@ namespace JournalPlayer
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(4, 578);
+            this.label3.Location = new System.Drawing.Point(3, 606);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(105, 13);
             this.label3.TabIndex = 0;
@@ -141,7 +143,7 @@ namespace JournalPlayer
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 355);
+            this.label1.Location = new System.Drawing.Point(3, 383);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(93, 13);
             this.label1.TabIndex = 0;
@@ -149,7 +151,7 @@ namespace JournalPlayer
             // 
             // richTextBoxNextEntry
             // 
-            this.richTextBoxNextEntry.Location = new System.Drawing.Point(111, 352);
+            this.richTextBoxNextEntry.Location = new System.Drawing.Point(110, 380);
             this.richTextBoxNextEntry.Name = "richTextBoxNextEntry";
             this.richTextBoxNextEntry.Size = new System.Drawing.Size(781, 200);
             this.richTextBoxNextEntry.TabIndex = 5;
@@ -169,7 +171,7 @@ namespace JournalPlayer
             this.textBoxJournalFile.Location = new System.Drawing.Point(111, 187);
             this.textBoxJournalFile.Name = "textBoxJournalFile";
             this.textBoxJournalFile.Size = new System.Drawing.Size(625, 20);
-            this.textBoxJournalFile.TabIndex = 4;
+            this.textBoxJournalFile.TabIndex = 5;
             // 
             // buttonStep
             // 
@@ -273,15 +275,15 @@ namespace JournalPlayer
             // 
             // textBoxOutputFile
             // 
-            this.textBoxOutputFile.Location = new System.Drawing.Point(111, 317);
+            this.textBoxOutputFile.Location = new System.Drawing.Point(111, 347);
             this.textBoxOutputFile.Name = "textBoxOutputFile";
             this.textBoxOutputFile.Size = new System.Drawing.Size(625, 20);
-            this.textBoxOutputFile.TabIndex = 4;
+            this.textBoxOutputFile.TabIndex = 9;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(4, 320);
+            this.label7.Location = new System.Drawing.Point(4, 351);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(58, 13);
             this.label7.TabIndex = 0;
@@ -310,7 +312,7 @@ namespace JournalPlayer
             // checkBoxUseCurrentTime
             // 
             this.checkBoxUseCurrentTime.AutoSize = true;
-            this.checkBoxUseCurrentTime.Location = new System.Drawing.Point(755, 319);
+            this.checkBoxUseCurrentTime.Location = new System.Drawing.Point(755, 349);
             this.checkBoxUseCurrentTime.Name = "checkBoxUseCurrentTime";
             this.checkBoxUseCurrentTime.Size = new System.Drawing.Size(104, 17);
             this.checkBoxUseCurrentTime.TabIndex = 8;
@@ -322,7 +324,7 @@ namespace JournalPlayer
             this.textBoxPattern.Location = new System.Drawing.Point(111, 105);
             this.textBoxPattern.Name = "textBoxPattern";
             this.textBoxPattern.Size = new System.Drawing.Size(181, 20);
-            this.textBoxPattern.TabIndex = 0;
+            this.textBoxPattern.TabIndex = 3;
             // 
             // label8
             // 
@@ -349,14 +351,14 @@ namespace JournalPlayer
             this.dateTimePickerEndDate.Location = new System.Drawing.Point(389, 69);
             this.dateTimePickerEndDate.Name = "dateTimePickerEndDate";
             this.dateTimePickerEndDate.Size = new System.Drawing.Size(202, 20);
-            this.dateTimePickerEndDate.TabIndex = 1;
+            this.dateTimePickerEndDate.TabIndex = 2;
             // 
             // textBoxGotoLineNo
             // 
             this.textBoxGotoLineNo.Location = new System.Drawing.Point(110, 285);
             this.textBoxGotoLineNo.Name = "textBoxGotoLineNo";
             this.textBoxGotoLineNo.Size = new System.Drawing.Size(103, 20);
-            this.textBoxGotoLineNo.TabIndex = 0;
+            this.textBoxGotoLineNo.TabIndex = 6;
             // 
             // label10
             // 
@@ -402,7 +404,7 @@ namespace JournalPlayer
             this.textBoxGotoEntry.Location = new System.Drawing.Point(338, 285);
             this.textBoxGotoEntry.Name = "textBoxGotoEntry";
             this.textBoxGotoEntry.Size = new System.Drawing.Size(103, 20);
-            this.textBoxGotoEntry.TabIndex = 0;
+            this.textBoxGotoEntry.TabIndex = 7;
             // 
             // label11
             // 
@@ -433,11 +435,27 @@ namespace JournalPlayer
             this.buttonScan.UseVisualStyleBackColor = true;
             this.buttonScan.Click += new System.EventHandler(this.buttonScan_Click);
             // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(4, 320);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(53, 13);
+            this.label12.TabIndex = 0;
+            this.label12.Text = "Auto Skip";
+            // 
+            // textBoxAutoSkip
+            // 
+            this.textBoxAutoSkip.Location = new System.Drawing.Point(111, 317);
+            this.textBoxAutoSkip.Name = "textBoxAutoSkip";
+            this.textBoxAutoSkip.Size = new System.Drawing.Size(625, 20);
+            this.textBoxAutoSkip.TabIndex = 8;
+            // 
             // JournalPlayerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(918, 788);
+            this.ClientSize = new System.Drawing.Size(918, 832);
             this.Controls.Add(this.buttonRestart);
             this.Controls.Add(this.checkBoxUseCurrentTime);
             this.Controls.Add(this.buttonSelectDestFolder);
@@ -464,11 +482,13 @@ namespace JournalPlayer
             this.Controls.Add(this.textBoxJournalFile);
             this.Controls.Add(this.textBoxDestFolder);
             this.Controls.Add(this.label1);
+            this.Controls.Add(this.textBoxAutoSkip);
             this.Controls.Add(this.textBoxGotoEntry);
             this.Controls.Add(this.textBoxGotoLineNo);
             this.Controls.Add(this.textBoxPattern);
             this.Controls.Add(this.textBoxSourceFolder);
             this.Controls.Add(this.label3);
+            this.Controls.Add(this.label12);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label11);
             this.Controls.Add(this.label6);
@@ -527,5 +547,7 @@ namespace JournalPlayer
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Button buttonLocation;
         private System.Windows.Forms.Button buttonScan;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.TextBox textBoxAutoSkip;
     }
 }

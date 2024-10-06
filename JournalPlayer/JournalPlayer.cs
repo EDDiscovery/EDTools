@@ -17,6 +17,7 @@ namespace JournalPlayer
         string SourceFolder { get { return settings["Source"].Str(@"C:\Users\RK\Saved Games\Frontier Developments\Elite Dangerous"); } set { settings["Source"] = value; } }
         string DestFolder { get { return settings["Dest"].Str(@"c:\code\logs\test"); } set { settings["Dest"] = value; } }
         string Pattern { get { return settings["Pattern"].Str("journal*.log"); } set { settings["Pattern"] = value; } }
+        string GoToEventName { get { return settings["GoToEventName"].Str(""); } set { settings["GoToEventName"] = value; } }
         string AutoSkip { get { return settings["AutoSkip"].Str("Music;ReservoirReplenished;ShipLocker;SuitLoadout;Backpack;Loadout"); } set { settings["AutoSkip"] = value; } }
         DateTime Starttime { get { return settings["Starttime"].DateTime(new DateTime(2014, 1, 1, 1, 1, 1, 0, DateTimeKind.Utc), System.Globalization.CultureInfo.InvariantCulture); } set { settings["Starttime"] = value.ToStringZulu(); } }
         DateTime Endtime { get { return settings["Endtime"].DateTime(new DateTime(2049, 1, 1, 1, 1, 1, 0, DateTimeKind.Utc), System.Globalization.CultureInfo.InvariantCulture); } set { settings["Endtime"] = value.ToStringZulu(); } }
@@ -46,6 +47,7 @@ namespace JournalPlayer
             dateTimePickerEndDate.Value = Endtime;
             checkBoxUseCurrentTime.Checked = UseCurrentTime;
             textBoxAutoSkip.Text = AutoSkip;
+            textBoxGotoEntry.Text = GoToEventName;
 
             this.textBoxSourceFolder.TextChanged += new System.EventHandler(this.textBoxSourceFolder_TextChanged);
             this.textBoxDestFolder.TextChanged += new System.EventHandler(this.textBoxDestFolder_TextChanged);
@@ -60,6 +62,8 @@ namespace JournalPlayer
             Clear();
 
             tme.Tick += Tme_Tick;
+
+            EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
         }
 
         protected override void OnLoad(EventArgs e)
@@ -109,6 +113,7 @@ namespace JournalPlayer
         private void buttonClearDestFolder_Click(object sender, EventArgs e)
         {
             BaseUtils.FileHelpers.DeleteFiles(DestFolder, "*.log", new TimeSpan(0), 0);
+            BaseUtils.FileHelpers.DeleteFiles(DestFolder, "*.json", new TimeSpan(0), 0);
         }
 
         private void dateTimePickerStartDate_ValueChanged(object sender, EventArgs e)
@@ -213,15 +218,21 @@ namespace JournalPlayer
             tme.Stop();
 
             if (e.KeyCode == Keys.Enter)
-            {
-                stoponline = textBoxGotoLineNo.Text.InvariantParseInt(0);
+                buttonGoToLine_Click(null, null);
+        }
 
-                if (stoponline > 0 && stoponline > curlineno)  // if parsed, and in future
-                {
-                    tme.Interval = 50;
-                    tme.Start();
-                }
+        private void buttonGoToLine_Click(object sender, EventArgs e)
+        {
+            int v = textBoxGotoLineNo.Text.InvariantParseInt(0);
+
+            if (v > 0 && v > curlineno)  // if parsed, and in future
+            {
+                stoponline = v;
+                tme.Interval = 50;
+                tme.Start();
             }
+            else
+                Console.Beep(512, 100);
         }
 
         private void TextBoxGotoEntry_KeyDown(object sender, KeyEventArgs e)
@@ -229,9 +240,18 @@ namespace JournalPlayer
             tme.Stop();     // stop all anyway
 
             if (e.KeyCode == Keys.Enter)
+                buttonGotoEntry_Click(null, null);
+        }
+
+        private void buttonGotoEntry_Click(object sender, EventArgs e)
+        {
+            if ( textBoxGotoEntry.Text.Length>0)
             {
+                GoToEventName = textBoxGotoEntry.Text;
                 Goto(textBoxGotoEntry.Text);
             }
+            else
+                Console.Beep(512, 100);
         }
 
         private void buttonSelectSourceFolder_Click(object sender, EventArgs e)
@@ -283,6 +303,9 @@ namespace JournalPlayer
             textBoxOutputFile.Text = "";
             tme.Stop();
         }
+
+        System.Random rnd = new System.Random(1);
+        Dictionary<string, JArray> synthesisedmarkets = new Dictionary<string, JArray>();
 
         private void WriteEntryInNextBox()
         {
@@ -369,19 +392,42 @@ namespace JournalPlayer
                             }
                         case "market":
                             {
-                                JSONFormatter jf = new JSONFormatter();
+                                string station = json["StationName"].Str();
 
-                                // use eddtest jsontofluent
-                                jf.Array();
-                                jf.Object().V("id", 128049152).V("Name", "$platinum_name;").V("Name_Localised", "Platinum").V("Category", "$MARKET_category_metals;").V("Category_Localised", "Metals").V("BuyPrice", 0).V("SellPrice", 52820).V("MeanPrice", 58272).V("StockBracket", 0).V("DemandBracket", 3).V("Stock", 0).V("Demand", 273).V("Consumer", true).V("Producer", false).V("Rare", false).Close();
-                                jf.Object().V("id", 128049153).V("Name", "$palladium_name;").V("Name_Localised", "Palladium").V("Category", "$MARKET_category_metals;").V("Category_Localised", "Metals").V("BuyPrice", 0).V("SellPrice", 53565).V("MeanPrice", 50639).V("StockBracket", 0).V("DemandBracket", 3).V("Stock", 0).V("Demand", 353).V("Consumer", true).V("Producer", false).V("Rare", false).Close();
-                                jf.Object().V("id", 128049154).V("Name", "$gold_name;").V("Name_Localised", "Gold").V("Category", "$MARKET_category_metals;").V("Category_Localised", "Metals").V("BuyPrice", 0).V("SellPrice", 50096).V("MeanPrice", 47609).V("StockBracket", 0).V("DemandBracket", 1).V("Stock", 0).V("Demand", 19).V("Consumer", true).V("Producer", false).V("Rare", false).Close();
-                                string items = jf.Get();
-                                JArray ja = JArray.Parse(items);
+                                if (!synthesisedmarkets.TryGetValue(station, out JArray ja))        // if we have NOT synthed it, synth it
+                                {
+                                    JSONFormatter jf = new JSONFormatter();
+                                    jf.Array();
+                                    var commds = EliteDangerousCore.MaterialCommodityMicroResourceType.GetCommodities(EliteDangerousCore.MaterialCommodityMicroResourceType.SortMethod.None);
+                                    foreach (var x in commds)
+                                    {
+                                        if (rnd.Next(5) == 0)       // randomly pick
+                                        {
+                                            int buyprice = 100 + rnd.Next(200);
+                                            int sellprice = buyprice - 50;
+                                            int stock = 12000 + rnd.Next(12000);
+                                            jf.Object().V("id", (int)x.FDType).V("Name", "$" + x.FDType.ToString() + "_name;").V("Name_Localised", x.Type.ToString())
+                                                            .V("Category", "$MARKET_category_" + x.Type.ToString())
+                                                            .V("Category_Localised", x.Type.ToString())
+                                                            .V("BuyPrice", buyprice)
+                                                            .V("SellPrice", sellprice)
+                                                            .V("MeanPrice", (buyprice + sellprice) / 2)
+                                                            .V("StockBracket", 0).V("DemandBracket", 3)
+                                                            .V("Stock", stock)
+                                                            .V("Demand", 273)
+                                                            .V("Consumer", true).V("Producer", true).V("Rare", x.Rarity)
+                                                            .Close();
+                                        }
+                                    }
 
-                                json["Items"] = ja;
+                                    string items = jf.Get();        // get it as string
+                                    ja = JArray.Parse(items);       // turn back in JTokens
+                                    synthesisedmarkets[station] = ja;   // remember
+                                }
 
-                                BaseUtils.FileHelpers.TryWriteToFile(Path.Combine(outdir, "Market.json"), json.ToString());
+                                json["Items"] = ja; // replace and set Items to synthesised list
+
+                                BaseUtils.FileHelpers.TryWriteToFile(Path.Combine(outdir, "Market.json"), json.ToString(true));
 
                                 break;
                             }

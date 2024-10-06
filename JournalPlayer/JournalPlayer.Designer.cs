@@ -71,6 +71,8 @@ namespace JournalPlayer
             this.buttonScan = new System.Windows.Forms.Button();
             this.label12 = new System.Windows.Forms.Label();
             this.textBoxAutoSkip = new System.Windows.Forms.TextBox();
+            this.buttonGotoEntry = new System.Windows.Forms.Button();
+            this.buttonGoToLine = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxSourceFolder
@@ -451,6 +453,26 @@ namespace JournalPlayer
             this.textBoxAutoSkip.Size = new System.Drawing.Size(625, 20);
             this.textBoxAutoSkip.TabIndex = 8;
             // 
+            // buttonGotoEntry
+            // 
+            this.buttonGotoEntry.Location = new System.Drawing.Point(447, 283);
+            this.buttonGotoEntry.Name = "buttonGotoEntry";
+            this.buttonGotoEntry.Size = new System.Drawing.Size(34, 23);
+            this.buttonGotoEntry.TabIndex = 3;
+            this.buttonGotoEntry.Text = ">>";
+            this.buttonGotoEntry.UseVisualStyleBackColor = true;
+            this.buttonGotoEntry.Click += new System.EventHandler(this.buttonGotoEntry_Click);
+            // 
+            // buttonGoToLine
+            // 
+            this.buttonGoToLine.Location = new System.Drawing.Point(217, 283);
+            this.buttonGoToLine.Name = "buttonGoToLine";
+            this.buttonGoToLine.Size = new System.Drawing.Size(34, 23);
+            this.buttonGoToLine.TabIndex = 3;
+            this.buttonGoToLine.Text = ">>";
+            this.buttonGoToLine.UseVisualStyleBackColor = true;
+            this.buttonGoToLine.Click += new System.EventHandler(this.buttonGoToLine_Click);
+            // 
             // JournalPlayerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -461,6 +483,8 @@ namespace JournalPlayer
             this.Controls.Add(this.buttonSelectDestFolder);
             this.Controls.Add(this.buttonSelectSourceFolder);
             this.Controls.Add(this.buttonClearDestFolder);
+            this.Controls.Add(this.buttonGoToLine);
+            this.Controls.Add(this.buttonGotoEntry);
             this.Controls.Add(this.buttonMarketBuy);
             this.Controls.Add(this.buttonStartJump);
             this.Controls.Add(this.buttonViewInput);
@@ -549,5 +573,7 @@ namespace JournalPlayer
         private System.Windows.Forms.Button buttonScan;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.TextBox textBoxAutoSkip;
+        private System.Windows.Forms.Button buttonGotoEntry;
+        private System.Windows.Forms.Button buttonGoToLine;
     }
 }

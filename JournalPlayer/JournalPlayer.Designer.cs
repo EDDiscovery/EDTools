@@ -135,7 +135,7 @@ namespace JournalPlayer
             // 
             // dateTimePickerStartDate
             // 
-            this.dateTimePickerStartDate.CustomFormat = "dd/MM/yyyy  hh:mm:ss";
+            this.dateTimePickerStartDate.CustomFormat = "dd/MM/yyyy  HH:mm:ss";
             this.dateTimePickerStartDate.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dateTimePickerStartDate.Location = new System.Drawing.Point(111, 69);
             this.dateTimePickerStartDate.Name = "dateTimePickerStartDate";
@@ -348,7 +348,7 @@ namespace JournalPlayer
             // 
             // dateTimePickerEndDate
             // 
-            this.dateTimePickerEndDate.CustomFormat = "dd/MM/yyyy  hh:mm:ss";
+            this.dateTimePickerEndDate.CustomFormat = "dd/MM/yyyy  HH:mm:ss";
             this.dateTimePickerEndDate.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dateTimePickerEndDate.Location = new System.Drawing.Point(389, 69);
             this.dateTimePickerEndDate.Name = "dateTimePickerEndDate";

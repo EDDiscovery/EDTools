@@ -1458,7 +1458,7 @@ namespace EDDTest
             {
 
                 string starnameroot = args.Next();
-                int sysaddr = args.Int();
+                long sysaddr = args.Long();
                 double x = double.NaN, y = 0, z = 0;
 
                 if (args.Left >= 3)

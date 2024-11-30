@@ -22,20 +22,30 @@ using System.Text;
 namespace EDDTest
 {
     // EDSY Debugging and extracting eddb info
-    // check out EDSY, then copy the SLN from the lower folder
-    //to remove the error: edsy.js: 7084
+    // check out EDSY : https://github.com/taleden/EDSY.git on branch master
+    // copy the SLN from the folder where this source file is to the EDSY folder
+    //
+    // we want to output the eddb structure to a file
+    // 
+    // We will run it in visual studio to do this.
+    //
+    // Open the EDSY SLN . Select google chrome as the debugger target (on toolbar)
+    // 
+    // EDSY when run locally will error, so to remove the error, change the updateUIFitHash function so it does nothing and just returns true:
+    // edsy.js: ish 7084
     //	var updateUIFitHash = function(buildhash) {
     //		return true;
     //        
-    //to get eddb JSON out: edsy.js: 12234
+    //to get eddb JSON out: at the end of the onDomContentLoaded, place:
     //        var onDOMContentLoaded = function(e) {
     //        ... at end
     //        var out = JSON.stringify(eddb);
     //		console.log(out);
-
+    //
+    // run, get the console output, copy it to a file
+    // 
     // usage
-    // edsy c:\code\eddb.js "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
-    // edsy c:\code\edsyoutput.txt "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
+    // eddtest edsy c:\code\edsyoutput.txt "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
 
     public class ItemModulesEDSY
     {

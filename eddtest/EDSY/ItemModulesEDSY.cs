@@ -4,7 +4,7 @@
  * file except in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
  * ANY KIND, either express or implied. See the License for the specific language
@@ -26,26 +26,30 @@ namespace EDDTest
     // copy the SLN from the folder where this source file is to the EDSY folder
     //
     // we want to output the eddb structure to a file
-    // 
+    //
     // We will run it in visual studio to do this.
     //
     // Open the EDSY SLN . Select google chrome as the debugger target (on toolbar)
-    // 
+    //
     // EDSY when run locally will error, so to remove the error, change the updateUIFitHash function so it does nothing and just returns true:
-    // edsy.js: ish 7084
+    // edsy.js: ish 7234
     //	var updateUIFitHash = function(buildhash) {
     //		return true;
-    //        
+    //
     //to get eddb JSON out: at the end of the onDomContentLoaded, place:
     //        var onDOMContentLoaded = function(e) {
     //        ... at end
     //        var out = JSON.stringify(eddb);
     //		console.log(out);
     //
-    // run, get the console output, copy it to a file
-    // 
+    // run it. Open inspector (ctrl-shift_i). Go to console output.
+    // Inspector will cut the line to size, so you need to click the show more.
+    // Right click and save to file
+    // open file in notepad++, remove to just JSON
+    // Eddtest json filein >edsyoutput.json
+    //
     // usage
-    // eddtest edsy c:\code\edsyoutput.txt "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
+    // eddtest edsy c:\code\edsyoutput.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
 
     public class ItemModulesEDSY
     {
@@ -254,7 +258,7 @@ namespace EDDTest
                 ["minmulspd"] = "MinimumSpeedModifier",
                 ["optmulspd"] = "OptimalSpeedModifier",
                 ["maxmulspd"] = "MaximumSpeedModifier",
-                
+
                 ["minmulacc"] = "MinimumAccelerationModifier",
                 ["optmulacc"] = "OptimalAccelerationModifier",
                 ["maxmulacc"] = "MaximumAccelerationModifier",
@@ -363,12 +367,12 @@ namespace EDDTest
                     string fdname = mod["fdname"].Str();
 
                     if ( !mod.Contains("jitter") && (fdname.StartsWithIIC("hpt_pulselaserburst_")       // EDSY does not include jitter in some modules but its engineerable. based on mtype, add jitter
-                                                || fdname.StartsWithIIC("hpt_beamlaser_") 
+                                                || fdname.StartsWithIIC("hpt_beamlaser_")
                                                 || fdname.StartsWithIIC("hpt_cannon_")
                                                 || fdname.StartsWithIIC("hpt_guardian_shardcannon_")
                                                 || fdname.StartsWithIIC("hpt_slugshot_")
                                                 || fdname.StartsWithIIC("hpt_minelauncher_")
-                                                
+
                                                 || fdname.StartsWithIIC("hpt_atdumbfiremissile_")
                                                 || fdname.StartsWithIIC("hpt_dumbfiremissilerack_")
                                                 || fdname.StartsWithIIC("hpt_atventdisruptorpylon_")
@@ -441,7 +445,7 @@ namespace EDDTest
                             string value = null;
                             if (kvp.Key == "fuelmul" || kvp.Key == "maxrng")
                                 value = $"{mod[kvp.Key].Double(1000,-1):0.###}";
-                            else 
+                            else
                                 value = mod[kvp.Key].IsString ? mod[kvp.Key].Str().AlwaysQuoteString() : $"{mod[kvp.Key].Double():0.###}";
 
                             if (PropertiesToEDD.ContainsKey(kvp.Key))
@@ -502,6 +506,7 @@ namespace EDDTest
 
                 File.WriteAllLines(itemmodulesfilepath, itemmodules);
 
+                System.Diagnostics.Debug.WriteLine(Environment.NewLine + "Special Effects:" + Environment.NewLine);
 
                 // now process special effects and write out ship modules with delta values to debug
                 JObject speff = jo["expeffect"].Object();
@@ -509,13 +514,13 @@ namespace EDDTest
                 {
                     string fdname = sp.Value["fdname"].Str();
                     string name = sp.Value["special"].Str();
-                    string sline = $"[{fdname.AlwaysQuoteString()}] = new ShipModule(0,ShipModule.ModuleTypes.SpecialEffect,{name.AlwaysQuoteString()}) {{";
+                    string sline = $"[{fdname.AlwaysQuoteString()}] = new ItemData.ShipModule(0,ItemData.ShipModule.ModuleTypes.SpecialEffect,{name.AlwaysQuoteString()}) {{";
                     bool prop = false;
                     foreach (KeyValuePair<string, JToken> para in (JObject)sp.Value)
                     {
                         if (fdname == "special_thermalshock" && para.Key == "damage")       // does not seem to work
                             continue;
-                        
+
                         if (PropertiesToEDD.ContainsKey(para.Key))
                         {
                             if (PropertiesToEDD[para.Key] != null)
@@ -534,6 +539,8 @@ namespace EDDTest
                     System.Diagnostics.Debug.WriteLine($"{sline}");
 
                 }
+
+                System.Diagnostics.Debug.WriteLine(Environment.NewLine + "Modifiers:" + Environment.NewLine);
 
                 string modstring = $"Dictionary<string, double> modifiercontrolvalue = new Dictionary<string, double> {{\r\n";
                 string fdmapping = $"Dictionary<string, string> modifierfdmapping = new Dictionary<string, string> {{\r\n";
@@ -584,7 +591,7 @@ namespace EDDTest
 
                 }
 
-                fdmapping += "Triage these:" + Environment.NewLine;
+                fdmapping += Environment.NewLine + "Triage these:" + Environment.NewLine;
 
                 JObject fattr = jo["fdfieldattr"].Object();
 
@@ -666,90 +673,13 @@ namespace EDDTest
                 }
                 else
                     System.Diagnostics.Debug.WriteLine($"Not in normalised form (front part) {fid} {fdname} : {itemmodules[lineno]}");
-            }   
+            }
             else
-                System.Diagnostics.Debug.WriteLine($"Can't find {fid} {fdname} {edsyname}");
+            {
+                System.Diagnostics.Debug.WriteLine($"Can't find {fid} `{fdname}` `{edsyname}`");
+            }
         }
     }
 }
 
 
-
-
-// older convert EDDB taken from chrome
-
-//foreach( var kvp in PropertiesToEDD) System.Diagnostics.Debug.WriteLine($"[{kvp.Value.AlwaysQuoteString()}] = {kvp.Key.AlwaysQuoteString()},");
-
-//StringBuilder jsontext = new StringBuilder(200000);
-//using (Stream fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-//{
-//    using (StreamReader sr = new StreamReader(fs))
-//    {
-//        string linein;
-//        bool inlongcomment = false;
-
-//        // massage javascript to json
-
-//        while ((linein = sr.ReadLine()) != null)
-//        {
-//            string trimmed = linein.Trim();
-//            if (inlongcomment)
-//            {
-//                if (trimmed.Contains("*/"))
-//                    inlongcomment = false;
-//            }
-//            else if (trimmed.StartsWith("/*"))
-//            {
-//                if (!trimmed.Contains("*/"))
-//                    inlongcomment = true;
-//            }
-//            else if (!trimmed.StartsWith("//") && !trimmed.StartsWith("'use"))
-//            {
-//                int comment = linein.IndexOf("// ");
-//                if (comment == -1)
-//                    comment = linein.IndexOf("//\t");
-//                if (comment == -1)
-//                    comment = linein.IndexOf("/* ");
-//                if (comment == -1)
-//                    comment = linein.IndexOf("/*\t");
-//                if (comment != -1)
-//                    linein = linein.Substring(0, comment);
-
-//                string outstr = linein;
-
-//                if (trimmed.StartsWith("var eddb = {"))
-//                    outstr = "{";
-//                else if (trimmed == "};")
-//                    outstr = "}";
-//                else
-//                {
-//                    StringParser sp = new StringParser(linein);
-
-//                    string id = sp.NextWord(": ");
-//                    if (sp.IsCharMoveOn(':'))
-//                    {
-//                        string lineleft = sp.LineLeft.Replace("'", "\"").Replace("NaN", "-999").Replace("1 / 0", "null").Replace("1/0", "null");
-//                        if (lineleft.Contains("/") && !lineleft.Contains("\""))
-//                        {
-//                            // System.Diagnostics.Debug.WriteLine(lineleft);
-//                            Eval evt = new Eval(lineleft, allowfp: true);
-//                            if (evt.TryEvaluateDouble(false, false, out double value))
-//                                lineleft = value.ToStringInvariant() + ",";
-//                        }
-
-//                        need to decode it out
-
-
-//                        outstr = $"    {id.AlwaysQuoteString()}:{lineleft}";
-//                    }
-//                    else
-//                        outstr = outstr.Replace("'", "\"");
-//                }
-
-//                jsontext.AppendLine(outstr);
-//            }
-//        }
-//    }
-//}
-
-// BaseUtils.FileHelpers.TryWriteToFile(@"c:\code\convertout.json", jsontext.ToString());

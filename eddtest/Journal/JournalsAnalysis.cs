@@ -31,15 +31,273 @@ namespace EDDTest
 
     class ScanAnalyse : JournalAnalyse
     {
-        public bool Process(int lineno, JObject jr, string eventname)
+        [Flags]
+        public enum EDAtmosphereProperty
+        {
+            None = 0,
+            Hot = 1,
+            Thick = 2,
+            Thin = 4,
+            Rich = 64,
+        }
+
+        public enum EDAtmosphereType   // from the journal
+        {
+            Unknown = 0,
+            No = 1,         // No atmosphere
+            Earth_Like,
+            Ammonia,
+            Water,
+            Carbon_Dioxide,
+            Methane,
+            Helium,
+            Argon,
+            Neon,
+            Sulphur_Dioxide,
+            Nitrogen,
+            Silicate_Vapour,
+            Metallic_Vapour,
+            Oxygen,
+        }
+
+        [Flags]
+        public enum EDVolcanismProperty
+        {
+            None = 0,
+            Minor = 1,
+            Major = 2,
+        }
+
+        public enum EDVolcanism
+        {
+            Unknown = 0,
+            No,     // No volcanism
+            Water_Magma = 100,
+            Sulphur_Dioxide_Magma = 200,
+            Ammonia_Magma = 300,
+            Methane_Magma = 400,
+            Nitrogen_Magma = 500,
+            Silicate_Magma = 600,
+            Metallic_Magma = 700,
+            Water_Geysers = 800,
+            Carbon_Dioxide_Geysers = 900,
+            Ammonia_Geysers = 1000,
+            Methane_Geysers = 1100,
+            Nitrogen_Geysers = 1200,
+            Helium_Geysers = 1300,
+            Silicate_Vapour_Geysers = 1400,
+            Rocky_Magma = 1500,
+        }
+
+
+
+
+        private static Dictionary<EDAtmosphereType, string> atmoscomparestrings = null;
+
+        private static Dictionary<string, EDVolcanism> volcanismStr2EnumLookup = null;
+        public ScanAnalyse()
+        {
+            atmoscomparestrings = new Dictionary<EDAtmosphereType, string>();
+
+            foreach (EDAtmosphereType atm in Enum.GetValues(typeof(EDAtmosphereType)))
+            {
+                atmoscomparestrings[atm] = atm.ToString().ToLowerInvariant().Replace("_", " ");
+            }
+
+            volcanismStr2EnumLookup = new Dictionary<string, EDVolcanism>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (EDVolcanism atm in Enum.GetValues(typeof(EDVolcanism)))
+            {
+                volcanismStr2EnumLookup[atm.ToString().Replace("_", "")] = atm;
+            }
+
+        }
+
+        public static EDAtmosphereType ToEnum(string v, out EDAtmosphereProperty atmprop)
+        {
+            atmprop = EDAtmosphereProperty.None;
+
+            if (v.IsEmpty())
+                return EDAtmosphereType.No;
+
+            if (v.Equals("None", StringComparison.InvariantCultureIgnoreCase))
+                return EDAtmosphereType.No;
+
+            var searchstr = v.ToLowerInvariant();
+
+            if (searchstr.Contains("rich"))
+            {
+                atmprop |= EDAtmosphereProperty.Rich;
+            }
+            if (searchstr.Contains("thick"))
+            {
+                atmprop |= EDAtmosphereProperty.Thick;
+            }
+            if (searchstr.Contains("thin"))
+            {
+                atmprop |= EDAtmosphereProperty.Thin;
+            }
+            if (searchstr.Contains("hot"))
+            {
+                atmprop |= EDAtmosphereProperty.Hot;
+            }
+
+            foreach (var kvp in atmoscomparestrings)
+            {
+                if (searchstr.Contains(kvp.Value))     // both are lower case, does it contain it?
+                    return kvp.Key;
+            }
+            
+            atmprop = EDAtmosphereProperty.None;
+            return EDAtmosphereType.Unknown;
+        }
+
+
+        public static EDVolcanism ToEnum(string v, out EDVolcanismProperty vprop)
+        {
+            vprop = EDVolcanismProperty.None;
+
+            if (v.IsEmpty())
+                return EDVolcanism.No;
+
+            string searchstr = v.ToLowerInvariant().Replace("_", "").Replace(" ", "").Replace("-", "").Replace("volcanism", "");
+
+            if (searchstr.Contains("minor"))
+            {
+                vprop |= EDVolcanismProperty.Minor;
+                searchstr = searchstr.Replace("minor", "");
+            }
+            if (searchstr.Contains("major"))
+            {
+                vprop |= EDVolcanismProperty.Major;
+                searchstr = searchstr.Replace("major", "");
+            }
+
+            if (volcanismStr2EnumLookup.ContainsKey(searchstr))
+                return volcanismStr2EnumLookup[searchstr];
+
+            vprop = EDVolcanismProperty.None;
+            return EDVolcanism.Unknown;
+        }
+
+        private static SortedDictionary<string, string> atmtypes = new SortedDictionary<string, string>();
+        private static SortedDictionary<string, string> voltypes = new SortedDictionary<string, string>();
+
+
+        public bool Process(int lineno, JObject evt, string eventname)
         {
             if (eventname == "Scan")
             {
-                if (jr["BodyName"].Str().Contains("Ring", StringComparison.InvariantCultureIgnoreCase))
+                string StarType = evt["StarType"].StrNull();
+                string PlanetClass = evt["PlanetClass"].StrNull();
+                string timestamp = evt["timestamp"].Str();
+
+                //if (evt["BodyName"].Str().Contains("Ring", StringComparison.InvariantCultureIgnoreCase))
+                //{
+                //    Console.WriteLine(evt.ToString());
+                //    return true;
+                //}
+
+                if (PlanetClass != null)
                 {
-                    Console.WriteLine(jr.ToString());
-                    return true;
+                    Dictionary<string, double> AtmosphereComposition = null;
+
+                    JToken atmos = evt["AtmosphereComposition"];
+                    if (!atmos.IsNull())
+                    {
+                        if (atmos.IsObject)
+                        {
+                            AtmosphereComposition = atmos?.ToObjectQ<Dictionary<string, double>>();
+                            //System.Diagnostics.Debug.WriteLine($"Atmos list {AtmosphericComppositionList}");
+                        }
+                        else if (atmos.IsArray)
+                        {
+                            AtmosphereComposition = new Dictionary<string, double>();
+                            foreach (JObject jo in atmos)
+                            {
+                                AtmosphereComposition[jo["Name"].Str("Default")] = jo["Percent"].Double();
+                            }
+                            //System.Diagnostics.Debug.WriteLine($"Atmos list {AtmosphericComppositionList}");
+                        }
+                    }
+
+                    string Atmosphere = evt["Atmosphere"].StrNull();               // can be null, or empty
+
+                    if (Atmosphere == "thick  atmosphere")            // obv a frontier bug, atmosphere type has the missing text
+                    {
+                        Atmosphere = "thick " + evt["AtmosphereType"].Str().SplitCapsWord() + " atmosphere";
+                    }
+                    else if (Atmosphere == "thin  atmosphere")
+                    {
+                        Atmosphere = "thin " + evt["AtmosphereType"].Str().SplitCapsWord() + " atmosphere";
+                    }
+                    else if (Atmosphere.IsEmpty())                         // try type.
+                        Atmosphere = evt["AtmosphereType"].StrNull();       // it may still be null here or empty string
+
+                    if (Atmosphere.IsEmpty())       // null or empty - nothing in either, see if there is composition
+                    {
+                        if ((AtmosphereComposition?.Count ?? 0) > 0)    // if we have some composition, synthesise name
+                        {
+                            foreach (var e in Enum.GetNames(typeof(EDAtmosphereType)))
+                            {
+                                if (AtmosphereComposition.ContainsKey(e.ToString()))       // pick first match in ID
+                                {
+                                    Atmosphere = e.ToString().SplitCapsWord().ToLowerInvariant();
+                                    //   System.Diagnostics.Debug.WriteLine("Computed Atmosphere '" + Atmosphere + "'");
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (Atmosphere.IsEmpty())          // still nothing, set to None
+                            Atmosphere = "none";
+                    }
+                    else
+                    {
+                        Atmosphere = Atmosphere.Replace("sulfur", "sulphur").SplitCapsWord().ToLowerInvariant();      // fix frontier spelling mistakes
+                                                                                                                      //   System.Diagnostics.Debug.WriteLine("Atmosphere '" + Atmosphere + "'");
+                    }
+
+                    //System.IO.File.AppendAllText(@"c:\code\atmos.txt", $"Atmosphere {evt["Atmosphere"]} type {evt["AtmosphereType"]} => {Atmosphere}\r\n");
+
+                    System.Diagnostics.Debug.Assert(Atmosphere.HasChars());
+
+                    EDAtmosphereType AtmosphereID = ToEnum(Atmosphere.ToLowerInvariant(), out EDAtmosphereProperty ap);  // convert to internal ID
+                    EDAtmosphereProperty AtmosphereProperty = ap;
+
+                    string Volcanism = evt["Volcanism"].StrNull();
+                    var VolcanismID = ToEnum(Volcanism, out EDVolcanismProperty vp);
+                    var VolcanismProperty = vp;
+
+                    if (AtmosphereID == EDAtmosphereType.Unknown)
+                    {
+                        System.Diagnostics.Trace.WriteLine($"Atmos {timestamp} {PlanetClass} `{Atmosphere}` => {AtmosphereID} {AtmosphereProperty} : '{evt["Atmosphere"].Str()}' '{evt["AtmosphereType"].Str()}'");
+                        if ( ap != EDAtmosphereProperty.None)
+                        { 
+                        }
+
+                    }
+
+                    {
+                        string key = "." + AtmosphereID.ToString() + ((AtmosphereProperty != EDAtmosphereProperty.None) ? "_" + AtmosphereProperty.ToString().Replace(", ", "_") : "");
+
+                        string mainpart = AtmosphereID.ToString().Replace("_", " ") + ((AtmosphereProperty & EDAtmosphereProperty.Rich) != 0 ? " Rich" : "") + " Atmosphere";
+                        EDAtmosphereProperty apnorich = AtmosphereProperty & ~(EDAtmosphereProperty.Rich);
+                        string final = apnorich != EDAtmosphereProperty.None ? apnorich.ToString().Replace(",", "") + " " + mainpart : mainpart;
+                        atmtypes[key] = final;// + " | " + Atmosphere;
+                    }
+
+
+                    {
+
+                        string key = "." + VolcanismID.ToString() + (VolcanismProperty != EDVolcanismProperty.None ? "_" + VolcanismProperty.ToString() : "");
+
+                        string mainpart = VolcanismID.ToString().Replace("_", " ") + " Volcanism";
+                        string final = VolcanismProperty != EDVolcanismProperty.None ? VolcanismProperty.ToString() + " " + mainpart : mainpart;
+
+                        voltypes[key] = final;// + " | " + Volcanism;
+                    }
                 }
+
             }
 
             return false;
@@ -47,7 +305,18 @@ namespace EDDTest
 
         public string Report()
         {
-            return "";
+            string str = "";
+            foreach (var kvp in atmtypes)
+            {
+                str += $"{kvp.Key}: \"{kvp.Value}\" @" + Environment.NewLine;
+            }
+            str += "---" + Environment.NewLine;
+
+            foreach (var kvp in voltypes)
+            {
+                str += $"{kvp.Key}: \"{kvp.Value}\" @" + Environment.NewLine;
+            }
+            return str;
         }
     }
 
@@ -694,12 +963,18 @@ namespace EDDTest
     {
         public static void Analyse(string path, string filename, string type)
         {
+            if ( path== "J")
+            {
+                path = @"c:\users\rk\saved games\frontier developments\elite dangerous";
+            }
             FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
             JournalAnalyse ja = null;
             type = type.ToLowerInvariant();
             if (type == "slot")
                 ja = new SlotAnalyse();
+            else if (type == "scan")
+                ja = new ScanAnalyse();
             else if (type == "fsdLoc")
                 ja = new SlotAnalyse();
             else if (type == "shiptype")

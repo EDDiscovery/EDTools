@@ -448,9 +448,13 @@ namespace EDDTest
                 }
                 else if (cmd.Equals("journalanalyse"))
                 {
-                    if (args.Left >= 3)
+                    if (args.Left >= 4)
                     {
-                        JournalAnalysis.Analyse(args.Next(), args.Next(), args.Next());
+                        string path = args.Next();
+                        string filename = args.Next();
+                        string datetime = args.Next();
+                        string type = args.Next();
+                        JournalAnalysis.Analyse(path,filename,datetime.ParseDateTime(DateTime.MinValue, CultureInfo.CurrentCulture),type);
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

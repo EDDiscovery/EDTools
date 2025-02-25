@@ -487,6 +487,43 @@ namespace EDDTest
         }
     }
 
+    class BookTaxiAnalyse : JournalAnalyse
+    {
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+        public BookTaxiAnalyse()
+        {
+            rep["Count"] = 0;
+            rep["Retreat"] = 0;
+        }
+
+        public bool Process(int lineno, JObject jr, string eventname)
+        {
+            if (eventname == "BookTaxi")
+            {
+                rep["Count"]++;
+
+                if (jr.Contains("Retreat"))
+                    rep["Retreat"]++;
+                return true;
+
+            }
+
+            return false;
+        }
+
+        public string Report()
+        {
+            string str = "";
+            foreach (var kvp in rep)
+            {
+                str += $"{kvp.Key} {kvp.Value}" + Environment.NewLine;
+            }
+            return str;
+
+        }
+    }
+
+
     class AlleiganceAnalyse : JournalAnalyse
     {
         Dictionary<string, int> rep = new Dictionary<string, int>();
@@ -961,13 +998,14 @@ namespace EDDTest
 
     public static class JournalAnalysis
     {
-        public static void Analyse(string path, string filename, string type)
+        public static void Analyse(string path, string filename, DateTime starttime, string type)
         {
             if ( path== "J")
             {
                 path = @"c:\users\rk\saved games\frontier developments\elite dangerous";
             }
-            FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+            FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).
+                                Where(g=>g.LastWriteTimeUtc>=starttime).OrderBy(p => p.FullName).ToArray();
 
             JournalAnalyse ja = null;
             type = type.ToLowerInvariant();
@@ -985,6 +1023,8 @@ namespace EDDTest
                 ja = new ServicesAnalyse();
             else if (type == "fsdloc")
                 ja = new FSDLocAnalyse();
+            else if (type == "booktaxi")
+                ja = new BookTaxiAnalyse();
             else
             {
                 Console.Error.WriteLine("Not recognised analysis type");

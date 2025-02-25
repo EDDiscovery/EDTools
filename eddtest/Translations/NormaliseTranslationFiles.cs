@@ -43,7 +43,7 @@ namespace EDDTest
             string reporttext = $"Report at " + DateTime.Now.ToStringZulu() + Environment.NewLine;
 
             BaseUtils.Translator primary = BaseUtils.Translator.Instance;
-            primary.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), loadorgenglish: true, loadfile: true);
+            primary.LoadTranslation(language, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, Path.GetTempPath(), true );
 
 
             if (!primary.Translating)
@@ -55,7 +55,7 @@ namespace EDDTest
             BaseUtils.Translator secondary = new BaseUtils.Translator();
             if (language2 != null && language2 != "-")
             {
-                secondary.LoadTranslation(language2, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, @"c:\code", loadorgenglish: true, loadfile: true);
+                secondary.LoadTranslation(language2, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, @"c:\code",  true);
 
                 if (!secondary.Translating)
                 {

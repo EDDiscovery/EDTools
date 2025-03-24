@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2015 - 2021 robbyxp @ github.com
+ * Copyright © 2015 - 2025 robbyxp @ github.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,6 @@
  * ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  * 
- * EDDiscovery is not affiliated with Frontier Developments plc.
  */
 
 using BaseUtils;
@@ -34,50 +33,55 @@ namespace EDDTest
 
             if ( args.Left == 0)
             {
-                Console.WriteLine("Journal: Journal - write journal, run for help\n"+
+                Console.WriteLine("Journal: Journal - write journal with an event, run for help\n"+
                                   "         journalindented file - read lines from file in journal format and output indented\n" +
-                                  "         journalplay file file - read journal file and play into another file line by line\n" +
+                                  "         journalplay file file - read journal file and play into another file line by line, altering timestamp\n" +
                                   "         journalanalyse path filenamewildcard type - read all .log journal files and check - see code for type\n" +
+                                  "         journaltofluent file - read a journal file and output fluent code\n" +
+                                  "         readjournallogs file - read a continuous log or journal file out to stdout\n" +
+
                                   "JSON:    jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
                                   "         json - read a json from file and output indented\n" +
+                                  "         @json <verbose1/0> <@string1/0> -read json lines from file and output text in verbose or not. Optionally @ the strings. Non verbose has 132 line length limit\n" +
+                                  "         jsontofluent file - read a json from file and output fluent code\n" +
 
-                                  "Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
-                                  "Voicerecon <filename> -  Consol read a elite bindings file and output action script lines\n" +
-                                  "DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
-                                  "StatusMove lat long latstep longstep heading headstep steptime\n" +
-                                  "Status - run for help\n" +
-                                  "StatusRead\n" +
-                                  "CoriolisModules rootfolder - process coriolis-data\\modules\\<folder>\n" +
-                                  "CoriolisModule name - process coriolis-data\\modules\\<folder>\n" +
-                                  "CoriolisShips rootfolder - process coriolis-data\\ships\n" +
-                                  "CoriolisShip name - process coriolis-data\\ships\n" +
-                                  "CoriolisEng rootfolder - process coriolis-data\\modifications\n" +
-                                  "FrontierData rootfolder - process cvs file exports of frontier data\n" +
-                                  "FDEVIDs rootfolder - process cvs file exports of EDCD FDEV IDs\n" +
-                                  "EDDIData - check vs EDDI data\n" +
-                                  "scantranslate - process source files and look for .Tx definitions, run to see options\n" +
-                                  "normalisetranslate- process language files and normalise, run to see options\n" +
-                                  "scanforenums enumssemicolonlist path wildcard\n" +
-                                  "@json <verbose1/0> <@string1/0> -read json lines from file and output text in verbose or not. Optionally @ the strings. Non verbose has 132 line length limit\n" +
-                                  "jsontofluent file - read a json from file and output fluent code\n" +
-                                  "journaltofluent file - read a journal file and output fluent code\n" +
-                                  "escapestring - read a json from file and output text with quotes escaped for c# source files\n" +
-                                  "@string - read a file and output text for @ strings\n" +
-                                  "cutdownfile file lines -reduce a file size down to this number of lines\n" +
-                                  "xmldump file - decode xml and output attributes/elements showing structure\n" +
-                                  "dwwp file - for processing captured html on expeditions and outputing json of stars\n" +
-                                  "svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
-                                  "readlog file - read a continuous log or journal file out to stdout\n" +
-                                  "githubrelease - read the releases list and stat it\n" +
-                                  "logs wildcard - read files for json lines and process\n" +
-                                  "csvtocs path - read csv and turn into a cs class\n"+
-                                  "comments path\n" +
-                                  "mddoc path wildcard [REMOVE]\n" +
-                                  "finddoclinks path wildcard [REMOVE]\n" +
-                                  "finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
-                                  "insertext path wildcard find insert\n",
-                                  "outfitting file - Read outfitting.csv and compare vs item data\n"+
-                                  "itemsmodules filein fileout - read itemmodules.cs and reformat\n"
+                                  "MDDocs:  mddoc path wildcard [REMOVE] - process MDDOCS from output of doc tool and clean up\n" +
+                                  "         finddoclinks path wildcard [REMOVE]\n" +
+                                  "         finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
+                                  "Translx: normalisetranslate- process language files and normalise, run to see options\n" +
+                                  "         scanforenums enumssemicolonlist path wildcard\n" +
+
+                                  "Coriolis:CoriolisModules rootfolder - process coriolis-data\\modules\\<folder>\n" +
+                                  "         CoriolisModule name - process coriolis-data\\modules\\<folder>\n" +
+                                  "         CoriolisShips rootfolder - process coriolis-data\\ships\n" +
+                                  "         CoriolisShip name - process coriolis-data\\ships\n" +
+                                  "         CoriolisEng rootfolder - process coriolis-data\\modifications\n" +
+
+                                  "Frontier:FrontierData rootfolder - process cvs file exports of frontier data\n" +
+                                  "         FDEVIDs rootfolder - process cvs file exports of EDCD FDEV IDs\n" +
+                                  "         Voicerecon <filename> -  Console read a elite bindings file and output action script lines\n" +
+                                  "         outfitting file - Read outfitting.csv and compare vs item data\n" +
+                                  "         DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
+
+                                  "Websites:EDDIData - check vs EDDI data\n" +
+                                  "         ArtieData - check vs Artie data\n" +
+                                  "         edsy filename itemsmodulefilepathtosyncto - read a dump of EDSY EDDB file and process into ItemsModules.cs\n"+
+                                  "         Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
+                                  "         githubrelease - read the releases list and stat it\n" +
+
+                                  "Status:  Status - run for help\n" +
+                                  "         StatusRead\n" +
+                                  "         StatusMove lat long latstep longstep heading headstep steptime\n" +
+
+                                  "Files:   escapestring - read file and output text with quotes escaped for c# source files\n" +
+                                  "         @string - read a file and output text for @ strings\n" +
+                                  "         xmldump file - decode xml and output attributes/elements showing structure\n" +
+                                  "         cutdownfile file lines -reduce a file size down to this number of lines\n" +
+                                  "         mergecsharp files... - merge CS files\n" +
+                                  "         insertext path wildcard find insert\n",
+                                  "         wikiconvert path filespecwildcard\n",
+                                  "         svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
+                                  ""
 
                                   );
 
@@ -90,6 +94,8 @@ namespace EDDTest
 
                 if (cmd == null)
                     break;
+
+                #region DOCS
 
                 else if (cmd.Equals("finddoclinks"))
                 {
@@ -117,7 +123,9 @@ namespace EDDTest
                         }
                     }
                     else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                    { 
+                        Console.WriteLine($"Too few args for {cmd}"); break; 
+                    }
                 }
                 else if (cmd.Equals("mddoc"))      // processes MD DOC for wiki and makes it better
                 {
@@ -143,30 +151,9 @@ namespace EDDTest
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
 
-                else if (cmd.Equals("inserttext"))
-                {
-                    if (args.Left >= 4)
-                    {
-                        string path = args.Next();
-                        string wildcard = args.Next();
-                        string find = args.Next();
-                        string insert = args.Next();
+                #endregion
 
-                        if (path != null && wildcard != null && find != null && insert != null)
-                        {
-                            FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-
-                            InsertText.ProcessInsert(allFiles, find, insert);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Usage:\n" + "path wildcard findstring insertbeforestring"
-                                     );
-                        }
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
+                #region Translate
 
                 else if (cmd.Equals("normalisetranslate"))
                 {
@@ -203,29 +190,6 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
-                else if (cmd.Equals("translationrepeats"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        string primarypath = args.Next();
-                        int primarysearchdepth = args.Int();
-
-                        if (primarypath == null)
-                        {
-                            Console.WriteLine("Usage:\n" +
-                                                "translaterepeats ..\n"
-                                                );
-                        }
-                        else
-                        {
-                            string ret = TranslationFileRepeats.Process(primarypath, primarysearchdepth);
-                            Console.WriteLine(ret);
-                            System.Diagnostics.Debug.WriteLine(ret);
-                        }
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
                 else if (cmd.Equals("scanforenums"))
                 {
                     if (args.Left >= 3)
@@ -250,117 +214,14 @@ namespace EDDTest
                         }
                     }
                     else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
-                else if (cmd.Equals("journal"))
-                {
-                    Journal.JournalEntry(args);
-                    break;
-                }
-                else if (cmd.Equals("statusread"))
-                {
-                    string file = "status.json";
-                    if (args.Left >= 1)
-                        file = args.Next();
-                    Status.StatusRead(file);
-                }
-                else if (cmd.Equals("statusmove"))
-                {
-                    Status.StatusMove(args);
-                    break;
-                }
-                else if (cmd.Equals("status"))
-                {
-                    Status.StatusSet(args);
-                    break;
-                }
-                else if (cmd.Equals("eddidata"))
-                {
-                    EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();      // for the future
-                    EDDIData.CheckModulesvsEDDI();
-                    EDDIData.CheckSignalsvsEDDI();
-                }
-                else if (cmd.Equals("githubreleases"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        string file = args.Next();
-                        GitHub.Stats(file);
+                    { 
+                        Console.WriteLine($"Too few args for {cmd}"); break; 
                     }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
-                else if (cmd.Equals("dwwp"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        string text = File.ReadAllText(args.Next());
-                        StringParser sp = new StringParser(text);
-                        while (true)
-                        {
-                            string notes = sp.NextWord("-");
-                            if (notes == null)
-                                break;
 
-                            notes = notes.Trim();
+                #endregion
 
-                            if (sp.IsCharMoveOn('-'))
-                            {
-                                string reftext = sp.NextWord(":").Trim();
-
-                                if (sp.IsCharMoveOn(':'))
-                                {
-                                    string name = sp.NextWord("\r").Trim();
-
-                                    //                            Console.WriteLine("N: '" + name + "' Ref '" + reftext + "' loc '" + loc + "'");
-
-                                    JSONFormatter json = new JSONFormatter();
-                                    json.Object().V("Name", name).V("Notes", "DW3305->WPX " + notes).Close();
-
-                                    Console.WriteLine(json.Get() + ",");
-                                }
-                            }
-                        }
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
-                else if (cmd.Equals("voicerecon"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        BindingsFile.Bindings(args.Next());
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
-                else if (cmd.Equals("devicemappings"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        BindingsFile.DeviceMappings(args.Next());
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
-                else if (cmd.Equals("phoneme"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        Speech.Phoneme(args.Next(), args.Next());
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
-                else if (cmd.Equals("wikiconvert"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        WikiConvert.Convert(args.Next(), args.Next());
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
+                #region Coriolis
                 else if (cmd.Equals("coriolisships"))
                 {
                     if (args.Left >= 1)
@@ -416,22 +277,16 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
+
+                #endregion
+
+                #region Frontier
                 else if (cmd.Equals("frontierdata"))
                 {
                     if (args.Left >= 1)
                     {
                         EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
                         FrontierData.Process(args.Next());
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
-                else if (cmd.Equals("artiedata"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
-                        ArtieData.Process(args.Next());
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
@@ -446,19 +301,122 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
-                else if (cmd.Equals("journalanalyse"))
+
+                else if (cmd.Equals("voicerecon"))
                 {
-                    if (args.Left >= 4)
+                    if (args.Left >= 1)
                     {
-                        string path = args.Next();
+                        BindingsFile.Bindings(args.Next());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+                else if (cmd.Equals("outfitting"))
+                {
+                    if (args.Left >= 1)
+                    {
                         string filename = args.Next();
-                        string datetime = args.Next();
-                        string type = args.Next();
-                        JournalAnalysis.Analyse(path,filename,datetime.ParseDateTime(DateTime.MinValue, CultureInfo.CurrentCulture),type);
+                        EDCDOutfitting.Process(filename);
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
 
+                }
+                else if (cmd.Equals("devicemappings"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        BindingsFile.DeviceMappings(args.Next());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+
+                #endregion
+
+                #region WebSiteData
+
+                else if (cmd.Equals("eddidata"))
+                {
+                    EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();      // for the future
+                    EDDIData.CheckModulesvsEDDI();
+                    EDDIData.CheckSignalsvsEDDI();
+                }
+                else if (cmd.Equals("artiedata"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
+                        ArtieData.Process(args.Next());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+                else if (cmd.Equals("phoneme"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        Speech.Phoneme(args.Next(), args.Next());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+                else if (cmd.Equals("edsy"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        string infilename = args.Next();
+                        string itemsmod = args.Next();
+                        var edsy = new ItemModulesEDSY();
+                        edsy.ReadEDSY(infilename, itemsmod);
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+
+                }
+
+
+                else if (cmd.Equals("githubreleases"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        string file = args.Next();
+                        GitHub.Stats(file);
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+
+                #endregion
+
+                #region Status
+
+                else if (cmd.Equals("status"))
+                {
+                    Status.StatusSet(args);
+                    break;
+                }
+                else if (cmd.Equals("statusread"))
+                {
+                    string file = "status.json";
+                    if (args.Left >= 1)
+                        file = args.Next();
+                    Status.StatusRead(file);
+                }
+                else if (cmd.Equals("statusmove"))
+                {
+                    Status.StatusMove(args);
+                    break;
+                }
+
+                #endregion
+
+                #region Journal
+
+                else if (cmd.Equals("journal"))
+                {
+                    Journal.JournalEntry(args);
+                    break;
                 }
                 else if (cmd.Equals("journalindented"))
                 {
@@ -513,46 +471,49 @@ namespace EDDTest
                                 while ((s = sr.ReadLine()) != null)
                                 {
                                     JObject jo = JObject.Parse(s);
-                                    string eventname = jo["event"].Str();
-                                    jo["timestamp"] = "";
-
-                                    Console.WriteLine(lineno++ + ": " + eventname + ": " + jo.ToString(false));
-
-                                    if (rununtil == eventname)
+                                    if (jo != null)
                                     {
-                                        timerms = 0;
-                                        rununtil = null;
-                                    }
+                                        string eventname = jo["event"].Str();
+                                        jo["timestamp"] = "";
 
-                                    if (timerms == 0 || Console.KeyAvailable)
-                                    {
-                                        var ck = Console.ReadKey();
+                                        Console.WriteLine(lineno++ + ": " + eventname + ": " + jo.ToString(false));
 
-                                        timerms = 0;
-                                        rununtil = null;
-
-                                        if (ck.Key == ConsoleKey.Escape)
-                                            break;
-                                        else if (ck.Key >= ConsoleKey.D1 && ck.Key <= ConsoleKey.D9)
-                                            timerms = 100 * (ck.Key - ConsoleKey.D1) + 100;
-                                        else if (ck.Key == ConsoleKey.F1)
+                                        if (rununtil == eventname)
                                         {
-                                            timerms = 100;
-                                            rununtil = "FSDJump";
+                                            timerms = 0;
+                                            rununtil = null;
                                         }
-                                        else if (ck.Key == ConsoleKey.F2)
+
+                                        if (timerms == 0 || Console.KeyAvailable)
                                         {
-                                            timerms = 100;
-                                            rununtil = "StartJump";
+                                            var ck = Console.ReadKey();
+
+                                            timerms = 0;
+                                            rununtil = null;
+
+                                            if (ck.Key == ConsoleKey.Escape)
+                                                break;
+                                            else if (ck.Key >= ConsoleKey.D1 && ck.Key <= ConsoleKey.D9)
+                                                timerms = 100 * (ck.Key - ConsoleKey.D1) + 100;
+                                            else if (ck.Key == ConsoleKey.F1)
+                                            {
+                                                timerms = 100;
+                                                rununtil = "FSDJump";
+                                            }
+                                            else if (ck.Key == ConsoleKey.F2)
+                                            {
+                                                timerms = 100;
+                                                rununtil = "StartJump";
+                                            }
                                         }
+
+                                        jo["timestamp"] = DateTime.UtcNow.StartOfSecond().ToStringZuluInvariant();  // change time to right now
+
+                                        BaseUtils.FileHelpers.TryAppendToFile(outpath, jo.ToString() + Environment.NewLine, true);
+
+                                        if (timerms > 0)
+                                            System.Threading.Thread.Sleep(timerms);
                                     }
-
-                                    jo["timestamp"] = DateTime.UtcNow.StartOfSecond().ToStringZuluInvariant();  // change time to right now
-
-                                    BaseUtils.FileHelpers.TryAppendToFile(outpath, jo.ToString() + Environment.NewLine, true);
-
-                                    if (timerms > 0)
-                                        System.Threading.Thread.Sleep(timerms);
                                 }
                             }
                         }
@@ -564,146 +525,21 @@ namespace EDDTest
                     }
 
                 }
-                else if (cmd.Equals("jsonlines") || cmd.Equals("jsonlinescompressed"))
+                else if (cmd.Equals("journalanalyse"))
                 {
-                    if (args.Left >= 1)
-                    {
-                        bool indent = cmd.Equals("jsonindented");
-
-                        string path = args.Next();
-                        try
-                        {
-                            string text = File.ReadAllText(path);
-
-                            using (StringReader sr = new StringReader(text))
-                            {
-                                string line;
-                                while ((line = sr.ReadLine()) != null && (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape))
-                                {
-                                    JToken tk = JToken.Parse(line, out string err, JToken.ParseOptions.CheckEOL);
-                                    if (tk != null)
-                                        Console.WriteLine(tk.ToString(indent));
-                                    else
-                                        Console.WriteLine($"Error in JSON {err}");
-                                }
-                            }
-
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Failed " + ex.Message);
-                        }
-                    }
-                    else
-                    { 
-                        Console.WriteLine("Too few args for jsonlines* filename");
-                        break;
-                    }
-
-                }
-                else if (cmd.Equals("json"))
-                {
-                    if (args.Left >= 1)
+                    if (args.Left >= 4)
                     {
                         string path = args.Next();
-                        try
-                        {
-                            string text = File.ReadAllText(path);
-
-                            JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
-                            if (tk != null)
-                                Console.WriteLine(tk.ToString(true));
-                            else
-                                Console.WriteLine($"{err}\r\nERROR in JSON");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Failed " + ex.Message);
-                        }
-                    }
-                    else
-                    { 
-                        Console.WriteLine("Too few args for json filename");
-                        break;
-                    }
-
-                }
-                else if (cmd.Equals("@json"))
-                {
-                    if (args.Left >= 3)
-                    {
                         string filename = args.Next();
-                        bool verbose = args.Int() != 0;
-                        bool atit = args.Int() != 0;
-
-                        string[] text = File.ReadAllLines(filename);
-                        string res = "";
-                        foreach (var t in text)
-                        {
-                            var jtoken = JToken.Parse(t);
-                            if (jtoken != null)
-                            {
-                                if (verbose)
-                                {
-                                    res += "----------------------" + Environment.NewLine + jtoken.ToString(true) + Environment.NewLine;
-                                }
-                                else
-                                {
-                                    var sb = jtoken.ToString("", "", "", false, 132);
-                                    if (!sb.EndsWith(Environment.NewLine))
-                                        sb += Environment.NewLine;
-                                    res += sb;
-                                    if (JToken.Parse(sb) == null)
-                                    {
-                                        res += "ERROR!!";
-                                    }
-                                }
-                            }
-                            else
-                                res += "BAD JSON: " + t + Environment.NewLine;
-                        }
-
-                        if (atit)
-                            res = res.Replace("\"", "\"\"");
-
-                        Console.WriteLine(res);
+                        string datetime = args.Next();
+                        string type = args.Next();
+                        JournalAnalysis.Analyse(path, filename, datetime.ParseDateTime(DateTime.MinValue, CultureInfo.CurrentCulture), type);
                     }
                     else
-                    { 
-                        Console.WriteLine("Too few args for @json filename verbose1/0 atstrings0/1");
-                        break;
-                    }
-                }
-                else if (cmd.Equals("jsontofluent"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        string path = args.Next();
-                        try
-                        {
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
-                            string text = File.ReadAllText(path);
-
-                            JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
-                            if (tk != null)
-                            {
-                                Console.WriteLine(tk.ToString(true));
-                                string code = "";
-                                JSONToFluent(tk, ref code, true, true);
-                                System.Diagnostics.Debug.WriteLine(code);
-                                Console.WriteLine("qj" + code);
-                            }
-                            else
-                                Console.WriteLine($"{err}\r\nERROR in JSON");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Failed " + ex.Message);
-                        }
-                    }
-                    else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
                 }
+
                 else if (cmd.Equals("journaltofluent"))
                 {
                     if (args.Left >= 1)
@@ -719,8 +555,7 @@ namespace EDDTest
                                 if (tk != null)
                                 {
                                     Console.WriteLine(tk.ToString(true));
-                                    string code = "";
-                                    JSONToFluent(tk, ref code, true, true);
+                                    string code = QuickJSON.JSONFormatter.ToFluent(tk, true);
                                     System.Diagnostics.Debug.WriteLine(code);
                                     Console.WriteLine("qj" + code);
                                 }
@@ -734,36 +569,11 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
-                else if (cmd.Equals("cutdownfile"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        string filename = args.Next();
-                        int numberlines = args.Int();
 
-                        using (StreamReader sr = new StreamReader(filename))         // read directly from file..
-                        {
-                            using (StreamWriter wr = new StreamWriter(filename + ".out"))         // read directly from file..
-                            {
-                                for (int i = 0; i < numberlines; i++)
-                                {
-                                    string line = sr.ReadLine();
-                                    if (line != null)
-                                        wr.WriteLine(line);
-                                    else
-                                        break;
-                                }
-                            }
-                        }
-                    }
-                    else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
-
-                }
-                else if (cmd.Equals("readlog"))
+                else if (cmd.Equals("readjournallogs"))
                 {
                     if (args.Left >= 1)
                     {
@@ -822,23 +632,158 @@ namespace EDDTest
                         }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
-                else if (cmd.Equals("xmldump"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        string filename = args.Next();
-                        int format = args.Int();
 
-                        XElement bindings = XElement.Load(filename);
-                        Dump(bindings, 0, format);
+                #endregion
+
+                #region JSON
+
+                else if (cmd.Equals("jsonlines") || cmd.Equals("jsonlinescompressed"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        bool indent = cmd.Equals("jsonindented");
+
+                        string path = args.Next();
+                        try
+                        {
+                            string text = File.ReadAllText(path);
+
+                            using (StringReader sr = new StringReader(text))
+                            {
+                                string line;
+                                while ((line = sr.ReadLine()) != null && (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape))
+                                {
+                                    JToken tk = JToken.Parse(line, out string err, JToken.ParseOptions.CheckEOL);
+                                    if (tk != null)
+                                        Console.WriteLine(tk.ToString(indent));
+                                    else
+                                        Console.WriteLine($"Error in JSON {err}");
+                                }
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Failed " + ex.Message);
+                        }
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    {
+                        Console.WriteLine("Too few args for jsonlines* filename");
+                        break;
+                    }
 
                 }
+                else if (cmd.Equals("json"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        string path = args.Next();
+                        try
+                        {
+                            string text = File.ReadAllText(path);
+
+                            JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
+                            if (tk != null)
+                                Console.WriteLine(tk.ToString(true));
+                            else
+                                Console.WriteLine($"{err}\r\nERROR in JSON");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Failed " + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Too few args for json filename");
+                        break;
+                    }
+
+                }
+                else if (cmd.Equals("@json"))
+                {
+                    if (args.Left >= 3)
+                    {
+                        string filename = args.Next();
+                        bool verbose = args.Int() != 0;
+                        bool atit = args.Int() != 0;
+
+                        string[] text = File.ReadAllLines(filename);
+                        string res = "";
+                        foreach (var t in text)
+                        {
+                            var jtoken = JToken.Parse(t);
+                            if (jtoken != null)
+                            {
+                                if (verbose)
+                                {
+                                    res += "----------------------" + Environment.NewLine + jtoken.ToString(true) + Environment.NewLine;
+                                }
+                                else
+                                {
+                                    var sb = jtoken.ToString("", "", "", false, 132);
+                                    if (!sb.EndsWith(Environment.NewLine))
+                                        sb += Environment.NewLine;
+                                    res += sb;
+                                    if (JToken.Parse(sb) == null)
+                                    {
+                                        res += "ERROR!!";
+                                    }
+                                }
+                            }
+                            else
+                                res += "BAD JSON: " + t + Environment.NewLine;
+                        }
+
+                        if (atit)
+                            res = res.Replace("\"", "\"\"");
+
+                        Console.WriteLine(res);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Too few args for @json filename verbose1/0 atstrings0/1");
+                        break;
+                    }
+                }
+                else if (cmd.Equals("jsontofluent"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        string path = args.Next();
+                        try
+                        {
+                            string text = File.ReadAllText(path);
+
+                            JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
+                            if (tk != null)
+                            {
+                                Console.WriteLine(tk.ToString(true));
+                                string code = QuickJSON.JSONFormatter.ToFluent(tk, true);
+                                System.Diagnostics.Debug.WriteLine(code);
+                                Console.WriteLine("qj" + code);
+                            }
+                            else
+                                Console.WriteLine($"{err}\r\nERROR in JSON");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Failed " + ex.Message);
+                        }
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+
+
+                #endregion
+
+                #region Files
+
                 else if (cmd.Equals("escapestring"))
                 {
                     if (args.Left >= 1)
@@ -849,7 +794,7 @@ namespace EDDTest
                         Console.WriteLine(text);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
                 else if (cmd.Equals("@string"))
@@ -862,8 +807,86 @@ namespace EDDTest
                         Console.WriteLine(text);
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
+                }
+                else if (cmd.Equals("xmldump"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        string filename = args.Next();
+                        int format = args.Int();
+
+                        XElement bindings = XElement.Load(filename);
+                        XMLHelpers.Dump(bindings, 0, format);
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+
+                }
+                else if (cmd.Equals("cutdownfile"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        string filename = args.Next();
+                        int numberlines = args.Int();
+
+                        using (StreamReader sr = new StreamReader(filename))         // read directly from file..
+                        {
+                            using (StreamWriter wr = new StreamWriter(filename + ".out"))         // read directly from file..
+                            {
+                                for (int i = 0; i < numberlines; i++)
+                                {
+                                    string line = sr.ReadLine();
+                                    if (line != null)
+                                        wr.WriteLine(line);
+                                    else
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+
+                }
+                else if (cmd.Equals("mergecsharp"))
+                {
+                    MergeCSharp.Merge(args);
+                }
+                else if (cmd.Equals("inserttext"))
+                {
+                    if (args.Left >= 4)
+                    {
+                        string path = args.Next();
+                        string wildcard = args.Next();
+                        string find = args.Next();
+                        string insert = args.Next();
+
+                        if (path != null && wildcard != null && find != null && insert != null)
+                        {
+                            FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                            InsertText.ProcessInsert(allFiles, find, insert);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Usage:\n" + "path wildcard findstring insertbeforestring"
+                                     );
+                        }
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+
+                else if (cmd.Equals("wikiconvert"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        WikiConvert.Convert(args.Next(), args.Next());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
                 else if (cmd.Equals("svg"))
                 {
@@ -950,169 +973,12 @@ namespace EDDTest
                         Console.WriteLine(qjs.ToString());
                     }
                     else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
-
-                }
-                else if (cmd.Equals("logs"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        string filename = args.Next();
-
-                        FileInfo[] allFiles = Directory.EnumerateFiles(".", filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-
-                        Dictionary<string, string> signals = new Dictionary<string, string>();
-
-                        foreach (var f in allFiles)
-                        {
-                            string text = FileHelpers.TryReadAllTextFromFile(f.FullName);
-                            if (text != null)
-                            {
-                                StringReader sr = new StringReader(text);
-                                string line;
-                                while ((line = sr.ReadLine()) != null)
-                                {
-                                    JToken tk = JToken.Parse(line);
-                                    if (tk != null)
-                                    {
-                                        var sn = tk["SignalName"];
-                                        //  Console.WriteLine("Read " + tk.ToString());
-                                        if (sn != null)
-                                        {
-                                            string str = tk["SignalName"].Str();
-                                            string strl = tk["SignalName_Localised"].Str();
-                                            if (tk["IsStation"].Bool(false) == true)
-                                            {
-                                                if (strl.HasChars())
-                                                    Console.WriteLine("***** Station has localisation");
-
-                                                strl = "STATION";
-                                            }
-                                            if (signals.ContainsKey(str))
-                                            {
-                                                if (signals[str] != strl)
-                                                    Console.WriteLine("***** Clash, {0} {1} vs {2}", str, strl, signals[str]);
-                                            }
-                                            else
-                                            {
-                                                signals[str] = strl;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                        }
-
-                        Console.WriteLine("***************************** ID list");
-                        foreach (string v in signals.Keys)
-                        {
-                            if (signals[v] != "STATION" && signals[v].HasChars())
-                                Console.WriteLine("{0} {1}", v, signals[v]);
-                        }
-                    }
-                    else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
-
-                }
-                else if (cmd.Equals("csvtocs"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        string filename = args.Next();
-                        string precode = args.Next();
-                        CSVFile reader = new CSVFile();
-
-                        if (reader.Read(filename))
-                        {
-                            foreach (var row in reader.Rows)
-                            {
-                                string line = "";
-                                foreach (var cell in row.Cells)
-                                {
-                                    if (cell.InvariantParseDoubleNull() != null || cell.InvariantParseLongNull() != null)
-                                    {
-                                        line = line.AppendPrePad(cell, ",");
-                                    }
-                                    else
-                                    {
-                                        string celln = cell.Replace("_Name;", "");
-
-                                        line = line.AppendPrePad(celln.AlwaysQuoteString(), ",");
-                                    }
-                                }
-
-                                Console.WriteLine($"    {precode}({line}),");
-                            }
-                        }
-                    }
-                    else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
-
-
-                }
-                else if (cmd.Equals("mergecsharp"))
-                {
-                    MergeCSharp.Merge(args);
-                }
-                else if (cmd.Equals("jsontest"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        string path = args.Next();
-                        try
-                        {
-                            string text = File.ReadAllText(path);
-
-                            JToken tk = JToken.Parse(text, out string err, JToken.ParseOptions.CheckEOL);
-                            if (tk != null)
-                            {
-                                Console.WriteLine(tk.ToString(true));
-
-                                JArray v = tk["values"].Array();
-                                foreach (var x in v)
-                                {
-                                    System.Diagnostics.Debug.WriteLine("{ \"" + x.Str() + "\", EDPlanet.H },");
-                                }
-
-
-                            }
-                            else
-                                Console.WriteLine($"{err}\r\nERROR in JSON");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Failed " + ex.Message);
-                        }
-                    }
-                    else
-                        { Console.WriteLine($"Too few args for {cmd}"); break;}
-
-                }
-                else if (cmd.Equals("outfitting"))
-                {
-                    if (args.Left >= 1)
-                    {
-                        string filename = args.Next();
-                        EDCDOutfitting.Process(filename);
-                    }
-                    else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
 
                 }
-                else if (cmd.Equals("edsy"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        string infilename = args.Next();
-                        string itemsmod = args.Next();
-                        var edsy = new ItemModulesEDSY();
-                        edsy.ReadEDSY(infilename, itemsmod);
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
 
-                }
+                #endregion
+
                 else
                 {
                     Console.WriteLine("Unknown command, run with empty line for help");
@@ -1121,102 +987,6 @@ namespace EDDTest
             }
         }
 
-
-        static void Dump( XElement x, int level, int format)
-        {
-            string pretext = "                                       ".Substring(0, level * 3);
-            if (format == 0)
-                Console.WriteLine(level + pretext + x.NodeType + " " + x.Name.LocalName + (x.Value.HasChars() ? (" : " + x.Value) : ""));
-            else if (format == 1)
-            {
-                if (level > 1)
-                    Console.Write(",\"" + x.Value + "\"");
-            }
-
-            if (x.HasAttributes)
-            {
-                foreach (XAttribute y in x.Attributes())
-                {
-                    if (format == 0)
-                        Console.WriteLine(level + pretext + "  attr " + y.Name + " = " + y.Value);
-                    else if ( !y.Name.ToString().StartsWith("{http"))
-                        Console.Write("\"$" + y.Value.ToString().ToLower() +"\"");
-                }
-            }
-
-            if (x.HasElements)
-            {
-                foreach (XElement y in x.Elements())
-                {
-                    //Console.WriteLine(level + pretext + x.Name.LocalName + " desc " + y.Name.LocalName);
-                    Dump(y, level + 1, format);
-                    //Console.WriteLine(level + pretext + x.Name.LocalName + " Out desc " + y.Name.LocalName);
-                }
-            }
-
-            if (level == 1)
-                Console.WriteLine(",");
-
-        }
-
-        public static void JSONToFluent(JToken tk, ref string code, bool indent, bool converttimestamp)
-        {
-            if (tk.IsObject)
-            {
-                if (indent)
-                    code = code.NewLine();
-
-                if (tk.IsProperty)
-                    code += ".Object(" + tk.Name.AlwaysQuoteString() + ")";
-                else
-                    code += ".Object()";
-
-                foreach (var kvp in tk.Object())
-                {
-                    JSONToFluent(kvp.Value, ref code, indent,converttimestamp);
-                }
-
-                code += ".Close()";
-                if (indent)
-                    code = code.NewLine();
-            }
-            else if (tk.IsArray)
-            {
-                if (indent)
-                    code = code.NewLine();
-
-                if (tk.IsProperty)
-                    code += ".Array(" + tk.Name.AlwaysQuoteString() + ")";
-                else
-                    code += ".Array()";
-
-                foreach (var v in tk.Array())
-                {
-                    JSONToFluent(v, ref code, indent,converttimestamp);
-                }
-
-                code += ".Close()";
-
-                if (indent)
-                    code = code.NewLine();
-            }
-            else
-            {
-                string vstring = tk.ToString();
-
-                if (tk.IsProperty)
-                {
-                    if ( converttimestamp && tk.Name.Equals("timestamp"))
-                    {
-                        code += ".UTC(" + tk.Name.AlwaysQuoteString() + ")";
-                    }
-                    else
-                        code += ".V(" + tk.Name.AlwaysQuoteString() + "," + vstring + ")";
-                }
-                else
-                    code += ".V(" + vstring + ")";
-            }
-        }
 
 
     }

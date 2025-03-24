@@ -94,6 +94,9 @@ namespace EDDTest
             AimDownSight = 5,
             GlideMode = 12,
             BreathableAtmosphere = 16,
+            SupercruiseOverdrive = 20,         
+            SupercruiseAssist = 21,           
+            NPCCrewActive = 22,
         }
 
         public enum StatusFlags2ReportedInOtherMessages     // these are states reported as part of other messages

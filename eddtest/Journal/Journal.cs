@@ -39,6 +39,8 @@ namespace EDDTest
                 return;
             }
 
+            CSVFile stargrid = null;
+
             while (true) // read optional args
             {
                 string opt = (argsentry.Left > 0) ? argsentry[0] : null;
@@ -106,6 +108,13 @@ namespace EDDTest
                         argsentry.Remove();
                         gameversion = "2.2 (Beta 2)";
                     }
+                    else if (opt.Equals("-starsheet", StringComparison.InvariantCultureIgnoreCase) && argsentry.Left >= 1)
+                    {
+                        argsentry.Remove();
+                        stargrid = new CSVFile();
+                        if (!stargrid.Read(argsentry.Next()))
+                            stargrid = null;
+                    }
                     else
                         break;
                 }
@@ -131,7 +140,7 @@ namespace EDDTest
 
                 while (args.Left > 0)       // play thru all of the entries
                 {
-                    if (!createJournalEntry(cmdrname, args, repeatcount, gameversion, build, nogameversiononloadgame, odyssey ,filename))
+                    if (!createJournalEntry(cmdrname, args, repeatcount, gameversion, build, nogameversiononloadgame, odyssey ,filename, stargrid))
                         break;
 
                     repeatcount++;
@@ -164,7 +173,8 @@ namespace EDDTest
         #endregion
 
         public static bool createJournalEntry(string cmdrname, CommandArgs args, int repeatcount, 
-                                                string gameversion, string build, bool nogameversiononloadgame, bool odyssey, string filename)
+                                                string gameversion, string build, bool nogameversiononloadgame, bool odyssey, string filename,
+                                                CSVFile stargrid)
         {
             string filenamepath = Path.GetDirectoryName(filename);
 
@@ -178,9 +188,18 @@ namespace EDDTest
             #region  Travel
 
             if (eventtype.Equals("fsd"))
-                lineout = FSDJump(args, repeatcount);
+            {
+                lineout = FSDJump(args, repeatcount, stargrid);
+                if (lineout == null)
+                {
+                    Console.WriteLine("Unknown system");
+                    return false;
+                }
+            }
             else if (eventtype.Equals("fsdtravel"))
+            {
                 lineout = FSDTravel(args);
+            }
             else if (eventtype.Equals("locdocked") && args.Left >= 4)
             {
                 qj.Object().UTC("timestamp").V("event", "Location");
@@ -598,10 +617,10 @@ namespace EDDTest
             else if (eventtype.Equals("market") && args.Left >= 2)
             {
                 qj.Object().UTC("timestamp").V("event", "Market").V("MarketID", 12345678).V("StarSystem", args.Next()).V("StationName", args.Next());
-                
+
                 string market1 = qj.CurrentText + ", " + EDDTest.Properties.Resources.Market;
                 string market2 = qj.CurrentText + ", " + EDDTest.Properties.Resources.Market2;
-                File.WriteAllText(Path.Combine(filenamepath, "Market.json"), args.Int() == 0 ? market1 : market2 );
+                File.WriteAllText(Path.Combine(filenamepath, "Market.json"), args.Int() == 0 ? market1 : market2);
             }
             else if (eventtype.Equals("materials") && args.Left >= 2)
             {
@@ -618,7 +637,7 @@ namespace EDDTest
             {
                 qj.Object()
                     .UTC("timestamp").V("event", "MaterialCollected")
-                    .V("Name",args.Next())
+                    .V("Name", args.Next())
                     .V("Category", args.Next())
                     .V("Count", args.Int())
                 .Close();
@@ -973,7 +992,7 @@ namespace EDDTest
             else if (eventtype.Equals("shipyard") && args.Left >= 2)
             {
                 qj.Object().UTC("timestamp").V("event", "Shipyard").V("MarketID", 12345678).V("StarSystem", args.Next()).V("StationName", args.Next());
-               
+
                 string fline = qj.CurrentText + ", " + EDDTest.Properties.Resources.Shipyard;
                 File.WriteAllText(Path.Combine(filenamepath, "Shipyard.json"), fline);
             }
@@ -1032,7 +1051,7 @@ namespace EDDTest
             else if (eventtype.Equals("outfitting") && args.Left >= 2)
             {
                 qj.Object().UTC("timestamp").V("event", "Outfitting").V("MarketID", 12345678).V("StarSystem", args.Next()).V("StationName", args.Next());
-                
+
                 string fline = qj.CurrentText + ", " + EDDTest.Properties.Resources.Outfitting;
                 File.WriteAllText(Path.Combine(filenamepath, "Outfitting.json"), fline);
             }
@@ -1361,7 +1380,7 @@ namespace EDDTest
 
                 var text = File.ReadAllText(file);
                 JObject jo = JObject.Parse(text);
-                if ( jo != null && jo.Contains("event") && jo.Contains("timestamp"))
+                if (jo != null && jo.Contains("event") && jo.Contains("timestamp"))
                 {
                     jo["timestamp"] = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");     // replace timestamp
                     lineout += jo.ToString();
@@ -1447,7 +1466,9 @@ namespace EDDTest
 
         #region Implementation
 
-        static string FSDJump(CommandArgs args, int repeatcount)
+        // eddtest journal -starsheet c:\code\expeditiongrid.csv journal.buddyx1.log Buddy fsd "Alpha Centauri"
+
+        static string FSDJump(CommandArgs args, int repeatcount, CSVFile stargrid)
         {
             if (args.Left < 1)
             {
@@ -1458,21 +1479,37 @@ namespace EDDTest
             {
 
                 string starnameroot = args.Next();
-                long sysaddr = args.Long();
+                long? sysaddr = args.LongNull();
                 double x = double.NaN, y = 0, z = 0;
 
-                if (args.Left >= 3)
+                if (sysaddr != null)
                 {
-                    x = args.Double();      // zero if wrong
-                    y = args.Double();
-                    z = args.Double();
+                    if (args.Left >= 3)
+                    {
+                        x = args.Double();      // zero if wrong
+                        y = args.Double();
+                        z = args.Double();
+                    }
+                }
+                else if ( stargrid != null)
+                {
+                    int row = stargrid.FindInColumn(1, starnameroot);       // export of Search | Stars
+                    if (row >= 0)
+                    {
+                        x = stargrid[row].GetDouble(6).Value;
+                        y = stargrid[row].GetDouble(7).Value;
+                        z = stargrid[row].GetDouble(8).Value;
+                        sysaddr = stargrid[row].GetLong(9).Value;
+                    }
+                    else
+                        return null;
                 }
 
                 z = z + 100 * repeatcount;
 
-                string starname = starnameroot + ((z > 0) ? "_" + z.ToStringInvariant("0") : "");
+                string starname = starnameroot + ((repeatcount>0 && z > 0) ? "_" + z.ToStringInvariant("0") : "");
 
-                return FSDJump(starname, sysaddr, x, y, z);
+                return FSDJump(starname, sysaddr.Value, x, y, z);
             }
         }
 
@@ -1562,8 +1599,10 @@ namespace EDDTest
             string s = "Usage:    Journal [options] pathtologfile CMDRname [eventname [<paras>] ]..\n";
             s += "Options:  [-keyrepeat]|[-repeat ms] [-repeatfor N] [-nogameversiononloadgame]\n";
             s += "          [-gameversion ver] [-build ver] [-horizons] [-dayoffset N] [-beta] [-3.8]\n";
+            s += "          [-stargrid file (export of Search|Stars excel grid)]\n";
 
             s += helpout("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
+            s += helpout("", "FSD name (when -stargrid is present, x/y/z/system address is taken from sheet)", eventtype);
             s += helpout("", "FSDTravel name x y z destx desty destz percentint ", eventtype);
             s += helpout("", "Locdocked stasystem station stationfaction systemfaction", eventtype);
             s += helpout("", "Docked starsystem station faction", eventtype);

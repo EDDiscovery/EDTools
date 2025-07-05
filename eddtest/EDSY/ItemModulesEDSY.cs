@@ -43,8 +43,7 @@ namespace EDDTest
     //		console.log(out);
     //
     // run it. Open inspector (ctrl-shift_i). Go to console output.
-    // Inspector will cut the line to size, so you need to click the show more.
-    // Right click and save to file
+    // Inspector will cut the line to size, it will show "Show More(467kb) Copy" text. Copy it to clipboard, paster into np++, edit and save
     // open file in notepad++, remove to just JSON
     // Eddtest json filein >edsyoutput.json
     //
@@ -276,6 +275,8 @@ namespace EDDTest
 
             if (jo != null)
             {
+                File.WriteAllText(Path.GetFileNameWithoutExtension(jsoneddbfilepath) + "_full.json", jo.ToString(true));
+
                 itemmodules = File.ReadAllLines(itemmodulesfilepath);
                 if (itemmodules == null)
                     return;
@@ -298,8 +299,6 @@ namespace EDDTest
                     string shipdata = pad + $"private static ShipProperties {shipfdname.ToLowerInvariant().Replace(" ","_")} = new ShipProperties()" + Environment.NewLine;
                     shipdata += pad + "{" + Environment.NewLine;
                     shipdata += pad + $"    FDID = \"{shipfdname}\"," + Environment.NewLine;
-                    shipdata += pad + $"    EDCDID = \"{shipfdname}\"," + Environment.NewLine;
-                    shipdata += pad + $"    Manufacturer = \"<code>\"," + Environment.NewLine;
                     shipdata += pad + $"    HullMass = {ship["mass"].Int()}F," + Environment.NewLine;
                     shipdata += pad + $"    Name = \"{ship["name"].Str()}\"," + Environment.NewLine;
                     shipdata += pad + $"    Speed = {ship["topspd"].Int()}," + Environment.NewLine;
@@ -346,7 +345,7 @@ namespace EDDTest
                             string report = $"Mass={mass}, ExplosiveResistance={expres}, KineticResistance={kinres}, ThermalResistance={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
                           //  System.Diagnostics.Debug.WriteLine($".. {fid} {armourfdname} {mass} {kinres} {thmres} {expres} {axres} {hullbst} = {report}");
 
-                            ProcessData(fid, shipfdname, edsyname, report);
+                            ProcessData(fid, armourfdname, edsyname, report);
 
                         }
                         else
@@ -676,7 +675,15 @@ namespace EDDTest
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"Can't find {fid} `{fdname}` `{edsyname}`");
+                fdname = fdname.ToLower();
+                string moduletype = fdname.Contains("_grade1") ? "LightweightAlloy" :
+                                    fdname.Contains("_grade2") ? "ReinforcedAlloy" :
+                                    fdname.Contains("_grade3") ? "MilitaryGradeComposite" :
+                                    fdname.Contains("_mirrored") ? "MirroredSurfaceComposite" :
+                                    fdname.Contains("_reactive") ? "ReactiveSurfaceComposite" :
+                                    "Unknown";
+
+                System.Diagnostics.Debug.WriteLine($"{{ \"{fdname}\", new ShipModule({fid}, ShipModule.ModuleTypes.{moduletype}, \"{edsyname}\") }},");
             }
         }
     }

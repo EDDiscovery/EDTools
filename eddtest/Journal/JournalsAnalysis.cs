@@ -993,6 +993,70 @@ namespace EDDTest
         }
     }
 
+
+    class MarketIDAnalyse : JournalAnalyse
+    {
+        Dictionary<long, string> rep = new Dictionary<long, string>();
+        Dictionary<long, HashSet<string>> types = new Dictionary<long, HashSet<string>>();
+
+        public bool Process(int lineno, JObject evt, string eventname)
+        {
+            bool ret = false;
+            {
+                if (eventname == "Location" || eventname == "Docked")
+                {
+                    long? MarketID = evt["MarketID"].LongNull();
+                    if (MarketID != null)
+                    {
+                        string sname = evt["StationName"].Str();
+                        string stype = evt["StationType"].Str();
+                        if (stype == "Bernal")
+                            stype = "Ocellus";
+                        string text = sname + ":" + stype;
+                        if (rep.TryGetValue(MarketID.Value, out string v) && v != text)
+                        {
+                            Console.WriteLine($"Market {MarketID.Value} differ station {text} vs {v}");
+                        }
+                        rep[MarketID.Value] = text;
+
+                        long typeid = MarketID.Value / 1000000;        // 128 xxx xxx just take first two digits
+                        if (types.TryGetValue(typeid, out HashSet<string> typelist))
+                        {
+                            typelist.Add(stype);
+                        }
+                        else
+                            types[typeid] = new HashSet<string>() { stype };
+                    }
+                }
+            }
+            return ret;
+        }
+
+        public string Report()
+        {
+            var keys = rep.Keys.ToList();
+            keys.Sort();
+
+            string str = "";
+            foreach (var key in keys)
+            {
+                str += $"[\"{key}\"] = {rep[key]}," + Environment.NewLine;
+            }
+
+            var keys2 = types.Keys.ToList();
+            keys2.Sort();
+
+            foreach (var key in keys2)
+            {
+                List<string> list = types[key].ToList();
+                list.Sort();
+                str += $"{key} = {string.Join(",",list)}" + Environment.NewLine;
+            }
+
+            return str;
+        }
+    }
+
     //  journalanalyse "c:\users\rk\saved games\frontier developments\elite dangerous" *.log loadout
     //  journalanalyse "c:\code\logs" *.log loadout
 
@@ -1025,6 +1089,8 @@ namespace EDDTest
                 ja = new FSDLocAnalyse();
             else if (type == "booktaxi")
                 ja = new BookTaxiAnalyse();
+            else if (type == "marketid")
+                ja = new MarketIDAnalyse();
             else
             {
                 Console.Error.WriteLine("Not recognised analysis type");

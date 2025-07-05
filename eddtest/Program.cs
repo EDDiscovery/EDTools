@@ -14,10 +14,8 @@
  */
 
 using BaseUtils;
-using Microsoft.Win32;
 using QuickJSON;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -36,7 +34,7 @@ namespace EDDTest
                 Console.WriteLine("Journal: Journal - write journal with an event, run for help\n"+
                                   "         journalindented file - read lines from file in journal format and output indented\n" +
                                   "         journalplay file file - read journal file and play into another file line by line, altering timestamp\n" +
-                                  "         journalanalyse path filenamewildcard type - read all .log journal files and check - see code for type\n" +
+                                  "         journalanalyse type path filenamewildcard - read all .log journal files and check - see code for type\n" +
                                   "         journaltofluent file - read a journal file and output fluent code\n" +
                                   "         readjournallogs file - read a continuous log or journal file out to stdout\n" +
 
@@ -78,8 +76,9 @@ namespace EDDTest
                                   "         xmldump file - decode xml and output attributes/elements showing structure\n" +
                                   "         cutdownfile file lines -reduce a file size down to this number of lines\n" +
                                   "         mergecsharp files... - merge CS files\n" +
-                                  "         insertext path wildcard find insert\n",
+                                  "         inserttext path wildcard find insert : If insert = \"\" then lines are removed\n",
                                   "         wikiconvert path filespecwildcard\n",
+                                  "         corrupt path\n",
                                   "         svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
                                   ""
 
@@ -529,10 +528,10 @@ namespace EDDTest
                 {
                     if (args.Left >= 4)
                     {
+                        string type = args.Next();
                         string path = args.Next();
                         string filename = args.Next();
                         string datetime = args.Next();
-                        string type = args.Next();
                         JournalAnalysis.Analyse(path, filename, datetime.ParseDateTime(DateTime.MinValue, CultureInfo.CurrentCulture), type);
                     }
                     else
@@ -867,7 +866,15 @@ namespace EDDTest
                         {
                             FileInfo[] allFiles = Directory.EnumerateFiles(path, wildcard, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
 
-                            InsertText.ProcessInsert(allFiles, find, insert);
+                            string[] findstrings = null;
+                            if (find.StartsWith("@"))
+                            {
+                                findstrings = File.ReadAllLines(find.Substring(1));
+                            }
+                            else
+                                findstrings = new string[] { find };
+
+                            InsertText.ProcessInsert(allFiles, findstrings, insert);
                         }
                         else
                         {
@@ -971,6 +978,34 @@ namespace EDDTest
                         qjs.Close();
 
                         Console.WriteLine(qjs.ToString());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+
+                }
+                else if (cmd.Equals("corrupt"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        string path = args.Next();
+                        FileInfo fi = new FileInfo(path);
+
+                        using (Stream fs = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+                        {
+                            Random rnd = new Random();
+                            for(int i = 0; i < 100; i++)
+                            {
+                                long pos = rnd.Next() + fi.Length/2;
+                                if ( pos < fi.Length)
+                                {
+                                    Console.WriteLine($"Corrupt {pos}");
+                                    fs.Seek(pos, SeekOrigin.Begin);
+                                    fs.WriteByte((Byte)i);
+                                }
+                            }
+
+                            fs.Close();
+                        }
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

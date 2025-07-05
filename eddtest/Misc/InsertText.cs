@@ -25,10 +25,12 @@ namespace EDDTest
 {
     public static class InsertText
     {
-        static public void ProcessInsert(FileInfo[] files, string finder, string insert)            // overall index of items
+        static public void ProcessInsert(FileInfo[] files, string[] finder, string insert)            // overall index of items
         {
             foreach (var fi in files)
             {
+                System.Diagnostics.Debug.WriteLine($"Check {fi.Name}");
+
                 var utc8nobom = new UTF8Encoding(true);        // give it the default UTF8 with BOM encoding, it will detect BOM or UCS-2 automatically
 
                 bool inserted = false;
@@ -43,12 +45,23 @@ namespace EDDTest
                     string line;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        lines.Add(line);
-                        if (line.Contains(finder))
+                        bool inshere = false;
+                        foreach (var x in finder)
                         {
-                            inserted = true;
-                            lines.Add(insert);
+                            if (x.HasChars() && line.Contains(x))
+                            {
+                                inshere = inserted = true;
+                                if (insert.HasChars())
+                                {
+                                    lines.Add(line);
+                                    lines.Add(insert);
+                                }
+                                break;
+                            }
                         }
+
+                        if (!inshere)
+                            lines.Add(line);
                     }
                 }
 
@@ -63,7 +76,7 @@ namespace EDDTest
                         }
                     }
 
-                    File.Delete(fi.FullName);
+                      File.Delete(fi.FullName);
                     File.Move(fi.FullName + ".ins", fi.FullName);
                 }
             }

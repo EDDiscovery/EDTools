@@ -16,6 +16,7 @@
 using BaseUtils;
 using QuickJSON;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -182,6 +183,39 @@ namespace EDDTest
                         else
                         {
                             string ret = NormaliseTranslationFiles.ProcessNew(primarylanguage, primarypath, primarysearchdepth, language2, renamefile, enums);
+                            Console.WriteLine(ret);
+                            System.Diagnostics.Debug.WriteLine(ret);
+                        }
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+                else if (cmd.Equals("normalisetranslatemkii"))
+                {
+                    if (args.Left >= 3)
+                    {
+                        string primarypath = args.Next();       // mandatory
+                        int primarysearchdepth = args.Int();    // mandatory
+                        string primarylanguage = args.Next();   // mandatory
+
+                        List<string> languages = new List<string>();
+                        while (args.Left > 0)
+                            languages.Add(args.Next());
+
+                        if (primarypath == null || primarylanguage == null)
+                        {
+                            Console.WriteLine("Usage:\n" +
+                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none]\n" +
+                                                "Read the language-to-use and check it\n" +
+                                                "secondary-language: Read this language and overwrite the secondary files with normalised versions against the first, but carrying over the translations\n" +
+                                                "Always write report.txt\n" +
+                                                "Example:\n" +
+                                                "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n"
+                                                );
+                        }
+                        else
+                        {
+                            string ret = NormaliseTranslationFilesMKII.ProcessNew(primarylanguage, primarypath, primarysearchdepth, languages.ToArray());
                             Console.WriteLine(ret);
                             System.Diagnostics.Debug.WriteLine(ret);
                         }

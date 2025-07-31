@@ -155,41 +155,6 @@ namespace EDDTest
 
                 #region Translate
 
-                else if (cmd.Equals("normalisetranslate"))
-                {
-                    if (args.Left >= 3)
-                    {
-                        string primarypath = args.Next();       // mandatory
-                        int primarysearchdepth = args.Int();    // mandatory
-                        string primarylanguage = args.Next();   // mandatory
-
-                        string language2 = args.Next();         // optional..
-                        string renamefile = args.Next();
-                        string enums = args.Next();
-
-                        if (primarypath == null || primarylanguage == null)
-                        {
-                            Console.WriteLine("Usage:\n" +
-                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none] [renamefile or -] [semicolon-list-of-enum-files]\n" +
-                                                "Read the language-to-use and check it\n" +
-                                                "secondary-language: Read this language and overwrite the secondary files with normalised versions against the first, but carrying over the translations\n" +
-                                                "Rename file: List of lines with orgID | RenamedID to note renaming of existing IDs\n" +
-                                                "semicolon-list-of-enums-files: give list of enumerations to cross check against. Use c:\\code\\eddiscovery for built in EDD list of translator enums\n" +
-                                                "Always write report.txt\n" +
-                                                "Example:\n" +
-                                                "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n"
-                                                );
-                        }
-                        else
-                        {
-                            string ret = NormaliseTranslationFiles.ProcessNew(primarylanguage, primarypath, primarysearchdepth, language2, renamefile, enums);
-                            Console.WriteLine(ret);
-                            System.Diagnostics.Debug.WriteLine(ret);
-                        }
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
                 else if (cmd.Equals("normalisetranslatemkii"))
                 {
                     if (args.Left >= 3)
@@ -222,6 +187,62 @@ namespace EDDTest
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+                else if (cmd.Equals("replacetxid"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        // used to search the md files from default documentation for links to external objects
+                        // paras: . *.md OpenTK.Graphics.OpenGL c:\code\ofc\ofc\docexternlinks.txt opengl
+
+                        string path = args.Next();
+                        string wildcard = args.Next();
+
+                        string primarypath = args.Next();       // opt
+                        int primarysearchdepth = args.Int();
+                        string primarylanguage = args.Next();
+
+                        if (path != null && wildcard != null)
+                        {
+                            EDDTest.Translations.ScanForTX.ScanForTXFiles(path, wildcard, primarypath, primarysearchdepth, primarylanguage);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Usage:\n" + "path wildcard");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Too few args for {cmd}"); break;
+                    }
+                }
+                else if (cmd.Equals("scancolonstx"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        // used to search the md files from default documentation for links to external objects
+                        // paras: . *.md OpenTK.Graphics.OpenGL c:\code\ofc\ofc\docexternlinks.txt opengl
+
+                        string path = args.Next();
+                        string wildcard = args.Next();
+
+                        string primarypath = args.Next();       // opt
+                        int primarysearchdepth = args.Int();
+                        string primarylanguage = args.Next();
+
+                        if (path != null && wildcard != null)
+                        {
+                            EDDTest.Translations.ScanForColons.ScanForColonsFiles(path, wildcard, primarypath, primarysearchdepth, primarylanguage);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Usage:\n" + "path wildcard");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Too few args for {cmd}"); break;
+                    }
                 }
                 else if (cmd.Equals("scanforenums"))
                 {
@@ -318,7 +339,7 @@ namespace EDDTest
                 {
                     if (args.Left >= 1)
                     {
-                        EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
+                        EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
                         FrontierData.Process(args.Next());
                     }
                     else
@@ -328,7 +349,7 @@ namespace EDDTest
                 {
                     if (args.Left >= 1)
                     {
-                        EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
+                        EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
                         FDevIDs.Process(args.Next());
                     }
                     else
@@ -371,7 +392,7 @@ namespace EDDTest
 
                 else if (cmd.Equals("eddidata"))
                 {
-                    EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();      // for the future
+                    EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
                     EDDIData.CheckModulesvsEDDI();
                     EDDIData.CheckSignalsvsEDDI();
                 }
@@ -379,7 +400,7 @@ namespace EDDTest
                 {
                     if (args.Left >= 1)
                     {
-                        EliteDangerousCore.MaterialCommodityMicroResourceType.FillTable();
+                        EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
                         ArtieData.Process(args.Next());
                     }
                     else

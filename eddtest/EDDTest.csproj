@@ -51,8 +51,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="QuickJSON, Version=2.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\RJKJSoft.QuickJSON.2.7.0\lib\net48\QuickJSON.dll</HintPath>
+    <Reference Include="QuickJSON, Version=2.8.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RJKJSoft.QuickJSON.2.8.0\lib\net48\QuickJSON.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
@@ -90,6 +90,8 @@
     <Compile Include="Misc\InsertText.cs" />
     <Compile Include="Misc\mergecsharp.cs" />
     <Compile Include="Translations\NormaliseTranslationFilesMKII.cs" />
+    <Compile Include="Translations\ScanForColons.cs" />
+    <Compile Include="Translations\ScanForTX.cs" />
     <Compile Include="Translations\VerifyTranslationFormatting.cs" />
     <Compile Include="Journal\JournalsAnalysis.cs" />
     <Compile Include="Journal\Journal.cs" />
@@ -104,7 +106,6 @@
     <Compile Include="Frontier\Bindings.cs" />
     <Compile Include="Documentation\MDDoc.cs" />
     <Compile Include="Documentation\wikiconvert.cs" />
-    <Compile Include="Translations\NormaliseTranslationFiles.cs" />
     <Compile Include="Misc\Speech.cs" />
     <Compile Include="Status\Status.cs" />
   </ItemGroup>

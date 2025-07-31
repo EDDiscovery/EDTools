@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2016-2023 EDDiscovery development team
+ * Copyright 2016-2025 EDDiscovery development team
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -24,38 +24,47 @@ namespace EliteDangerousCore
     {
         public enum CatType
         {
-            Commodity, Raw, Encoded, Manufactured,          // all
+            Commodity,                                      // all, commodity items
+            Raw, Encoded, Manufactured,                     // all, materials
             Item,                                           // odyssey 4.0.  Called goods in game
             Component,                                      // odyssey 4.0.  Called assets in game
             Data,                                           // odyssey 4.0.  
             Consumable,                                     // odyssey 4.0. 
         };
         public CatType Category { get; private set; }               // see above
+
+        [QuickJSON.JsonIgnore()]
         public string TranslatedCategory { get; private set; }      // translation of above..
 
         public enum ItemType
         {
             VeryCommon, Common, Standard, Rare, VeryRare,           // materials
-            Unknown,                                                // used for microresources
+            Unknown,                                                // used for microresources (Item/Component/Data/Consumable)
             ConsumerItems, Chemicals, Drones, Foods, IndustrialMaterials, LegalDrugs, Machinery, Medicines, Metals, Minerals, Narcotics, PowerPlay,     // commodities..
             Salvage, Slaves, Technology, Textiles, Waste, Weapons,
         };
 
         public ItemType Type { get; private set; }                  // and its type, for materials its commonality, for commodities its group ("Metals" etc), for microresources Unknown
+
+        [QuickJSON.JsonIgnore()]
         public string TranslatedType { get; private set; }          // translation of above..        
 
 
         public enum MaterialGroupType                               // Material trader group type
         {
-            NA,
+            NA,                                                     // for other than materials
             RawCategory1, RawCategory2, RawCategory3, RawCategory4, RawCategory5, RawCategory6, RawCategory7,
             EncodedEmissionData, EncodedWakeScans, EncodedShieldData, EncodedEncryptionFiles, EncodedDataArchives, EncodedFirmware,
             ManufacturedChemical, ManufacturedThermic, ManufacturedHeat, ManufacturedConductive, ManufacturedMechanicalComponents,
-            ManufacturedCapacitors, ManufacturedShielding, ManufacturedComposite, ManufacturedCrystals, ManufacturedAlloys,
+            ManufacturedCapacitors, ManufacturedShielding, ManufacturedComposite, ManufacturedCrystals, ManufacturedAlloys, EncodedGuardian,
+            EncodedGuardianObelisk, ManufacturedGuardian, EncodedThargoid1, EncodedThargoid2, ManufacturedThargoid1, ManufacturedThargoid2, ManufacturedThargoid3,
+            ManufacturedThargoid4,
         };
 
 
         public MaterialGroupType MaterialGroup { get; private set; } // only for materials, grouping
+
+        [QuickJSON.JsonIgnore()]
         public string TranslatedMaterialGroup { get; private set; }
 
         // DO NOT REORDER, add new ones to category END
@@ -121,6 +130,8 @@ namespace EliteDangerousCore
             UnknownMineral, UnknownRefinedMineral,
             // march 15 2024
             ThargoidTitanDriveComponent, ThargoidCystSpecimen, ThargoidBoneFragments, ThargoidOrganSample,
+            // trailblazers feb 25
+            Haematite, Steel,
 
             //---------------------------------------------------------- Raw
             Carbon = 1000, Iron, Lead, Nickel, Phosphorus, Rhenium, Sulphur, Arsenic,
@@ -134,8 +145,9 @@ namespace EliteDangerousCore
             AncientHistoricalData, AncientLanguageData, AncientTechnologicalData, DecodedEmissionData, EncodedScandata, EncryptionArchives, Guardian_ModuleBlueprint, Guardian_WeaponBlueprint,
             HyperspaceTrajectories, SecurityFirmware, ShieldPatternAnalysis, TG_ResidueData, TG_ShipSystemsData, UnknownWakeData, AdaptiveEncryptors, ClassifiedScandata,
             CompactEmissionsData, DataminedWake, EmbeddedFirmware, Guardian_VesselBlueprint, ShieldFrequencyData,
-            // March 15 2024
-            TG_WreckageComponents,
+
+            // Ascendency 3/12/2024
+            TG_StructuralData02, SearchRescueVoucher,
 
             //---------------------------------------------------------- Manufactured
             BasicConductors = 3000, ChemicalStorageUnits, CompactComposites, CrystalShards, GridResistors, Guardian_PowerCell, Guardian_Sentinel_WreckageComponents, HeatConductionWiring,
@@ -147,14 +159,27 @@ namespace EliteDangerousCore
             FedProprietaryComposites, HeatVanes, PolymerCapacitors, ProtoLightAlloys, RefinedFocusCrystals, TG_CausticCrystal, TG_WeaponParts, ThermicAlloys,
             UnknownTechnologyComponents, BiotechConductors, ExquisiteFocusCrystals, FedCoreComposites, TG_Abrasion01, ImperialShielding, ImprovisedComponents, MilitaryGradeAlloys,
             MilitarySupercapacitors, PharmaceuticalIsolators, ProtoHeatRadiators, ProtoRadiolicAlloys, TG_PropulsionElement, Unknownenergysource, UnknownOrganicCircuitry,
-            //---------------------------------------------------------- Item
+            // March 15 2024
+            TG_WreckageComponents,
+            // November 11/24 - this appears to be the same as TactivalCoreChip
+            UnknownCoreChip,
+            //---------------------------------------------------------- Item/Goods
             AgriculturalProcessSample = 4000, BiochemicalAgent, BuildingSchematic, Californium, CastFossil, ChemicalProcessSample, ChemicalSample, CompactLibrary,
             CompressionLiquefiedGas, DeepMantleSample, DegradedPowerRegulator, GeneticRepairMeds, GeneticSample, GMeds, HealthMonitor, Hush,
             InertiaCanister, infinity, InorganicContaminant, insight, InsightDataBank, InsightEntertainmentSuite, IonisedGas, LargeCapacityPowerRegulator,
             Lazarus, MicrobialInhibitor, MutagenicCatalyst, NutritionalConcentrate, PersonalComputer, PersonalDocuments, PetrifiedFossil, Push,
             PyrolyticCatalyst, RefinementProcessSample, ShipSchematic, SuitSchematic, SurveillanceEquipment, SyntheticGenome, SyntheticPathogen, TrueFormFossil,
             UniversalTranslator, VehicleSchematic, WeaponSchematic,
-            //---------------------------------------------------------- Component
+
+            // new Ascendency 3/11/2024
+            PowerIndustrial, PowerMiscIndust, PowerInventory, PowerPlayMilitary, PowerElectronics, PowerComputer, PowerExperiment,
+            PowerAgriculture, PowerExtraction, PowerEquipment, PowerMedical, PowerMiscComputer, PowerSecurity, PowerPower, PowerReasearch,
+
+            // new Ascendency 3/12/2024
+
+            BioMechanicalComponent, SabotagedComponent,
+
+            //---------------------------------------------------------- Component/Assets
             Aerogel = 5000, CarbonFibrePlating, ChemicalCatalyst, ChemicalSuperbase, Circuitboard, CircuitSwitch, ElectricalFuse, ElectricalWiring,
             Electromagnet, EncryptedMemoryChip, Epinephrine, EpoxyAdhesive, Graphene, IonBattery, MemoryChip, MetalCoil,
             MicroElectrode, MicroHydraulics, MicroSupercapacitor, MicroThrusters, Microtransformer, Motor, OpticalFibre, OpticalLens,
@@ -176,35 +201,41 @@ namespace EliteDangerousCore
             SpectralAnalysisData, Spyware, StellarActivityLogs, SurveilleanceLogs, TacticalPlans, TaxRecords, TopographicalSurveys, TravelPermits,
             TroopDeploymentRecords, UnionmemberShip, VaccinationRecords, VaccineResearch, VIPSecurityDetail, VirologyData, Virus, VisitorRegister,
             WeaponInventory, WeaponTestData, XenoDefenceProtocols,
+
+            // new Ascendency 1 3/11/24
+            PowerPreparationSpyware, PowerSpyware, PowerResearchData, PowerEmployeeData, PowerFinancialRecords, PowerPropagandaData, PowerClassifiedData, PowerMegashipData,
+
             //---------------------------------------------------------- Consumable
             AMM_Grenade_EMP = 7000, AMM_Grenade_Frag, AMM_Grenade_Shield, Bypass, EnergyCell, HealthPack,
         }
 
-        public MCMR FDType { get; private set; }                    // the enum
+        [QuickJSON.JsonIgnore()] public MCMR FDType { get; private set; }                    // the enum
         public string FDName { get; private set; }                  // fdname, lower case..
 
-        public string TranslatedName { get; private set; }          // name of it in nice text. This gets translated
+        [QuickJSON.JsonIgnore()] public string TranslatedName { get; private set; }          // name of it in nice text. This gets translated
+
         public string EnglishName { get; private set; }             // name of it in English
 
         public string Shortname { get; private set; }               // short abv. name
-        public Color Colour { get; private set; }                   // colour if its associated with one
+
+        [QuickJSON.JsonIgnore()] public Color Colour { get; private set; }                   // colour if its associated with one
         public bool Rarity { get; private set; }                    // if it is a rare commodity
 
-        public bool IsCommodity { get { return Category == CatType.Commodity; } }
-        public bool IsMaterial { get { return Category == CatType.Encoded || Category == CatType.Manufactured || Category == CatType.Raw; } }
-        public bool IsRaw { get { return Category == CatType.Raw; } }
-        public bool IsEncoded { get { return Category == CatType.Encoded; } }
-        public bool IsManufactured { get { return Category == CatType.Manufactured; } }
-        public bool IsEncodedOrManufactured { get { return Category == CatType.Encoded || Category == CatType.Manufactured; } }
-        public bool IsRareCommodity { get { return Rarity && IsCommodity; } }
-        public bool IsNormalCommodity { get { return !Rarity && IsCommodity; } }
-        public bool IsCommonMaterial { get { return Type == ItemType.Common || Type == ItemType.VeryCommon; } }
+        [QuickJSON.JsonIgnore()] public bool IsCommodity { get { return Category == CatType.Commodity; } }
+        [QuickJSON.JsonIgnore()] public bool IsMaterial { get { return Category == CatType.Encoded || Category == CatType.Manufactured || Category == CatType.Raw; } }
+        [QuickJSON.JsonIgnore()] public bool IsRaw { get { return Category == CatType.Raw; } }
+        [QuickJSON.JsonIgnore()] public bool IsEncoded { get { return Category == CatType.Encoded; } }
+        [QuickJSON.JsonIgnore()] public bool IsManufactured { get { return Category == CatType.Manufactured; } }
+        [QuickJSON.JsonIgnore()] public bool IsEncodedOrManufactured { get { return Category == CatType.Encoded || Category == CatType.Manufactured; } }
+        [QuickJSON.JsonIgnore()] public bool IsRareCommodity { get { return Rarity && IsCommodity; } }
+        [QuickJSON.JsonIgnore()] public bool IsNormalCommodity { get { return !Rarity && IsCommodity; } }
+        [QuickJSON.JsonIgnore()] public bool IsCommonMaterial { get { return Type == ItemType.Common || Type == ItemType.VeryCommon; } }
 
-        public bool IsMicroResources { get { return Category >= CatType.Item; } }     // odyssey 4.0
-        public bool IsConsumable { get { return Category == CatType.Consumable; } }     // odyssey 4.0
-        public bool IsData { get { return Category == CatType.Data; } }
-        public bool IsItem { get { return Category == CatType.Item; } }
-        public bool IsComponent { get { return Category == CatType.Component; } }
+        [QuickJSON.JsonIgnore()] public bool IsMicroResources { get { return Category >= CatType.Item; } }     // odyssey 4.0
+        [QuickJSON.JsonIgnore()] public bool IsConsumable { get { return Category == CatType.Consumable; } }     // odyssey 4.0
+        [QuickJSON.JsonIgnore()] public bool IsData { get { return Category == CatType.Data; } }
+        [QuickJSON.JsonIgnore()] public bool IsItem { get { return Category == CatType.Item; } }
+        [QuickJSON.JsonIgnore()] public bool IsComponent { get { return Category == CatType.Component; } }
 
         public bool IsJumponium
         {
@@ -239,7 +270,8 @@ namespace EliteDangerousCore
         public const int RareCap = 150;
         public const int VeryRareCap = 100;
 
-        public int? MaterialLimit()
+        // does the material have a limit.   Null if not a material
+        public int? MaterialLimitOrNull()
         {
             if (Type == ItemType.VeryCommon) return VeryCommonCap;
             if (Type == ItemType.Common) return CommonCap;
@@ -425,11 +457,20 @@ namespace EliteDangerousCore
             {
                 lock (mcmrlist)
                 {
-                    Add(cat, ItemType.Unknown, MaterialGroupType.NA, (MCMR)fakeid, fdname, locname ?? fdname.SplitCapsWordFull(), fakeid.ToStringInvariant(), false);
+                    bool material = cat == CatType.Raw || cat == CatType.Encoded || cat == CatType.Manufactured;
+
+                    // base itemtype on cat type - materials get common, commodities are assigned to waste!, MCMRs to Unknown
+                    ItemType it = material ? ItemType.Common : cat == CatType.Commodity ? ItemType.Waste : ItemType.Unknown;
+
+                    // we could base it on type, but the problem it messes up the material group display
+                    // assign it to MGT NA. prev code cat == CatType.Raw ? MaterialGroupType.RawCategory1 : cat == CatType.Encoded ? MaterialGroupType.EncodedDataArchives : cat == CatType.Manufactured ? MaterialGroupType.ManufacturedChemical : MaterialGroupType.NA;
+                    MaterialGroupType mgt = MaterialGroupType.NA;
+
+                    Add(cat, it, mgt, (MCMR)fakeid, fdname, locname ?? fdname.SplitCapsWordFull(), fakeid.ToStringInvariant(), false);
+                    System.Diagnostics.Debug.WriteLine($"*** Unknown Material/Commodity/Microresource: {fdname}, {cat}, {locname} -> {cat}, {it}, {mgt}");
                     fakeid++;
                 }
 
-                System.Diagnostics.Debug.WriteLine("** Made MCMRType: {0},{1},{2},{3}", "?", fdname, cat.ToString(), locname);
             }
 
             return mcmrlist[fdname.ToLowerInvariant()];
@@ -456,11 +497,13 @@ namespace EliteDangerousCore
         }
         private static void Add(CatType catname, ItemType typeofit, MaterialGroupType mtg, MCMR id, string fdname, string englishtext, string shortname, bool rare = false)
         {
+#if DEBUG
             if (shortname.HasChars() && mcmrlist.Values.ToList().Find(x => x.Shortname.Equals(shortname, StringComparison.InvariantCultureIgnoreCase)) != null)
             {
                 System.Diagnostics.Trace.WriteLine("**** Shortname repeat for " + id);
+                System.Diagnostics.Debug.Assert(false);
             }
-
+#endif
             Color colour = Color.Green;
 
             if (typeofit == ItemType.VeryRare)
@@ -492,14 +535,14 @@ namespace EliteDangerousCore
             Colour = cl;
             Rarity = rare;
 
-            TranslatedType = TranslatedType.TxID(typeof(MaterialCommodityMicroResourceType), Type.ToString());                // valid to pass this thru the Tx( system
-            TranslatedCategory = TranslatedCategory.TxID(typeof(MaterialCommodityMicroResourceType), TranslatedCategory);        // valid to pass this thru the Tx( system
-            TranslatedMaterialGroup = TranslatedMaterialGroup.TxID(typeof(MaterialCommodityMicroResourceType), MaterialGroup.ToString());                // valid to pass this thru the Tx( system
+            TranslatedType = TranslatedType.Tx();                // valid to pass this thru the Tx( system
+            TranslatedCategory = TranslatedCategory.Tx();        // valid to pass this thru the Tx( system
+            TranslatedMaterialGroup = TranslatedMaterialGroup.Tx();                // valid to pass this thru the Tx( system
 
             //System.Diagnostics.Debug.WriteLine($"Added {FDName} {Name} {Shortname}");
         }
 
-        public static void FillTable()
+        public static void Initialise()
         {
             mcmrlist = new Dictionary<string, MaterialCommodityMicroResourceType>();
 
@@ -597,6 +640,7 @@ namespace EliteDangerousCore
             Add(CatType.Commodity, ItemType.Metals, MCMR.Praseodymium, "Praseodymium");
             Add(CatType.Commodity, ItemType.Metals, MCMR.Samarium, "Samarium");
             Add(CatType.Commodity, ItemType.Metals, MCMR.Silver, "Silver");
+            Add(CatType.Commodity, ItemType.Metals, MCMR.Steel, "Steel");
             Add(CatType.Commodity, ItemType.Metals, MCMR.Tantalum, "Tantalum");
             Add(CatType.Commodity, ItemType.Metals, MCMR.Thallium, "Thallium");
             Add(CatType.Commodity, ItemType.Metals, MCMR.Thorium, "Thorium");
@@ -612,6 +656,7 @@ namespace EliteDangerousCore
             Add(CatType.Commodity, ItemType.Minerals, MCMR.Gallite, "Gallite");
             Add(CatType.Commodity, ItemType.Minerals, MCMR.Goslarite, "Goslarite");
             Add(CatType.Commodity, ItemType.Minerals, MCMR.Grandidierite, "Grandidierite");
+            Add(CatType.Commodity, ItemType.Minerals, MCMR.Haematite, "Haematite");
             Add(CatType.Commodity, ItemType.Minerals, MCMR.Indite, "Indite");
             Add(CatType.Commodity, ItemType.Minerals, MCMR.Jadeite, "Jadeite");
             Add(CatType.Commodity, ItemType.Minerals, MCMR.Lepidolite, "Lepidolite");
@@ -722,7 +767,7 @@ namespace EliteDangerousCore
             Add(CatType.Commodity, ItemType.Salvage, MCMR.SpacePioneerRelics, "Space Pioneer Relics");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.TacticalData, "Tactical Data");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidGeneratorTissueSample, "Caustic Tissue Sample");
-            Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidHeart, "Thargoid Heart");
+            Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidHeart, "Thargoid Heart", "THH");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidPod, "Xenobiological Prison Pod");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidScoutTissueSample, "Thargoid Scout Tissue Sample");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidTissueSampleType1, "Thargoid Cyclops Tissue Sample");
@@ -761,7 +806,7 @@ namespace EliteDangerousCore
             Add(CatType.Commodity, ItemType.Salvage, MCMR.USSCargoTechnicalBlueprints, "Technical Blueprints");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.USSCargoTradeData, "Trade Data");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.WreckageComponents, "Wreckage Components");
-            Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidTitanDriveComponent, "Titan Drive Component");
+            Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidTitanDriveComponent, "Titan Drive Component", "TDC");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidCystSpecimen, "Cyst Specimen");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidBoneFragments, "Bone Fragments");
             Add(CatType.Commodity, ItemType.Salvage, MCMR.ThargoidOrganSample, "Organ Sample");
@@ -978,8 +1023,6 @@ namespace EliteDangerousCore
 
             #endregion
 
-            // TBD materialtrader does it still work?
-
             #region Encoded 
 
             // Keep in ItemType order for the Materialtrader.cs. It relies on the Key returns being in add order to fill its info in properly
@@ -1081,48 +1124,53 @@ namespace EliteDangerousCore
 
             #region Other Encoded
 
-            Add(CatType.Encoded, ItemType.VeryRare, MCMR.Guardian_VesselBlueprint, "Guardian Vessel Blueprint Fragment", "GMVB");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.AncientBiologicalData, "Pattern Alpha Obelisk Data", "PAOD");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.AncientCulturalData, "Pattern Beta Obelisk Data", "PBOD");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.AncientHistoricalData, "Pattern Gamma Obelisk Data", "PGOD");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.AncientLanguageData, "Pattern Delta Obelisk Data", "PDOD");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.AncientTechnologicalData, "Pattern Epsilon Obelisk Data", "PEOD");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.Guardian_ModuleBlueprint, "Guardian Module Blueprint Fragment", "GMBS");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.Guardian_WeaponBlueprint, "Guardian Weapon Blueprint Fragment", "GWBS");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.TG_ResidueData, "Thargoid Residue Data", "URDA");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.TG_ShipSystemsData, "Ship Systems Data", "SSD");
-            Add(CatType.Encoded, ItemType.Rare, MCMR.UnknownWakeData, "Thargoid Wake Data", "UWD");
-            Add(CatType.Encoded, ItemType.Common, MCMR.TG_StructuralData, "Thargoid Structural Data", "UKSD");
-            Add(CatType.Encoded, ItemType.Standard, MCMR.TG_CompositionData, "Thargoid Material Composition Data", "UMCD");
-            Add(CatType.Encoded, ItemType.Standard, MCMR.TG_ShipFlightData, "Ship Flight Data", "SFD");
-            Add(CatType.Encoded, ItemType.Standard, MCMR.UnknownShipSignature, "Thargoid Ship Signature", "USSig");
-            Add(CatType.Encoded, ItemType.Standard, MCMR.TG_WreckageComponents, "Wreckage Components", "TGWC");
+            Add(CatType.Encoded, ItemType.VeryRare, MaterialGroupType.EncodedGuardian, MCMR.Guardian_VesselBlueprint, "Guardian Vessel Blueprint Fragment", "GMVB");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedGuardianObelisk, MCMR.AncientBiologicalData, "Pattern Alpha Obelisk Data", "PAOD");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedGuardianObelisk, MCMR.AncientCulturalData, "Pattern Beta Obelisk Data", "PBOD");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedGuardianObelisk, MCMR.AncientHistoricalData, "Pattern Gamma Obelisk Data", "PGOD");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedGuardianObelisk, MCMR.AncientLanguageData, "Pattern Delta Obelisk Data", "PDOD");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedGuardianObelisk, MCMR.AncientTechnologicalData, "Pattern Epsilon Obelisk Data", "PEOD");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedGuardian, MCMR.Guardian_ModuleBlueprint, "Guardian Module Blueprint Fragment", "GMBS");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedGuardian, MCMR.Guardian_WeaponBlueprint, "Guardian Weapon Blueprint Fragment", "GWBS");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedThargoid1, MCMR.TG_ResidueData, "Thargoid Residue Data", "URDA");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedThargoid1, MCMR.TG_ShipSystemsData, "Ship Systems Data", "SSD");
+            Add(CatType.Encoded, ItemType.Rare, MaterialGroupType.EncodedThargoid1, MCMR.UnknownWakeData, "Thargoid Wake Data", "UWD");
+            Add(CatType.Encoded, ItemType.Common, MaterialGroupType.EncodedThargoid1, MCMR.TG_StructuralData, "Thargoid Structural Data", "UKSD");
+            Add(CatType.Encoded, ItemType.Standard, MaterialGroupType.EncodedThargoid1, MCMR.TG_CompositionData, "Thargoid Material Composition Data", "UMCD");
+            Add(CatType.Encoded, ItemType.Standard, MaterialGroupType.EncodedThargoid2, MCMR.TG_ShipFlightData, "Ship Flight Data", "SFD");
+            Add(CatType.Encoded, ItemType.Standard, MaterialGroupType.EncodedThargoid2, MCMR.UnknownShipSignature, "Thargoid Ship Signature", "USSig");
+            Add(CatType.Encoded, ItemType.Standard, MaterialGroupType.EncodedThargoid2, MCMR.TG_InterdictionData, "Thargoid Interdiction Telemetry", "TIT");
+            Add(CatType.Encoded, ItemType.Standard, MaterialGroupType.EncodedThargoid2, MCMR.TG_ShutdownData, "Massive Energy Surge Analytics", "MESA");
+
+            // ascendency 3/12/2024
+            Add(CatType.Encoded, ItemType.Standard, MaterialGroupType.EncodedThargoid2, MCMR.TG_StructuralData02, "Thargoid Capital Ship Data", "TGSTRUCTD2");
+            Add(CatType.Encoded, ItemType.Standard, MCMR.SearchRescueVoucher, "Search and Rescue Voucher", "SRCHRESV");
 
             #endregion
 
             #region Other Manufactured
 
-            Add(CatType.Manufactured, ItemType.VeryCommon, MCMR.Guardian_PowerCell, "Guardian Power Cell", "GPCe");
-            Add(CatType.Manufactured, ItemType.VeryCommon, MCMR.Guardian_Sentinel_WreckageComponents, "Guardian Wreckage Components", "GSWC");
-            Add(CatType.Manufactured, ItemType.VeryCommon, MCMR.TG_Abrasion03, "Hardened Surface Fragments", "HSF");
-            Add(CatType.Manufactured, ItemType.Common, MCMR.Guardian_PowerConduit, "Guardian Power Conduit", "GPC");
-            Add(CatType.Manufactured, ItemType.Common, MCMR.UnknownCarapace, "Thargoid Carapace", "UKCP");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.Guardian_Sentinel_WeaponParts, "Guardian Sentinel Weapon Parts", "GSWP");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.Guardian_TechComponent, "Guardian Technology Component", "GTC");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.TG_Abrasion02, "Phasing Membrane Residue", "PMR");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.TG_BioMechanicalConduits, "Bio-Mechanical Conduits", "BMC");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.TG_CausticGeneratorParts, "Corrosive Mechanisms", "COMEC");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.TG_CausticShard, "Caustic Shard", "CASH");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.TG_InterdictionData, "Thargoid Interdiction Telemetry", "TIT");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.TG_ShutdownData, "Massive Energy Surge Analytics", "MESA");
-            Add(CatType.Manufactured, ItemType.Standard, MCMR.UnknownEnergycell, "Thargoid Energy Cell", "UKEC");
-            Add(CatType.Manufactured, ItemType.Rare, MCMR.TG_CausticCrystal, "Caustic Crystal", "CACR");
-            Add(CatType.Manufactured, ItemType.Rare, MCMR.TG_WeaponParts, "Weapon Parts", "WP");
-            Add(CatType.Manufactured, ItemType.Rare, MCMR.UnknownTechnologyComponents, "Thargoid Technological Components", "UKTC");
-            Add(CatType.Manufactured, ItemType.VeryRare, MCMR.TG_Abrasion01, "Heat Exposure Specimen", "HEXS");
-            Add(CatType.Manufactured, ItemType.VeryRare, MCMR.TG_PropulsionElement, "Propulsion Elements", "PE");
-            Add(CatType.Manufactured, ItemType.VeryRare, MCMR.Unknownenergysource, "Sensor Fragment", "UES");
-            Add(CatType.Manufactured, ItemType.VeryRare, MCMR.UnknownOrganicCircuitry, "Thargoid Organic Circuitry", "UKOC");
+            Add(CatType.Manufactured, ItemType.VeryCommon, MaterialGroupType.ManufacturedGuardian, MCMR.Guardian_PowerCell, "Guardian Power Cell", "GPCe");
+            Add(CatType.Manufactured, ItemType.VeryCommon, MaterialGroupType.ManufacturedGuardian, MCMR.Guardian_Sentinel_WreckageComponents, "Guardian Wreckage Components", "GSWC");
+            Add(CatType.Manufactured, ItemType.VeryCommon, MaterialGroupType.ManufacturedThargoid1, MCMR.TG_Abrasion03, "Hardened Surface Fragments", "HSF");
+            Add(CatType.Manufactured, ItemType.Common, MaterialGroupType.ManufacturedGuardian, MCMR.Guardian_PowerConduit, "Guardian Power Conduit", "GPC");
+            Add(CatType.Manufactured, ItemType.Common, MaterialGroupType.ManufacturedThargoid1, MCMR.UnknownCarapace, "Thargoid Carapace", "UKCP");
+            Add(CatType.Manufactured, ItemType.Common, MaterialGroupType.ManufacturedThargoid1, MCMR.UnknownCoreChip, "Tactical Core Chip", "TCC");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedGuardian, MCMR.Guardian_Sentinel_WeaponParts, "Guardian Sentinel Weapon Parts", "GSWP");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedGuardian, MCMR.Guardian_TechComponent, "Guardian Technology Component", "GTC");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedThargoid1, MCMR.TG_Abrasion02, "Phasing Membrane Residue", "PMR");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedThargoid1, MCMR.TG_BioMechanicalConduits, "Bio-Mechanical Conduits", "BMC");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedThargoid2, MCMR.TG_CausticGeneratorParts, "Corrosive Mechanisms", "COMEC");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedThargoid2, MCMR.TG_CausticShard, "Caustic Shard", "CASH");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedThargoid2, MCMR.UnknownEnergycell, "Thargoid Energy Cell", "UKEC");
+            Add(CatType.Manufactured, ItemType.Standard, MaterialGroupType.ManufacturedThargoid2, MCMR.TG_WreckageComponents, "Wreckage Components", "TGWC");
+            Add(CatType.Manufactured, ItemType.Rare, MaterialGroupType.ManufacturedThargoid2, MCMR.TG_CausticCrystal, "Caustic Crystal", "CACR");
+            Add(CatType.Manufactured, ItemType.Rare, MaterialGroupType.ManufacturedThargoid3, MCMR.TG_WeaponParts, "Weapon Parts", "WP");
+            Add(CatType.Manufactured, ItemType.Rare, MaterialGroupType.ManufacturedThargoid3, MCMR.UnknownTechnologyComponents, "Thargoid Technological Components", "UKTC");
+            Add(CatType.Manufactured, ItemType.VeryRare, MaterialGroupType.ManufacturedThargoid3, MCMR.TG_Abrasion01, "Heat Exposure Specimen", "HEXS");
+            Add(CatType.Manufactured, ItemType.VeryRare, MaterialGroupType.ManufacturedThargoid3, MCMR.TG_PropulsionElement, "Propulsion Elements", "PE");
+            Add(CatType.Manufactured, ItemType.VeryRare, MaterialGroupType.ManufacturedThargoid3, MCMR.Unknownenergysource, "Sensor Fragment", "UES");
+            Add(CatType.Manufactured, ItemType.VeryRare, MaterialGroupType.ManufacturedThargoid4, MCMR.UnknownOrganicCircuitry, "Thargoid Organic Circuitry", "UKOC");
 
             #endregion
 
@@ -1171,6 +1219,31 @@ namespace EliteDangerousCore
             Add(CatType.Item, MCMR.UniversalTranslator, "Universal Translator", "MRIUT");
             Add(CatType.Item, MCMR.VehicleSchematic, "Vehicle Schematic", "MRIVS");
             Add(CatType.Item, MCMR.WeaponSchematic, "Weapon Schematic", "MRIWS");
+
+            // ascendency 3/11/24
+            Add(CatType.Item, MCMR.PowerIndustrial, "Industrial Component", "MRINCP");
+            Add(CatType.Item, MCMR.PowerMiscIndust, "Industrial Machinery", "MRINM");
+            Add(CatType.Item, MCMR.PowerInventory, "Inventory Record", "MRPIR");
+            Add(CatType.Item, MCMR.PowerPlayMilitary, "Military Schematic", "MRPPM");
+            Add(CatType.Item, MCMR.PowerElectronics, "Electronics Package", "MRPPE");
+            Add(CatType.Item, MCMR.PowerComputer, "Computer Parts", "MRPPC");
+            Add(CatType.Item, MCMR.PowerExperiment, "Experimental Prototype", "MRPPEx");
+            Add(CatType.Item, MCMR.PowerAgriculture, "Agricultural Sample", "MRPAS");
+            Add(CatType.Item, MCMR.PowerExtraction, "Extraction Sample", "MRPPES");
+            Add(CatType.Item, MCMR.PowerEquipment, "Personal Protective Equipment", "MRPEM");
+            Add(CatType.Item, MCMR.PowerMedical, "Medical sample", "MRPME");
+            Add(CatType.Item, MCMR.PowerMiscComputer, "Data Storage Device", "MRPMC");
+            Add(CatType.Item, MCMR.PowerSecurity, "Security Logs", "MRPSL");
+            Add(CatType.Item, MCMR.PowerPower, "Energy Regulator", "MRPPP");
+            Add(CatType.Item, MCMR.PowerReasearch, "Research Notes", "MRPRD");
+
+            // ascendency 3/12/24
+
+            Add(CatType.Item, MCMR.BioMechanicalComponent, "Spire Refinery Compound", "MRSPRC");
+            Add(CatType.Item, MCMR.SabotagedComponent, "Contaminated Spire Compound", "MRSBSC");
+
+            // Components
+
             Add(CatType.Component, MCMR.Aerogel, "Aerogel", "MRCA");
             Add(CatType.Component, MCMR.CarbonFibrePlating, "Carbon Fibre Plating", "MRCCFP");
             Add(CatType.Component, MCMR.ChemicalCatalyst, "Chemical Catalyst", "MRCCC");
@@ -1204,6 +1277,7 @@ namespace EliteDangerousCore
             Add(CatType.Component, MCMR.TungstenCarbide, "Tungsten Carbide", "MRCTC");
             Add(CatType.Component, MCMR.ViscoElasticPolymer, "Viscoelastic Polymer", "MRCVP");
             Add(CatType.Component, MCMR.WeaponComponent, "Weapon Component", "MRCWC");
+
             Add(CatType.Data, MCMR.AccidentLogs, "Accident Logs", "MRDACCLOGS");
             Add(CatType.Data, MCMR.AirqualityReports, "Air Quality Reports", "MRDAQR");
             Add(CatType.Data, MCMR.AtmosphericData, "Atmospheric Data", "MRDAD");
@@ -1319,6 +1393,22 @@ namespace EliteDangerousCore
             Add(CatType.Data, MCMR.WeaponInventory, "Weapon Inventory", "MRDWI");
             Add(CatType.Data, MCMR.WeaponTestData, "Weapon Test Data", "MRWTD");
             Add(CatType.Data, MCMR.XenoDefenceProtocols, "Xeno-Defence Protocols", "MRDXDP");
+
+            // ascendency, 3/11/24
+
+            Add(CatType.Data, MCMR.PowerPreparationSpyware, "Power Injection Malware", "MRDPIM");
+            Add(CatType.Data, MCMR.PowerSpyware, "Power Tracker Malware", "MRDPTM");
+            Add(CatType.Data, MCMR.PowerResearchData, "Power Research Data", "MRDPRD");
+            Add(CatType.Data, MCMR.PowerEmployeeData, "Power Association Data", "MRDPAD");
+            Add(CatType.Data, MCMR.PowerFinancialRecords, "Power Industrial Data", "MRDPID");
+            Add(CatType.Data, MCMR.PowerPropagandaData, "Power Political Data", "MRDPPD");
+            Add(CatType.Data, MCMR.PowerClassifiedData, "Power Classified Data", "MRDPCD");
+            Add(CatType.Data, MCMR.PowerMegashipData, "Power Megaship Data", "MRDPMD");
+
+
+
+            // consumable
+
             Add(CatType.Consumable, MCMR.AMM_Grenade_EMP, "Shield Disruptor", "MRCSD");
             Add(CatType.Consumable, MCMR.AMM_Grenade_Frag, "Frag Grenade", "MRCFG");
             Add(CatType.Consumable, MCMR.AMM_Grenade_Shield, "Shield Projector", "MRCSP");
@@ -1335,8 +1425,14 @@ namespace EliteDangerousCore
 
             foreach (var x in mcmrlist.Values)
             {
-                x.TranslatedName = x.TranslatedName.TxID(typeof(MaterialCommodityMicroResourceType), x.FDName);
+                x.TranslatedName = x.TranslatedName.Tx();
             }
+
+            //foreach( var x in mcmrlist)
+            //{
+            //    if (x.Value.IsRareCommodity)
+            //        System.Diagnostics.Debug.WriteLine($"{x.Value.FDName},");
+            //}
 
         }
 

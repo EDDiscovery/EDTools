@@ -48,7 +48,7 @@ namespace EDDTest
     // Eddtest json filein >edsyoutput.json
     //
     // usage
-    // eddtest edsy c:\code\edsyoutput.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\Items\ItemModules.cs"
+    // eddtest edsy c:\code\edsy.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\ItemModules.cs"
 
     public class ItemModulesEDSY
     {
@@ -275,7 +275,8 @@ namespace EDDTest
 
             if (jo != null)
             {
-                File.WriteAllText(Path.GetFileNameWithoutExtension(jsoneddbfilepath) + "_full.json", jo.ToString(true));
+                string writeback = Path.GetFullPath(jsoneddbfilepath).Replace(".json","_full.json");
+                File.WriteAllText(writeback, jo.ToString(true));
 
                 itemmodules = File.ReadAllLines(itemmodulesfilepath);
                 if (itemmodules == null)

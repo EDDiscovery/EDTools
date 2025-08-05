@@ -19,17 +19,25 @@ using System.IO;
 
 namespace EDDTest
 {
-    public static partial class Journal
+    public partial class JournalCreator
     {
-        static void WriteToLog(string filename, string cmdrname, string lineout, string gameversion, string build, bool nogameversiononloadgame, bool odyssey, int part, bool checkjson  )
+        private string filename;
+        private string cmdrname;
+        private string gameversion = "4.0.0.1050";
+        private string build = "r123456/r0 ";
+        private bool nogameversiononloadgame = false;
+        private bool odyssey = true;
+        private int part = 1;
+
+        private bool WriteToLog(string lineout, bool checkjson = true)
         {
             if (lineout != null && checkjson)
             {
                 JToken jk = JToken.Parse(lineout, out string error, JToken.ParseOptions.CheckEOL);
-                if ( jk == null )
+                if (jk == null)
                 {
                     Console.WriteLine("Error in JSON " + error);
-                    return;
+                    return false;
                 }
             }
 
@@ -42,13 +50,13 @@ namespace EDDTest
                         JSONFormatter fileheader = new JSONFormatter();
 
 
-                        fileheader.Object().UTC("timestamp",-1).V("event", "Fileheader").V("language", "English\\\\UK").V("part",part);
+                        fileheader.Object().UTC("timestamp", -1).V("event", "Fileheader").V("language", "English\\\\UK").V("part", part);
 
                         fileheader.V("gameversion", gameversion).V("build", build);
 
                         JSONFormatter loadgame = new JSONFormatter();
 
-                        loadgame.Object().UTC("timestamp",-1).V("event", "LoadGame").V("FID", "F1962222").V("Commander", cmdrname)
+                        loadgame.Object().UTC("timestamp", -1).V("event", "LoadGame").V("FID", "F1962222").V("Commander", cmdrname)
                                 .V("Horizons", true);
 
                         if (odyssey)
@@ -60,7 +68,7 @@ namespace EDDTest
                                 .V("GameMode", "Group").V("Group", "FleetComm").V("Credits", 3815287).V("Loan", 0);
 
 
-                        if ( !nogameversiononloadgame)
+                        if (!nogameversiononloadgame)
                         {
                             loadgame.V("gameversion", gameversion).V("build", build);
                         }
@@ -84,8 +92,39 @@ namespace EDDTest
                     }
                 }
             }
+
+            return true;
         }
 
+        public static void FMission(JSONFormatter q, int id, string name, bool pas, int time)
+        {
+            q.V("MissionID", id).V("Name", name).V("PassengerMission", pas).V("Expires", time);
+        }
+
+        public static string Squadron(string ev, string name, params string[] list)
+        {
+            QuickJSON.JSONFormatter qj = new JSONFormatter();
+
+            qj.Object().UTC("timestamp").V("event", ev);
+            qj.V("SquadronName", name);
+            if (list.Length >= 2)
+            {
+                qj.V("OldRank", list[0]);
+                qj.V("NewRank", list[1]);
+            }
+            else if (list.Length == 1)
+            {
+                qj.V("CurrentRank", list[0]);
+            }
+
+            return qj.Get();
+
+        }
+
+    }
+
+    public static class JournalExtensions
+    {
         // used by -dayoffset to write logs at a different time point
         static public TimeSpan DateTimeOffset = new TimeSpan(0);
 
@@ -94,14 +133,6 @@ namespace EDDTest
             DateTime utc = DateTime.UtcNow.Add(DateTimeOffset).AddSeconds(offset);
             fmt.V(name, utc.ToStringZulu());
             return fmt;
-        }
-
-        public static string NewLine(this string s)
-        {
-            if (s.Length > 0 && !s.EndsWith(Environment.NewLine))
-                s += Environment.NewLine;
-            return s;
-
         }
     }
 

@@ -81,11 +81,36 @@ namespace EDDTest
                                   "         wikiconvert path filespecwildcard\n",
                                   "         corrupt path\n",
                                   "         svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
-                                  ""
+                                  "\n" +
+                                  "Use -File path to read argument from file instead of from command line"
 
                                   );
 
-                return;
+                 return;
+            }
+
+            if ( args.Peek.ToLower() == "-file")
+            {
+                args.Remove();
+                if (args.Left >= 1)
+                {
+                    string path = args.Next();
+                    string filecontents = BaseUtils.FileHelpers.TryReadAllTextFromFile(path);
+                    if (filecontents != null)
+                    {                  
+                        args = new CommandArgs(filecontents);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Can't read file for -File");
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Too few args for -File");
+                    return;
+                }
             }
 
             while (true)
@@ -469,7 +494,8 @@ namespace EDDTest
 
                 else if (cmd.Equals("journal"))
                 {
-                    Journal.JournalEntry(args);
+                    var cr = new JournalCreator();
+                    cr.JournalEntry(args);
                     break;
                 }
                 else if (cmd.Equals("journalindented"))

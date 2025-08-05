@@ -79,6 +79,9 @@
     <Compile Include="EDDI Data\EDDIModules.cs" />
     <Compile Include="EDDI Data\EDDIModuleCheck.cs" />
     <Compile Include="FDEVIDs\FDEVIDS.cs" />
+    <Compile Include="Journal\Journalcreate.cs" />
+    <Compile Include="Journal\Journalhelp.cs" />
+    <Compile Include="Journal\Journalfsdjump.cs" />
     <Compile Include="Misc\xml.cs" />
     <Compile Include="Misc\Github.cs" />
     <Compile Include="Coriolis\CorolisEng.cs" />

@@ -92,9 +92,11 @@
     <Compile Include="Translations\Enums.cs" />
     <Compile Include="Misc\InsertText.cs" />
     <Compile Include="Misc\mergecsharp.cs" />
+    <Compile Include="Translations\FixErrors.cs" />
     <Compile Include="Translations\NormaliseTranslationFilesMKII.cs" />
     <Compile Include="Translations\ScanForColons.cs" />
     <Compile Include="Translations\ScanForTX.cs" />
+    <Compile Include="Translations\translatororiginal.cs" />
     <Compile Include="Translations\VerifyTranslationFormatting.cs" />
     <Compile Include="Journal\JournalsAnalysis.cs" />
     <Compile Include="Journal\Journal.cs" />

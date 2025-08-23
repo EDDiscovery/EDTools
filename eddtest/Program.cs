@@ -179,6 +179,12 @@ namespace EDDTest
                 #endregion
 
                 #region Translate
+                else if (cmd.Equals("fix"))
+                {
+                    string lang = args.Next();       // mandatory
+                    FixErrors.Process(lang);
+
+                }
 
                 else if (cmd.Equals("normalisetranslatemkii"))
                 {

@@ -1087,41 +1087,41 @@ namespace EDDTest
             #endregion
             #region  Squadron
 
-            else if (eventtype.Equals("appliedtosquadron") && args.Left >= 1)
-                lineout = Squadron("AppliedToSquadron", args.Next());
+            else if (eventtype.Equals("appliedtosquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(),"AppliedToSquadron", args.Next());
 
-            else if (eventtype.Equals("disbandedsquadron") && args.Left >= 1)
-                lineout = Squadron("DisbandedSquadron", args.Next());
+            else if (eventtype.Equals("disbandedsquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "DisbandedSquadron", args.Next());
 
-            else if (eventtype.Equals("invitedtosquadron") && args.Left >= 1)
-                lineout = Squadron("InvitedToSquadron", args.Next());
+            else if (eventtype.Equals("invitedtosquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "InvitedToSquadron", args.Next());
 
-            else if (eventtype.Equals("joinedsquadron") && args.Left >= 1)
-                lineout = Squadron("JoinedSquadron", args.Next());
+            else if (eventtype.Equals("joinedsquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "JoinedSquadron", args.Next());
 
-            else if (eventtype.Equals("leftsquadron") && args.Left >= 1)
-                lineout = Squadron("LeftSquadron", args.Next());
+            else if (eventtype.Equals("leftsquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "LeftSquadron", args.Next());
 
-            else if (eventtype.Equals("kickedfromsquadron") && args.Left >= 1)
-                lineout = Squadron("KickedFromSquadron", args.Next());
+            else if (eventtype.Equals("kickedfromsquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "KickedFromSquadron", args.Next());
 
-            else if (eventtype.Equals("sharedbookmarktosquadron") && args.Left >= 1)
-                lineout = Squadron("SharedBookmarkToSquadron", args.Next());
+            else if (eventtype.Equals("sharedbookmarktosquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "SharedBookmarkToSquadron", args.Next());
 
-            else if (eventtype.Equals("squadroncreated") && args.Left >= 1)
-                lineout = Squadron("SquadronCreated", args.Next());
+            else if (eventtype.Equals("squadroncreated") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "SquadronCreated", args.Next());
 
-            else if (eventtype.Equals("wonatrophyforsquadron") && args.Left >= 1)
-                lineout = Squadron("WonATrophyForSquadron", args.Next());
+            else if (eventtype.Equals("wonatrophyforsquadron") && args.Left >= 2)
+                lineout = Squadron(args.Bool(), "WonATrophyForSquadron", args.Next());
 
-            else if (eventtype.Equals("squadrondemotion") && args.Left >= 3)
-                lineout = Squadron("SquadronDemotion", args.Next(), args.Next(), args.Next());
+            else if (eventtype.Equals("squadrondemotion") && args.Left >= 4)
+                lineout = Squadron(args.Bool(), "SquadronDemotion", args.Next());
 
-            else if (eventtype.Equals("squadronpromotion") && args.Left >= 3)
-                lineout = Squadron("SquadronPromotion", args.Next(), args.Next(), args.Next());
+            else if (eventtype.Equals("squadronpromotion") && args.Left >= 4)
+                lineout = Squadron(args.Bool(), "SquadronPromotion", args.Next(), args.Next(), args.Next());
 
-            else if (eventtype.Equals("squadronstartup") && args.Left >= 2)
-                lineout = Squadron("SquadronStartup", args.Next(), args.Next());
+            else if (eventtype.Equals("squadronstartup") && args.Left >= 3)
+                lineout = Squadron(args.Bool(), "SquadronStartup", args.Next(), args.Next());
 
 
             #endregion

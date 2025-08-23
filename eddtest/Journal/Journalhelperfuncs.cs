@@ -101,7 +101,7 @@ namespace EDDTest
             q.V("MissionID", id).V("Name", name).V("PassengerMission", pas).V("Expires", time);
         }
 
-        public static string Squadron(string ev, string name, params string[] list)
+        public static string Squadron(bool newformat, string ev, string name, params string[] list)
         {
             QuickJSON.JSONFormatter qj = new JSONFormatter();
 
@@ -109,12 +109,25 @@ namespace EDDTest
             qj.V("SquadronName", name);
             if (list.Length >= 2)
             {
-                qj.V("OldRank", list[0]);
-                qj.V("NewRank", list[1]);
+                qj.V("OldRank", list[0].InvariantParseInt(0));
+                qj.V("NewRank", list[1].InvariantParseInt(0));
+                if (newformat)
+                {
+                    qj.V("OldRankName", "Rank_" + list[0].InvariantParseInt(0).ToString());
+                    qj.V("NewRankName", "Rank_" + list[1].InvariantParseInt(1).ToString());
+                    qj.V("OldRankName_Localised", "LRank_" + list[0].InvariantParseInt(0).ToString());
+                    qj.V("NewRankName_Localised", "LRank_" + list[1].InvariantParseInt(1).ToString());
+                }
+
             }
             else if (list.Length == 1)
             {
-                qj.V("CurrentRank", list[0]);
+                qj.V("CurrentRank", list[0].InvariantParseInt(0));
+                if (newformat)
+                {
+                    qj.V("CurrentRankName", "CRank_" + list[0].InvariantParseInt(0).ToString());
+                    qj.V("CurrentRankName_Localised", "LRank_" + list[0].InvariantParseInt(0).ToString());
+                }
             }
 
             return qj.Get();

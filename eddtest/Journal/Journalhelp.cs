@@ -27,13 +27,16 @@ namespace EDDTest
 
             if (header)
             {
-                s =  "Usage:    Journal [options] pathtologfile CMDRname [eventname [<paras>] ]..\n";
-                s =  "          JournalFile filenamewithparas..\n";
-                s += "Options:  [-keyrepeat]|[-repeat ms] (repeat whole sequence by key or by delay, Escape quits)\n";
-                s += "          [-repeatfor N] (repeat whole sequence N times)\n";
-                s += "          [-keydelay]|[-delay ms] (Pause between each entry for key, or pause for this ms)\n";
-                s += "          [-nogameversiononloadgame] [-gameversion ver] [-build ver] [-horizons] [-dayoffset N] [-beta] [-3.8]\n";
-                s += "          [-stargrid file (export of Search|Stars excel grid)]\n";
+                s = "Usage:    Journal pathtologfile CMDRname [command|event [<paras>] ]..\n"
+                + "          JournalFile filename\n"
+                + "command = Loop N ... EndLoop\n"
+                + "          msDelay N (ms delay between events)\n"
+                + "          pause N (pause for N ms)\n"
+                + "          KeyDelay (pause for a key between events, NoKeyDelay to turn off)\n"
+                + "          stargrid <file> (give a star grid csv file to use for fsd jump)\n"
+                + "          gameversion N (set gameversion, default 4.0.0.1050. Also use 3.8 for legacy or beta for 2.2 (Beta 2)\n"
+                + "          build N (set gameversion, default 4.0.0.1050)\n"
+                + "          dayoffset N (change date written by N days)\n";
             }
 
             s += helpout("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
@@ -127,7 +130,7 @@ namespace EDDTest
 
             s += helpout("Suit/Weapons", "Buysuit name", eventtype);
 
-            s += helpout("Squadron", "*Squadrons* name (use squardon event name)", eventtype);
+            s += helpout("Squadron", "*Squadrons* name [args] (* use squardon event name)", eventtype);
 
             s += helpout("Text", "Receivetext from channel msg", eventtype);
             s += helpout("", "SentText to/channel msg", eventtype);

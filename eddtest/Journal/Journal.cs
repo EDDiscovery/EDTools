@@ -150,10 +150,6 @@ namespace EDDTest
                         return RetCodes.Failed;
                     }
                 }
-                else if (args.PeekAndRemoveIf("nogameversiononloadgame"))
-                {
-                    nogameversiononloadgame = true;
-                }
                 else if (args.PeekAndRemoveIf("horizons"))
                 {
                     odyssey = false;

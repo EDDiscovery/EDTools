@@ -22,96 +22,6 @@ namespace EDDTest
 {
     public class Status
     {
-        public enum StatusFlags1Ship                             // Flags
-        {
-            ShipDocked = 0, // (on a landing pad)
-            ShipLanded = 1, // (on planet surface)
-            LandingGear = 2,
-            InSupercruise = 4,
-            FlightAssist = 5,
-            HardpointsDeployed = 6,
-            InWing = 7,
-            CargoScoopDeployed = 9,
-            SilentRunning = 10,
-            ScoopingFuel = 11,
-            FsdMassLocked = 16,
-            FsdCharging = 17,
-            FsdCooldown = 18,
-            OverHeating = 20,
-            BeingInterdicted = 23,
-            HUDInAnalysisMode = 27,     // 3.3
-            FsdJump = 30,
-        }
-
-        public enum StatusFlags1SRV                              // Flags
-        {
-            SrvHandbrake = 12,
-            SrvTurret = 13,
-            SrvUnderShip = 14,
-            SrvDriveAssist = 15,
-            SrvHighBeam = 31,
-        }
-
-        public enum StatusFlags1All                             // Flags
-        {
-            ShieldsUp = 3,
-            Lights = 8,
-            LowFuel = 19,
-            HasLatLong = 21,
-            IsInDanger = 22,
-            NightVision = 28,             // 3.3
-        }
-
-        private enum StatusFlags1ReportedInOtherEvents       // reported via other mechs than flags 
-        {
-            AltitudeFromAverageRadius = 29, // 3.4, via position
-        }
-
-        // shiptype (operating mode)
-
-        public enum StatusFlags1ShipType                        // Flags
-        {
-            InMainShip = 24,
-            InFighter = 25,
-            InSRV = 26,
-            ShipMask = (1 << InMainShip) | (1 << InFighter) | (1 << InSRV),
-        }
-
-        public enum StatusFlags2ShipType                   // used to compute ship type
-        {
-            OnFoot = 0,
-            InTaxi = 1,
-            InMulticrew = 2,
-            OnFootInStation = 3,
-            OnFootOnPlanet = 4,
-            OnFootInHangar = 13,
-            OnFootInSocialSpace = 14,
-            OnFootExterior = 15,
-        }
-
-        public enum StatusFlags2Events                  // these are bool flags, reported sep.
-        {
-            AimDownSight = 5,
-            GlideMode = 12,
-            BreathableAtmosphere = 16,
-            SupercruiseOverdrive = 20,         
-            SupercruiseAssist = 21,           
-            NPCCrewActive = 22,
-        }
-
-        public enum StatusFlags2ReportedInOtherMessages     // these are states reported as part of other messages
-        {
-            LowOxygen = 6,
-            LowHealth = 7,
-            Cold = 8,
-            Hot = 9,
-            VeryCold = 10,
-            VeryHot = 11,
-            TempBits = (1 << Cold) | (1 << Hot) | (1 << VeryCold) | (1 << VeryHot),
-            FSDHyperdriveCharging = 19,         // U14 nov 22
-        }
-
-
         public static void StatusSet(CommandArgs args)
         {
             long flags = 0,flags2=0;
@@ -170,7 +80,7 @@ namespace EDDTest
                 else if (v.Equals("Supercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlags1ShipType.InMainShip) |
-                                (1L << (int)StatusFlags1Ship.InSupercruise) |
+                                (1L << (int)StatusFlags1Ship.Supercruise) |
                                 (1L << (int)StatusFlags1All.ShieldsUp);
                 }
                 else if (v.Equals("NormalSpace", StringComparison.InvariantCultureIgnoreCase))          // checked alpha 4
@@ -181,7 +91,7 @@ namespace EDDTest
                 else if (v.Equals("TaxiSupercruise", StringComparison.InvariantCultureIgnoreCase))               // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlags1ShipType.InMainShip) |
-                                (1L << (int)StatusFlags1Ship.InSupercruise) |
+                                (1L << (int)StatusFlags1Ship.Supercruise) |
                                 (1L << (int)StatusFlags1All.ShieldsUp);
                     flags2 = (1L << (int)StatusFlags2ShipType.InTaxi);
                 }
@@ -204,7 +114,7 @@ namespace EDDTest
                 }
                 else if (v.Equals("DockedStarPort", StringComparison.InvariantCultureIgnoreCase))             
                 {
-                    flags = (1L << (int)StatusFlags1Ship.ShipDocked) |
+                    flags = (1L << (int)StatusFlags1Ship.Docked) |
                         (1L << (int)StatusFlags1Ship.LandingGear) |
                                 (1L << (int)StatusFlags1Ship.FsdMassLocked) |
                                 (1L << (int)StatusFlags1All.ShieldsUp) |
@@ -212,7 +122,7 @@ namespace EDDTest
                 }
                 else if (v.Equals("DockedInstallation", StringComparison.InvariantCultureIgnoreCase))   // TBD
                 {
-                    flags = (1L << (int)StatusFlags1Ship.ShipDocked) |
+                    flags = (1L << (int)StatusFlags1Ship.Docked) |
                            (1L << (int)StatusFlags1Ship.LandingGear) |
                             (1L << (int)StatusFlags1Ship.FsdMassLocked) |
                                 (1L << (int)StatusFlags1All.ShieldsUp) |
@@ -262,13 +172,24 @@ namespace EDDTest
                             (1L << (int)StatusFlags2Events.BreathableAtmosphere);
                     bodyname = "Starport";
                 }
-                else if (v.Equals("OnFootInInstallation", StringComparison.InvariantCultureIgnoreCase))    
+                else if (v.Equals("OnFootInInstallation", StringComparison.InvariantCultureIgnoreCase))
                 {
                     flags = (1L << (int)StatusFlags1All.HasLatLong);
                     flags2 = (1L << (int)StatusFlags2ShipType.OnFoot) |
                              (1L << (int)StatusFlags2ShipType.OnFootOnPlanet) |
-                             (1L << (int)StatusFlags2ReportedInOtherMessages.Cold) |
-                             (1L << (int)StatusFlags2ShipType.OnFootExterior);     // tbd if this is correct
+                             (1L << (int)StatusFlags2Events.BreathableAtmosphere);          // correct sept 25
+
+                    temperature = 82;
+                    SelectedWeapon = "$humanoid_fists_name;";
+                    SelectedWeaponLoc = "Unarmed";
+                    bodyname = "Nervi 2g";
+                }
+                else if (v.Equals("OnFootInAbandonedInstallation", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    flags = (1L << (int)StatusFlags1All.HasLatLong);
+                    flags2 = (1L << (int)StatusFlags2ShipType.OnFoot) |
+                             (1L << (int)StatusFlags2ShipType.OnFootOnPlanet);          // not breathable
+
                     temperature = 82;
                     SelectedWeapon = "$humanoid_fists_name;";
                     SelectedWeaponLoc = "Unarmed";
@@ -277,7 +198,9 @@ namespace EDDTest
                 else if (v.Equals("OnFootPlanet", StringComparison.InvariantCultureIgnoreCase))    
                 {
                     flags = (1L << (int)StatusFlags1All.HasLatLong);
-                    flags2 = (1L << (int)StatusFlags2ShipType.OnFoot) | (1L << (int)StatusFlags2ShipType.OnFootOnPlanet);
+                    flags2 = (1L << (int)StatusFlags2ShipType.OnFoot) | 
+                             (1L << (int)StatusFlags2ShipType.OnFootOnPlanet) |     // correct sept 25
+                             (1L << (int)StatusFlags2ShipType.OnFootExterior);
                     temperature = 78;
                     bodyname = "Nervi 2g";
                     SelectedWeapon = "$humanoid_fists_name;";
@@ -286,7 +209,7 @@ namespace EDDTest
                 else if (v.Equals("Landed", StringComparison.InvariantCultureIgnoreCase))           // checked alpha 4
                 {
                     flags = (1L << (int)StatusFlags1ShipType.InMainShip) |
-                                (1L << (int)StatusFlags1Ship.ShipLanded) |
+                                (1L << (int)StatusFlags1Ship.Landed) |
                                 (1L << (int)StatusFlags1Ship.LandingGear) |
                                 (1L << (int)StatusFlags1Ship.FsdMassLocked) |
                                 (1L << (int)StatusFlags1All.ShieldsUp) |
@@ -669,7 +592,7 @@ namespace EDDTest
         public static void StatusMove(CommandArgs args)
         {
             long flags = (1L << (int)StatusFlags1ShipType.InSRV) |
-                        (1L << (int)StatusFlags1Ship.ShipLanded) |
+                        (1L << (int)StatusFlags1Ship.Landed) |
                         (1L << (int)StatusFlags1All.ShieldsUp) |
                         (1L << (int)StatusFlags1All.Lights);
 
@@ -743,5 +666,95 @@ namespace EDDTest
             }
         }
 
+        #region Flags
+
+
+        private enum StatusFlags1Ship                             // Flags -> Events
+        {
+            Docked = 0, // (on a landing pad)
+            Landed = 1, // (on planet surface)
+            LandingGear = 2,
+            Supercruise = 4,
+            FlightAssist = 5,
+            HardpointsDeployed = 6,
+            InWing = 7,
+            CargoScoopDeployed = 9,
+            SilentRunning = 10,
+            ScoopingFuel = 11,
+            FsdMassLocked = 16,
+            FsdCharging = 17,
+            FsdCooldown = 18,
+            OverHeating = 20,
+            BeingInterdicted = 23,
+            HUDInAnalysisMode = 27,     // 3.3
+            FsdJump = 30,
+        }
+
+        public enum StatusFlags1SRV                              // Flags
+        {
+            SrvHandbrake = 12,
+            SrvTurret = 13,
+            SrvUnderShip = 14,
+            SrvDriveAssist = 15,
+            SrvHighBeam = 31,
+        }
+
+        public enum StatusFlags1All                             // Flags
+        {
+            ShieldsUp = 3,
+            Lights = 8,
+            LowFuel = 19,
+            HasLatLong = 21,
+            IsInDanger = 22,
+            NightVision = 28,             // 3.3
+        }
+        private enum StatusFlags1ReportedInOtherEvents       // reported via other mechs than flags 
+        {
+            AltitudeFromAverageRadius = 29, // 3.4, via position
+        }
+
+        public enum StatusFlags1ShipType                        // Flags
+        {
+            InMainShip = 24,
+            InFighter = 25,
+            InSRV = 26,
+            ShipMask = (1 << InMainShip) | (1 << InFighter) | (1 << InSRV),
+        }
+
+        public enum StatusFlags2ShipType                   // used to compute ship type
+        {
+            OnFoot = 0,
+            InTaxi = 1,
+            InMulticrew = 2,
+            OnFootInStation = 3,
+            OnFootOnPlanet = 4,
+            OnFootInHangar = 13,
+            OnFootInSocialSpace = 14,
+            OnFootExterior = 15,
+        }
+
+        public enum StatusFlags2Events                  // these are bool flags, reported sep.
+        {
+            AimDownSight = 5,
+            GlideMode = 12,
+            BreathableAtmosphere = 16,
+            SupercruiseOverdrive = 20,
+            SupercruiseAssist = 21,
+            NPCCrewActive = 22,
+        }
+
+        public enum StatusFlags2ReportedInOtherMessages     // these are states reported as part of other messages
+        {
+            LowOxygen = 6,
+            LowHealth = 7,
+            Cold = 8,
+            Hot = 9,
+            VeryCold = 10,
+            VeryHot = 11,
+            TempBits = (1 << Cold) | (1 << Hot) | (1 << VeryCold) | (1 << VeryHot),
+            FSDHyperdriveCharging = 19,         // U14 nov 22
+        }
+
+        #endregion
     }
 }

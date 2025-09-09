@@ -47,7 +47,8 @@ namespace EDDTest
                                   "MDDocs:  mddoc path wildcard [REMOVE] - process MDDOCS from output of doc tool and clean up\n" +
                                   "         finddoclinks path wildcard [REMOVE]\n" +
                                   "         finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
-                                  "Translx: normalisetranslate- process language files and normalise, run to see options\n" +
+                                  "Translx: normalisetranslatemkii- process language files and normalise, run to see options\n" +
+                                  "         normalisetranslateold- process language files and normalise, run to see options\n" +
                                   "         scanforenums enumssemicolonlist path wildcard\n" +
 
                                   "Coriolis:CoriolisModules rootfolder - process coriolis-data\\modules\\<folder>\n" +
@@ -219,6 +220,43 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
+                else if (cmd.Equals("normalisetranslate"))
+                {
+                    if (args.Left >= 3)
+                    {
+                        string primarypath = args.Next();       // mandatory
+                        int primarysearchdepth = args.Int();    // mandatory
+                        string primarylanguage = args.Next();   // mandatory
+
+                        string language2 = args.Next();         // optional..
+                        string renamefile = args.Next();
+                        string enums = args.Next();
+
+                        if (primarypath == null || primarylanguage == null)
+                        {
+                            Console.WriteLine("Usage:\n" +
+                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none] [renamefile or -] [semicolon-list-of-enum-files]\n" +
+                                                "Read the language-to-use and check it\n" +
+                                                "secondary-language: Read this language and overwrite the secondary files with normalised versions against the first, but carrying over the translations\n" +
+                                                "Rename file: List of lines with orgID | RenamedID to note renaming of existing IDs\n" +
+                                                "semicolon-list-of-enums-files: give list of enumerations to cross check against. Use c:\\code\\eddiscovery for built in EDD list of translator enums\n" +
+                                                "Always write report.txt\n" +
+                                                "Example:\n" +
+                                                "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n"
+                                                );
+                        }
+                        else
+                        {
+                            string ret = NormaliseTranslationFiles.ProcessNew(primarylanguage, primarypath, primarysearchdepth, language2, renamefile, enums);
+                            Console.WriteLine(ret);
+                            System.Diagnostics.Debug.WriteLine(ret);
+                        }
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+
+
                 else if (cmd.Equals("replacetxid"))
                 {
                     if (args.Left >= 2)

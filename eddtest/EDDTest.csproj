@@ -94,6 +94,7 @@
     <Compile Include="Misc\mergecsharp.cs" />
     <Compile Include="Translations\FixErrors.cs" />
     <Compile Include="Translations\NormaliseTranslationFilesMKII.cs" />
+    <Compile Include="Translations\NormaliseTranslationFilesOld.cs" />
     <Compile Include="Translations\ScanForColons.cs" />
     <Compile Include="Translations\ScanForTX.cs" />
     <Compile Include="Translations\translatororiginal.cs" />

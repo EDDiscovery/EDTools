@@ -1,8 +1,8 @@
-﻿using QuickJSON;
+﻿using BaseUtils;
+using QuickJSON;
 using System;
 using System.IO;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace EDDStatusDisplay
 {
@@ -21,6 +21,13 @@ namespace EDDStatusDisplay
             string user = Environment.GetEnvironmentVariable("USERNAME");
             path = @"c:\users\" + user + @"\saved games\frontier developments\elite dangerous\";
             watchfile = Path.Combine(path, "status.json");
+
+            foreach( var x in destlist)
+            {
+                StringParser sp = new StringParser(x);
+                string s = sp.NextWord(",");
+                comboBoxSelDest.Items.Add(s);
+            }
         }
 
         protected override void OnShown(EventArgs e)
@@ -96,7 +103,8 @@ namespace EDDStatusDisplay
             legalstate = json["LegalState"].StrNull();
             labelLegalState.Text = "Legal State: " + (legalstate??"-");
             
-            bodyname = labelBody.Text = json["BodyName"].Str();
+            bodyname = json["BodyName"].Str();
+            labelBody.Text = bodyname;
 
             health = json["Health"].DoubleNull();
             labelHealth.Text = health.HasValue ? ((health * 100).ToStringInvariant("0.##") + " H%") : "";
@@ -105,7 +113,7 @@ namespace EDDStatusDisplay
             labelOxygen.Text = oxygen.HasValue ? ((oxygen * 100).ToStringInvariant("0.##") + " O2%") : "";
 
             destination = json["Destination"].Object();
-            labelDest.Text = destination != null ? ("Dest: " + destination["Name"].Str() + " (" + destination["Body"].Int() + ")") : "";
+            labelDest.Text = destination != null ? ("Dest: " + destination["Name_Localised"].Str().Alt(destination["Name"].Str()) + " (" + destination["Body"].Long() + ")") : "Select Dest";
 
             fuel = json["Fuel"].I("FuelMain").DoubleNull();
             fuelres = json["Fuel"].I("FuelReservoir").DoubleNull();
@@ -118,7 +126,7 @@ namespace EDDStatusDisplay
             labelBalance.Text = bal.HasValue ? ("Balance: " + bal.ToStringInvariant("0") + " cr") : "";
 
             gui = json["GuiFocus"].IntNull();
-            labelGUI.Text = gui.HasValue ? ("GUIMode: " + ((FocusValues)gui).ToString()) : "";
+            labelGUI.Text = gui.HasValue ? ("GUI: " + ((FocusValues)gui).ToString()) : "";
 
             fg = json["FireGroup"].IntNull();
             labelFiregroup.Text = fg.HasValue ? ("Firegroup: " + "ABCDEFGHIJKL"[fg.Value]) : "";
@@ -217,23 +225,26 @@ namespace EDDStatusDisplay
                     qj.V("Balance", bal.Value);
 
                 if (destination != null)
-                    qj.Object("Destination").V("System", 2928282).V("Body", destination["Body"].Int()).V("Name", destination["Name"].Str()).Close();
+                {
+                    qj.Object("Destination").V("System", destination["System"].Long()).V("Body", destination["Body"].Int()).V("Name", destination["Name"].Str());
+                    if (destination.Contains("Name_Localised"))
+                        qj.V("Name_Localised", destination["Name_Localised"].Str());
+                    qj.Close();
+                }
 
             }
-
 
 
             qj.Close();
 
             string j = qj.Get();
             System.Diagnostics.Debug.WriteLine(j);
-            //            File.WriteAllText(watchfile, j);
+            File.WriteAllText(watchfile, j);
         }
 
         bool Bit(string ctrl, bool? setit = null)
         {
             int bit = ctrl.Substring(3).InvariantParseInt(0);
-            bool ch;
 
             if (ctrl.StartsWith("F1-"))
             {
@@ -618,6 +629,50 @@ namespace EDDStatusDisplay
             WriteStatus();
         }
 
+        private void buttonGUIRight_Click(object sender, EventArgs e)
+        {
+            gui = gui == null ? 0 : ((gui + 1) % 12);
+            WriteStatus();
+        }
+
+        private void buttonGUILeft_Click(object sender, EventArgs e)
+        {
+            gui = gui == null ? 0 : ((gui + 12 -1) % 12);
+            WriteStatus();
+        }
+
+        //Belt Cluster
+        //Body
+        // Carrier
+        //Orbital Station
+        //Resource
+        //Settlement
+        //Star
+
+        static string[] destlist = new string[]
+        {
+            "Belt Cluster, 5306465653474, 24, LHS 3447 B A Belt Cluster 5",
+            "Body, 5306465653474, 26, LHS 3447 B 1 a",
+            "Carrier, 5306465653474, 30, ALEPH BOREAL Q8M-T7K",
+            "Starport, 5306465653474, 58, Bluford Orbital",
+            "Resource Site, 5306465653474, 32, $MULTIPLAYER_SCENARIO77_TITLE; ,Resource Extraction Site [Low]",
+            "Settlement, 5306465653474, 33, Yanez's Hold",
+            "Eravate, 5856221467362, 0, Eravate",
+        };
+
+        private void comboBoxSelDest_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            StringParser sp = new StringParser(destlist[comboBoxSelDest.SelectedIndex]);
+            destination = new JObject();
+            sp.NextWordComma(terminators:"");
+            destination["System"] = sp.NextLongComma(" ,");
+            destination["Body"] = sp.NextIntComma(" ,");
+            destination["Name"] = sp.NextWord(",");
+            if (sp.IsCharMoveOn(','))
+                destination["Name_Localised"] = sp.NextWord(",");
+            WriteStatus();
+
+        }
 
 
         public enum FocusValues
@@ -724,6 +779,7 @@ namespace EDDStatusDisplay
             FSDHyperdriveCharging = 19,         // U14 nov 22
         }
 
+
         #endregion
 
         ulong flags, flags2;
@@ -736,7 +792,6 @@ namespace EDDStatusDisplay
         double? health, oxygen;
         string SelectedWeapon;
         string SelectedWeaponLoc;
-
 
         string bodyname;
         string legalstate;

@@ -233,6 +233,62 @@ namespace EDDTest
                         .V("Body", bodyname)
                         .V("BodyID", bodyid);
             }
+            else if (eventtype.Equals("dockinggranted") && args.Left >= 3)
+            {
+                int pad = args.Int();
+                string stationname = args.Next();
+                string stationtype = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "DockingGranted")
+                        .V("LandingPad", pad)
+                        .V("MarketID", 3700268288)
+                        .V("StationName", stationname)
+                        .V("StationType", stationtype);
+            }
+            else if (eventtype.Equals("dockingdenied") && args.Left >= 3)
+            {
+                string reason = args.Next();
+                string stationname = args.Next();
+                string stationtype = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "DockingDenied")
+                        .V("Reason", reason)
+                        .V("MarketID", 3700268288)
+                        .V("StationName", stationname)
+                        .V("StationType", stationtype);
+            }
+            else if (eventtype.Equals("dockingtimeout") && args.Left >= 2)
+            {
+                string stationname = args.Next();
+                string stationtype = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "DockingTimeout")
+                        .V("MarketID", 3700268288)
+                        .V("StationName", stationname)
+                        .V("StationType", stationtype);
+            }
+
+            else if (eventtype.Equals("dockingcancelled") && args.Left >= 2)
+            {
+                string stationname = args.Next();
+                string stationtype = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "DockingCancelled")
+                        .V("MarketID", 3700268288)
+                        .V("StationName", stationname)
+                        .V("StationType", stationtype);
+            }
+            else if (eventtype.Equals("dockingrequested") && args.Left >= 2)
+            {
+                string stationname = args.Next();
+                string stationtype = args.Next();
+
+                qj.Object().UTC("timestamp").V("event", "DockingRequested")
+                        .V("MarketID", 3700268288)
+                        .V("StationName", stationname)
+                        .V("StationType", stationtype)
+                        .Object("LandingPads").V("Small",17).V("Medium",4).V("Large",2).Close();
+            }
 
             #endregion
             #region  Missions

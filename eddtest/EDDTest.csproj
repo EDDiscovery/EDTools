@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="EDDI Data\EDDISignalCheck.cs" />
     <Compile Include="EDDI Data\EDDISignalSources.cs" />
+    <Compile Include="EDSY\EdsyProperties.cs" />
     <Compile Include="From EDD Project Manually copied\Identifiers.cs" />
     <Compile Include="From EDD Project Manually copied\MaterialCommoditiesRecipes.cs" />
     <Compile Include="Frontier\ArtieData.cs" />
@@ -88,7 +89,7 @@
     <Compile Include="Coriolis\CorolisShips.cs" />
     <Compile Include="Coriolis\CorolisModules.cs" />
     <Compile Include="Frontier\FrontierData.cs" />
-    <Compile Include="EDSY\ItemModulesEDSY.cs" />
+    <Compile Include="EDSY\EDSY.cs" />
     <Compile Include="Translations\Enums.cs" />
     <Compile Include="Misc\InsertText.cs" />
     <Compile Include="Misc\mergecsharp.cs" />

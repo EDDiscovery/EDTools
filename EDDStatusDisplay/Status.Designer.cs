@@ -105,6 +105,8 @@ namespace EDDStatusDisplay
             this.radioButton25 = new System.Windows.Forms.RadioButton();
             this.labelBalance = new System.Windows.Forms.Label();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.buttonGUIRight = new System.Windows.Forms.Button();
+            this.buttonGUILeft = new System.Windows.Forms.Button();
             this.labelGUI = new System.Windows.Forms.Label();
             this.labelFiregroup = new System.Windows.Forms.Label();
             this.buttonNormalSpace = new System.Windows.Forms.Button();
@@ -127,6 +129,7 @@ namespace EDDStatusDisplay
             this.buttonOnFootPlanetNoShip = new System.Windows.Forms.Button();
             this.buttonOnFootInstallationInside = new System.Windows.Forms.Button();
             this.buttonOnFootPlanetSocialSpace = new System.Windows.Forms.Button();
+            this.comboBoxSelDest = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -1030,6 +1033,7 @@ namespace EDDStatusDisplay
             // 
             // groupBox6
             // 
+            this.groupBox6.Controls.Add(this.comboBoxSelDest);
             this.groupBox6.Controls.Add(this.labelDest);
             this.groupBox6.Controls.Add(this.labelRadius);
             this.groupBox6.Controls.Add(this.labelBody);
@@ -1040,17 +1044,16 @@ namespace EDDStatusDisplay
             this.groupBox6.Controls.Add(this.radioButton25);
             this.groupBox6.Location = new System.Drawing.Point(307, 214);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(352, 93);
+            this.groupBox6.Size = new System.Drawing.Size(352, 117);
             this.groupBox6.TabIndex = 3;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Position/Dest";
             // 
             // labelDest
             // 
-            this.labelDest.AutoSize = true;
-            this.labelDest.Location = new System.Drawing.Point(6, 65);
+            this.labelDest.Location = new System.Drawing.Point(6, 88);
             this.labelDest.Name = "labelDest";
-            this.labelDest.Size = new System.Drawing.Size(27, 13);
+            this.labelDest.Size = new System.Drawing.Size(237, 31);
             this.labelDest.TabIndex = 2;
             this.labelDest.Text = "dest";
             // 
@@ -1138,6 +1141,8 @@ namespace EDDStatusDisplay
             // 
             // groupBox7
             // 
+            this.groupBox7.Controls.Add(this.buttonGUIRight);
+            this.groupBox7.Controls.Add(this.buttonGUILeft);
             this.groupBox7.Controls.Add(this.labelBalance);
             this.groupBox7.Controls.Add(this.labelGUI);
             this.groupBox7.Controls.Add(this.labelFiregroup);
@@ -1148,6 +1153,26 @@ namespace EDDStatusDisplay
             this.groupBox7.TabIndex = 4;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Info";
+            // 
+            // buttonGUIRight
+            // 
+            this.buttonGUIRight.Location = new System.Drawing.Point(146, 83);
+            this.buttonGUIRight.Name = "buttonGUIRight";
+            this.buttonGUIRight.Size = new System.Drawing.Size(29, 23);
+            this.buttonGUIRight.TabIndex = 3;
+            this.buttonGUIRight.Text = ">";
+            this.buttonGUIRight.UseVisualStyleBackColor = true;
+            this.buttonGUIRight.Click += new System.EventHandler(this.buttonGUIRight_Click);
+            // 
+            // buttonGUILeft
+            // 
+            this.buttonGUILeft.Location = new System.Drawing.Point(118, 83);
+            this.buttonGUILeft.Name = "buttonGUILeft";
+            this.buttonGUILeft.Size = new System.Drawing.Size(29, 23);
+            this.buttonGUILeft.TabIndex = 3;
+            this.buttonGUILeft.Text = "<";
+            this.buttonGUILeft.UseVisualStyleBackColor = true;
+            this.buttonGUILeft.Click += new System.EventHandler(this.buttonGUILeft_Click);
             // 
             // labelGUI
             // 
@@ -1367,11 +1392,20 @@ namespace EDDStatusDisplay
             this.buttonOnFootPlanetSocialSpace.UseVisualStyleBackColor = true;
             this.buttonOnFootPlanetSocialSpace.Click += new System.EventHandler(this.buttonOnFootPlanetSocialSpace_Click);
             // 
+            // comboBoxSelDest
+            // 
+            this.comboBoxSelDest.FormattingEnabled = true;
+            this.comboBoxSelDest.Location = new System.Drawing.Point(249, 85);
+            this.comboBoxSelDest.Name = "comboBoxSelDest";
+            this.comboBoxSelDest.Size = new System.Drawing.Size(93, 21);
+            this.comboBoxSelDest.TabIndex = 3;
+            this.comboBoxSelDest.SelectedIndexChanged += new System.EventHandler(this.comboBoxSelDest_SelectedIndexChanged);
+            // 
             // Status
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(687, 777);
+            this.ClientSize = new System.Drawing.Size(680, 777);
             this.Controls.Add(this.buttonSupercruiseCompass);
             this.Controls.Add(this.buttonSupercruise);
             this.Controls.Add(this.buttonLatLonOff);
@@ -1518,5 +1552,8 @@ namespace EDDStatusDisplay
         private System.Windows.Forms.Button buttonOnFootPlanetNoShip;
         private System.Windows.Forms.Button buttonOnFootInstallationInside;
         private System.Windows.Forms.Button buttonOnFootPlanetSocialSpace;
+        private System.Windows.Forms.Button buttonGUIRight;
+        private System.Windows.Forms.Button buttonGUILeft;
+        private System.Windows.Forms.ComboBox comboBoxSelDest;
     }
 }

@@ -56,6 +56,9 @@ namespace EDDTest
             s += helpout("", "fsdtarget system starclass jumpsremaining", eventtype);
             s += helpout("", "reservoirreplenished main reserve", eventtype);
             s += helpout("", "approachbody starsystem sysaddr bodyname bodyid", eventtype);
+            s += helpout("", "dockinggranted landingpad stationname stationtype", eventtype);
+            s += helpout("", "dockingdenied reason stationname stationtype", eventtype);
+            s += helpout("", "dockingtimeout/dockingrequested/dockingcancelled stationname stationtype", eventtype);
 
             s += helpout("Missions", "MissionAccepted/MissionCompleted faction victimfaction id", eventtype);
             s += helpout("", "MissionRedirected newsystem newstation id", eventtype);

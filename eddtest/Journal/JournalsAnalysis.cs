@@ -25,12 +25,15 @@ namespace EDDTest
 
     interface JournalAnalyse
     {
-        bool Process(int lineno, JObject jr, string eventname);
+        bool Process(string filename, int lineno, JObject jr, string eventname);
         string Report();
+
+        string OutputName { get; }
     }
 
     class ScanAnalyse : JournalAnalyse
     {
+        public string OutputName { get; }
         [Flags]
         public enum EDAtmosphereProperty
         {
@@ -183,7 +186,7 @@ namespace EDDTest
         private static SortedDictionary<string, string> voltypes = new SortedDictionary<string, string>();
 
 
-        public bool Process(int lineno, JObject evt, string eventname)
+        public bool Process(string filename, int lineno, JObject evt, string eventname)
         {
             if (eventname == "Scan")
             {
@@ -322,8 +325,9 @@ namespace EDDTest
 
     class BodyTypeAnalyse : JournalAnalyse
     {
+        public string OutputName { get; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("BodyType"))
             {
@@ -338,7 +342,7 @@ namespace EDDTest
             return false;
         }
 
-        public string Report() 
+        public string Report()
         {
             string str = "";
             foreach (var kvp in rep)
@@ -349,10 +353,57 @@ namespace EDDTest
         }
     }
 
+    class ScanFind : JournalAnalyse
+    {
+        public string BodyName;
+        public bool Modern;
+        public string OutputName { get; set; }
+
+        List<Tuple<string, int, string>> rep = new List<Tuple<string, int, string>>();
+
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        {
+            if (eventname == "Scan")
+            {
+                string bodyname = jr["BodyName"].Str();
+                string starsystem= jr["StarSystem"].Str();
+                if (bodyname.Contains(BodyName, StringComparison.InvariantCultureIgnoreCase) || starsystem.Contains(BodyName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (!Modern || (jr.Contains("BodyID")))
+                        rep.Add(new Tuple<string, int, string>(filename, lineno, jr.ToString()));
+                }
+            }
+            else if (eventname == "FSDJump")
+            {
+                string starsystem = jr["StarSystem"].Str();
+                if (starsystem.Contains(BodyName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (!Modern || (jr.Contains("BodyID")))
+                        rep.Add(new Tuple<string, int, string>(filename, lineno, jr.ToString()));
+                }
+            }
+
+            return false;
+        }
+
+        public string Report()
+        {
+            OutputName = BodyName + ".json";
+
+            string str = "";
+            foreach (var v in rep)
+            {
+                str += $"{v.Item3}" + Environment.NewLine;
+            }
+            return str;
+        }
+    }
+
     class EconomyAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("Economy"))
             {
@@ -391,8 +442,9 @@ namespace EDDTest
 
     class ServicesAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         SortedDictionary<string, int> rep = new SortedDictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("StationServices"))
             {
@@ -427,8 +479,9 @@ namespace EDDTest
 
     class StationTypeAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("StationType"))
             {
@@ -458,8 +511,9 @@ namespace EDDTest
 
     class PassengerAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("PassengerType"))
             {
@@ -489,6 +543,7 @@ namespace EDDTest
 
     class BookTaxiAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
         public BookTaxiAnalyse()
         {
@@ -496,7 +551,7 @@ namespace EDDTest
             rep["Retreat"] = 0;
         }
 
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (eventname == "BookTaxi")
             {
@@ -526,8 +581,9 @@ namespace EDDTest
 
     class AlleiganceAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (jr.Contains("SystemAllegiance"))
             {
@@ -558,8 +614,9 @@ namespace EDDTest
     }
     class FactionsAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             string bt = jr.MultiStr(new string[] { "SpawningFaction", "Faction", "VictimFaction" });
 
@@ -589,8 +646,9 @@ namespace EDDTest
 
     class CrimeAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if (eventname == "CommitCrime")
             {
@@ -621,8 +679,9 @@ namespace EDDTest
 
     class PowerPlayStateAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             string bt = jr["PowerplayState"].StrNull();
 
@@ -660,6 +719,7 @@ namespace EDDTest
 
     class FSDLocAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         void Incr(string hdr, string value)
         {
             value = hdr + (value == null ? "Missing" : value);
@@ -671,7 +731,7 @@ namespace EDDTest
         }
 
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             if ( eventname == "FSDJump" || eventname == "Location" || eventname=="CarrierJump")
             {
@@ -761,6 +821,7 @@ namespace EDDTest
 
     class SlotAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         void Incr(string value, string entry)
         {
             if ( value.Contains("Shield"))
@@ -776,7 +837,7 @@ namespace EDDTest
                 rep[value] = new HashSet<string> { entry };
         }
         Dictionary<string, HashSet<string>> rep = new Dictionary<string, HashSet<string>>();
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             bool ok = false;
             string b1 = jr["Slot"].StrNull();
@@ -859,6 +920,7 @@ namespace EDDTest
 
     class ShipTypeAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
 
         void Incr(string value)
@@ -869,7 +931,7 @@ namespace EDDTest
                 rep[value] = 1;
         }
 
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             bool ret = false;
             {
@@ -934,6 +996,7 @@ namespace EDDTest
 
     class LoadoutAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
 
         void Incr(string value)
@@ -944,7 +1007,7 @@ namespace EDDTest
                 rep[value] = 1;
         }
 
-        public bool Process(int lineno, JObject jr, string eventname)
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
         {
             bool ret = false;
             {
@@ -996,10 +1059,10 @@ namespace EDDTest
 
     class MarketIDAnalyse : JournalAnalyse
     {
+        public string OutputName { get; set; }
         Dictionary<long, string> rep = new Dictionary<long, string>();
         Dictionary<long, HashSet<string>> types = new Dictionary<long, HashSet<string>>();
-
-        public bool Process(int lineno, JObject evt, string eventname)
+        public bool Process(string filename, int lineno, JObject evt, string eventname)
         {
             bool ret = false;
             {
@@ -1062,12 +1125,18 @@ namespace EDDTest
 
     public static class JournalAnalysis
     {
-        public static void Analyse(string path, string filename, DateTime starttime, string type)
+        public static void Analyse(CommandArgs args)
         {
+            string type = args.Next();
+            string path = args.Next();
+            string filename = args.Next();
+            DateTime starttime = args.Next().ParseDateTime(DateTime.MinValue, System.Globalization.CultureInfo.CurrentCulture);
+
             if ( path== "J")
             {
                 path = @"c:\users\rk\saved games\frontier developments\elite dangerous";
             }
+
             FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).
                                 Where(g=>g.LastWriteTimeUtc>=starttime).OrderBy(p => p.FullName).ToArray();
 
@@ -1091,6 +1160,16 @@ namespace EDDTest
                 ja = new BookTaxiAnalyse();
             else if (type == "marketid")
                 ja = new MarketIDAnalyse();
+            else if (type == "bodytype")
+                ja = new BodyTypeAnalyse();
+            else if (type == "scanfind")
+            {
+                var sf = new ScanFind();
+                sf.BodyName = args.Next();
+                sf.Modern = args.Bool();
+                System.Diagnostics.Debug.Assert(sf.BodyName != null);
+                ja = sf;
+            }
             else
             {
                 Console.Error.WriteLine("Not recognised analysis type");
@@ -1104,6 +1183,7 @@ namespace EDDTest
                     if (Console.ReadKey().Key == ConsoleKey.Escape)
                         break;
                 }
+                //System.Diagnostics.Debug.WriteLine($"Processing {fi.FullName}");
 
                 int found = 0;
                 using (StreamReader sr = new StreamReader(fi.FullName))         // read directly from file.. presume UTF8 no bom
@@ -1119,7 +1199,7 @@ namespace EDDTest
                             if (jr != null)
                             {
                                 string eventname = jr["event"].Str();
-                                if (ja.Process(lineno, jr, eventname))
+                                if (ja.Process(fi.FullName, lineno, jr, eventname))
                                     found++;
                             }
                         }
@@ -1143,7 +1223,7 @@ namespace EDDTest
 
             string rep = ja.Report();
             Console.WriteLine(rep);
-            File.WriteAllText("report.txt", rep);
+            File.WriteAllText(ja.OutputName ?? "report.txt", rep);
         }
     }
 }

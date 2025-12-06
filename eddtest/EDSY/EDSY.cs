@@ -31,10 +31,8 @@ namespace EDDTest
     //
     // Open the EDSY SLN . Select google chrome as the debugger target (on toolbar)
     //
-    // EDSY when run locally will error, so to remove the error, change the updateUIFitHash function so it does nothing and just returns true:
-    // edsy.js: ish 7234
-    //	var updateUIFitHash = function(buildhash) {
-    //		return true;
+    // Fixed Dec 25 : EDSY when run locally will error, so to remove the error, change the updateUIFitHash function so it does nothing and just returns true:
+    //                      edsy.js: ish 7234	var updateUIFitHash = function(buildhash) { return true;
     //
     //to get eddb JSON out: at the end of the onDomContentLoaded, place:
     //        var onDOMContentLoaded = function(e) {
@@ -45,7 +43,6 @@ namespace EDDTest
     // run it. Open inspector (ctrl-shift_i). Go to console output.
     // Inspector will cut the line to size, it will show "Show More(467kb) Copy" text. Copy it to clipboard, paster into np++, edit and save
     // open file in notepad++, remove to just JSON
-    // Eddtest json filein >edsyoutput.json
     //
     // usage
     // eddtest edsy c:\code\edsy.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\ItemModules.cs"
@@ -55,7 +52,19 @@ namespace EDDTest
         public void ReadEDSY(string jsoneddbfilepath, string itemmodulesfilepath)
         {
             // convert EDSY file to json
-            string jsontext = File.ReadAllText(jsoneddbfilepath);
+            string jsontext = FileHelpers.TryReadAllTextFromFile(jsoneddbfilepath);
+            if ( jsontext == null)
+            {
+                Console.WriteLine($"Cannot find {jsoneddbfilepath}");
+                return;
+            }
+
+            if ( !File.Exists(itemmodulesfilepath))
+            {
+                Console.WriteLine($"Cannot find items file {itemmodulesfilepath}");
+                return;
+            }
+
             JObject jo = JObject.Parse(jsontext, out string error, JToken.ParseOptions.AllowTrailingCommas);
 
             if (jo != null)
@@ -77,6 +86,8 @@ namespace EDDTest
                 JObject shiplist = jo["ship"].Object();
 
                 int processed = 0;
+
+                string textout = "";
 
                 foreach (var item in modules)
                 {
@@ -203,40 +214,35 @@ namespace EDDTest
 
                     string edsyname = mod["name"].Str();
 
-                    bool found = ProcessData(fid, fdname, edsyname, properties);
+                    bool found = ProcessData(fid, fdname, edsyname, properties, ref textout);
                     if (found)
                         processed++;
 
                     // free versions
                     if (fid == 128064258)
-                        ProcessData(128666641, fdname, edsyname, properties);
+                        ProcessData(128666641, fdname, edsyname, properties, ref textout, false);
                     if (fid == 128064218)
-                        ProcessData(128666640, fdname, edsyname, properties);
+                        ProcessData(128666640, fdname, edsyname, properties, ref textout, false);
                     if (fid == 128049381)
-                        ProcessData(128049673, fdname, edsyname, properties);
+                        ProcessData(128049673, fdname, edsyname, properties, ref textout, false);
                     if (fid == 128064033)
-                        ProcessData(128666635, fdname, edsyname, properties);
+                        ProcessData(128666635, fdname, edsyname, properties, ref textout, false);
                     if (fid == 128064178)
-                        ProcessData(128666639, fdname, edsyname, properties);
+                        ProcessData(128666639, fdname, edsyname, properties, ref textout, false);
                     if (fid == 128662535)
-                        ProcessData(128666642, fdname, edsyname, properties);
+                        ProcessData(128666642, fdname, edsyname, properties, ref textout, false);
                     if (fid == 128064068)
-                        ProcessData(128666636, fdname, edsyname, properties);
+                        ProcessData(128666636, fdname, edsyname, properties, ref textout, false);
                     if (fid == 128064103)
-                        ProcessData(128666637, fdname, edsyname, properties);
-
-
+                        ProcessData(128666637, fdname, edsyname, properties, ref textout, false);
                 }
 
                 if (processed == 0)
                     Console.WriteLine($"WARNING CANNOT FIND ANY MODULES IN GIVEN FILE");
 
-                File.WriteAllLines(itemmodulesfilepath, itemmodules);
-
                 //---------------------------------------------------------------------------
                 // other data
 
-                string textout = "";
 
                 foreach (var item in shiplist)
                 {
@@ -283,25 +289,29 @@ namespace EDDTest
                         long fid = mod["fdid"].Long();
                         double mass = mod["mass"].Double();
                         string armourfdname = mod["fdname"].Str();
+                        int hidden = mod["hidden"].Int(0);
 
-                        if (modules.Contains(mitem.Key))
+                        if (hidden == 0)
                         {
-                            JObject infoline = modules[mitem.Key].Object();
-                            string edsyname = shipname + " " + infoline["name"].Str();
-                            double kinres = infoline["kinres"].Double();
-                            double thmres = infoline["thmres"].Double();
-                            double expres = infoline["expres"].Double();
-                            double axres = infoline["axeres"].Double();
-                            double hullbst = infoline["hullbst"].Double();
+                            if (modules.Contains(mitem.Key))
+                            {
+                                JObject infoline = modules[mitem.Key].Object();
+                                string edsyname = shipname + " " + infoline["name"].Str();
+                                double kinres = infoline["kinres"].Double();
+                                double thmres = infoline["thmres"].Double();
+                                double expres = infoline["expres"].Double();
+                                double axres = infoline["axeres"].Double();
+                                double hullbst = infoline["hullbst"].Double();
 
-                            string report = $"Mass={mass}, ExplosiveResistance={expres}, KineticResistance={kinres}, ThermalResistance={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
-                            //  System.Diagnostics.Debug.WriteLine($".. {fid} {armourfdname} {mass} {kinres} {thmres} {expres} {axres} {hullbst} = {report}");
+                                string report = $"Mass={mass}, ExplosiveResistance={expres}, KineticResistance={kinres}, ThermalResistance={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
+                                //  System.Diagnostics.Debug.WriteLine($".. {fid} {armourfdname} {mass} {kinres} {thmres} {expres} {axres} {hullbst} = {report}");
 
-                            ProcessData(fid, armourfdname, edsyname, report);
+                                ProcessData(fid, armourfdname, edsyname, report, ref textout);
 
+                            }
+                            else
+                                System.Diagnostics.Debug.WriteLine($".. ERROR!");
                         }
-                        else
-                            System.Diagnostics.Debug.WriteLine($".. ERROR!");
                     }
                 }
 
@@ -411,12 +421,14 @@ namespace EDDTest
 
                 textout += modstring + fdmapping;
 
-                Console.WriteLine(textout);
-                File.WriteAllText(@"c:\code\report.lst", textout);
+                File.WriteAllLines(itemmodulesfilepath, itemmodules);
+
+                //   Console.WriteLine(textout);
+                File.WriteAllText(@"report.txt", textout);
             }
             else
                 Console.WriteLine(error);
-        }
+         }
     }
 }
 

@@ -1120,6 +1120,87 @@ namespace EDDTest
         }
     }
 
+    class ScanDockingBodies : JournalAnalyse
+    {
+        public string OutputName { get; set; }
+
+        Dictionary<string, List<Tuple<string, int>>> bodies = new Dictionary<string, List<Tuple<string, int>>>();
+
+        void Add(string n, int id, string name)
+        {
+            if (!bodies.TryGetValue(n, out var b))
+            {
+                bodies[n] = b = new List<Tuple<string, int>>();
+            }
+            b.Add(new Tuple<string, int>(name, id));
+        }
+ 
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        {
+            if (eventname == "Scan")
+            {
+                string bodyname = jr["BodyName"].Str();
+                int? bodyid = jr["BodyID"].IntNull();
+                string planetclass = jr["PlanetClass"].StrNull();
+                string starsystem = jr["StarSystem"].Str();
+                JObject parentslist = jr["Parents"].Object();
+                if ( bodyid>=1 && planetclass!=null )
+                {
+                    Add(starsystem, bodyid.Value, bodyname);
+                    // System.Diagnostics.Debug.WriteLine($"Body {bodyname}:{bodyid} in {starsystem}");
+                }
+            }
+            else if (eventname == "Docked")
+            {
+                int? bodyid = jr["BodyID"].IntNull();
+                string stationname = jr["StationName"].Str();
+
+                // System.Diagnostics.Debug.WriteLine($"Docked : {jr.ToString()}");
+                if ( bodyid>=1)
+                {
+             //       System.Diagnostics.Debug.WriteLine($"Docked {stationname}:{bodyid}");
+                }
+            }
+            else if (eventname == "Location")
+            {
+                string bodytype = jr["BodyType"].Str();
+                int? bodyid = jr["BodyID"].IntNull();
+                bool onfoot = jr["OnFoot"].Bool();
+                string stationname = jr["StationName"].Str();
+                string starsystem = jr["StarSystem"].Str();
+                if (bodytype == "Station" && onfoot == false && stationname.HasChars())
+                {
+                    Add(starsystem, bodyid.Value, "STATION:" + stationname);
+                    System.Diagnostics.Debug.WriteLine($"Station : {stationname} {bodyid} in {starsystem}");
+                }
+            }
+
+
+            return false;
+        }
+
+        public string Report()
+        {
+            string str = "";
+            foreach(var k in bodies)
+            {
+                k.Value.Sort(delegate (Tuple<string, int> left, Tuple<string, int> right) { return left.Item2.CompareTo(right.Item2); });
+
+                bool hasstation = k.Value.Where(x => x.Item1.StartsWith("STATION")).Count() > 0;
+                if (hasstation)
+                {
+                    foreach (var b in k.Value)
+                    {
+                        str += $"`{k.Key}` : {b.Item2} : {b.Item1}" + Environment.NewLine;
+                    }
+                }
+            }
+
+            return str;
+        }
+    }
+
+
     //  journalanalyse "c:\users\rk\saved games\frontier developments\elite dangerous" *.log loadout
     //  journalanalyse "c:\code\logs" *.log loadout
 
@@ -1168,6 +1249,11 @@ namespace EDDTest
                 sf.BodyName = args.Next();
                 sf.Modern = args.Bool();
                 System.Diagnostics.Debug.Assert(sf.BodyName != null);
+                ja = sf;
+            }
+            else if (type == "stationdocked")
+            {
+                var sf = new ScanDockingBodies();
                 ja = sf;
             }
             else

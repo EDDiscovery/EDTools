@@ -237,71 +237,99 @@ namespace EDDTest
         };
 
 
-        bool ProcessData(long fid, string fdname, string edsyname, string parameters)
+        bool ProcessData(long edsyfid, string esdyfdname, string edsyname, string parameters, ref string textout, bool checkname = true)
         {
             int lineno = -1;
 
-            if (fid > 0)       // find by fid if its there
+            if (edsyfid > 0)       // find by fid if its there
             {
-                string fids = "(" + fid.ToStringInvariant() + ",";
+                string fids = "(" + edsyfid.ToStringInvariant() + ",";
                 lineno = Array.FindIndex(itemmodules, x => x.Contains(fids));
             }
-            else
+
+            if (lineno == -1)      // if can't find
             {
-                string fdnamef = fdname.AlwaysQuoteString();
+                //System.Diagnostics.Debug.WriteLine($"Find {fdname} with unknown FID");
+
+                string fdnamef = esdyfdname.AlwaysQuoteString();
                 lineno = Array.FindIndex(itemmodules, x => x.ContainsIIC(fdnamef));     // try fdname quoted
 
                 if (lineno == -1)
                 {
                     lineno = Array.FindIndex(itemmodules, x => x.ContainsIIC(edsyname));    // else try text
                 }
+                else
+                {
+                    textout += $"FID missing {edsyfid} in module {esdyfdname} should be {edsyfid}\r\n";
+                }
             }
 
-            int pos = lineno >= 0 ? itemmodules[lineno].IndexOf("new ShipModule(") + 15 : -1;
-
-            if (lineno >= 0 && pos > 0)
+            if (lineno >= 0 )
             {
-                StringParser sp = new StringParser(itemmodules[lineno], pos);
-                long? fidread = sp.NextLongComma(",");    // fid
-                string edtype = sp.NextWordComma();  // type
-                string name = sp.NextQuotedWord();
-                if (fidread.HasValue && edtype != null && name != null && sp.IsCharMoveOn(')'))
+                StringParser sp = new StringParser(itemmodules[lineno]);
+
+                string modulefdname;
+                if (sp.IsCharMoveOn('{') && (modulefdname = sp.NextQuotedWord()) != null && sp.IsCharMoveOn(',') && sp.IsStringMoveOn("new ShipModule("))
                 {
-                    edsyname = edsyname.Replace("-", " ");      // Multi-Cannon
-                    name = name.Replace("-", " ");      // type-6
+                    int replacepos = sp.Position;
 
-                    if (name.Length < edsyname.Length || !edsyname.EqualsIIC(name.Substring(0, edsyname.Length)))
+                    long? fidread = sp.NextLongComma(",");    // fid
+                    string edtype = sp.NextWordComma();  // type
+                    string name = sp.NextQuotedWord();
+
+                    if (fidread.HasValue && edtype != null && name != null && sp.IsCharMoveOn(')'))
                     {
-                        // don't turn diff on - human needed
-                        System.Diagnostics.Debug.WriteLine($"Difference name {fid} {fdname} EDSY: '{edsyname}' vs ItemModules.cs: '{name}'");
+                        if (!checkname || modulefdname.EqualsIIC(esdyfdname))
+                        {
+                            edsyname = edsyname.Replace("-", " ");      // Multi-Cannon
+                            name = name.Replace("-", " ");      // type-6
+
+                            if (name.Length < edsyname.Length || !edsyname.EqualsIIC(name.Substring(0, edsyname.Length)))
+                            {
+                                // don't turn diff on - human needed
+                                textout += $"Difference name {edsyfid} {esdyfdname} EDSY: '{edsyname}' vs ItemModules.cs: '{name}'\r\n";
+                            }
+
+                            string lineshouldbe = $"{{ {parameters} }} }},";
+                            bool diff = sp.LineLeft != lineshouldbe;
+
+                            if (diff)
+                            {
+                                string msg = $"\r\n{lineno + 1} Difference Properties {edsyfid} {esdyfdname}\r\n `{itemmodules[lineno].Trim()}`\r\n`{lineshouldbe}`\r\n";
+                                textout += msg;
+                                System.Diagnostics.Debug.Write(msg);
+
+                                itemmodules[lineno] = itemmodules[lineno].Left(replacepos) + $"{fidread.Value},{edtype},{name.AlwaysQuoteString()}){lineshouldbe}";
+                            }
+
+                            return true;
+                        }
+                        else
+                        {
+                            textout += $"Error EDSY does not agree with fdname of itemsmodule {edsyfid} {esdyfdname} : {itemmodules[lineno]}\r\n";
+                        }
                     }
-
-                    string lineshouldbe = $"{{ {parameters} }} }},";
-                    bool diff = sp.LineLeft != lineshouldbe;
-
-                    if (diff)
+                    else
                     {
-                        System.Diagnostics.Debug.WriteLine($"Difference {fid} {fdname} `{sp.LineLeft}` vs `{lineshouldbe}`");
-
-                        itemmodules[lineno] = itemmodules[lineno].Left(pos) + $"{fidread.Value},{edtype},{name.AlwaysQuoteString()}){lineshouldbe}";
+                        textout += $"Error in form (front part) {edsyfid} {esdyfdname} : {itemmodules[lineno]}\r\n";
                     }
-
-                    return true;
                 }
                 else
-                    System.Diagnostics.Debug.WriteLine($"Not in normalised form (front part) {fid} {fdname} : {itemmodules[lineno]}");
+                {
+                    textout += $"Error in form (front part) {edsyfid} {esdyfdname} : {itemmodules[lineno]}\r\n";
+                }
             }
             else
             {
-                fdname = fdname.ToLower();
-                string moduletype = fdname.Contains("_grade1") ? "LightweightAlloy" :
-                                    fdname.Contains("_grade2") ? "ReinforcedAlloy" :
-                                    fdname.Contains("_grade3") ? "MilitaryGradeComposite" :
-                                    fdname.Contains("_mirrored") ? "MirroredSurfaceComposite" :
-                                    fdname.Contains("_reactive") ? "ReactiveSurfaceComposite" :
+                esdyfdname = esdyfdname.ToLower();
+                string moduletype = esdyfdname.Contains("_grade1") ? "LightweightAlloy" :
+                                    esdyfdname.Contains("_grade2") ? "ReinforcedAlloy" :
+                                    esdyfdname.Contains("_grade3") ? "MilitaryGradeComposite" :
+                                    esdyfdname.Contains("_mirrored") ? "MirroredSurfaceComposite" :
+                                    esdyfdname.Contains("_reactive") ? "ReactiveSurfaceComposite" :
                                     "Unknown";
 
-                System.Diagnostics.Debug.WriteLine($"{{ \"{fdname}\", new ShipModule({fid}, ShipModule.ModuleTypes.{moduletype}, \"{edsyname}\") }},");
+                textout += $"MODULE NOT IN Modules : {{ \"{esdyfdname}\", new ShipModule({edsyfid}, ShipModule.ModuleTypes.{moduletype}, \"{edsyname}\") }},\r\n";
             }
 
             return false;

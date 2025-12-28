@@ -1201,6 +1201,73 @@ namespace EDDTest
     }
 
 
+    class DockedFind : JournalAnalyse
+    {
+        public string StationType;
+        public double X, Y, Z;
+        public string OutputName { get; set; }
+
+        class Results
+        {
+            public string system, station;
+            public double dist;
+
+        }
+
+        Dictionary<string, Tuple<double, double, double>> SystemLocations = new Dictionary<string, Tuple<double, double, double>>();
+
+        Dictionary<string, Results> rep = new Dictionary<string, Results>();
+
+        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        {
+            if (eventname == "FSDJump")
+            {
+                string starsystem = jr["StarSystem"].Str();
+                double? x = jr["StarPos"][0].DoubleNull();
+                double? y = jr["StarPos"][1].DoubleNull();
+                double? z = jr["StarPos"][2].DoubleNull();
+
+                if ( x.HasValue )
+                    SystemLocations[starsystem] = new Tuple<double, double, double>(x.Value, y.Value, z.Value);
+            }
+            else if (eventname == "Docked")
+            {
+                string starsystem = jr["StarSystem"].Str();
+                string stationtype = jr["StationType"].Str();
+                string stationname = jr["StationName"].Str();
+
+                if ( stationtype.EqualsIIC(StationType))
+                {
+                    if ( SystemLocations.TryGetValue(starsystem ,out Tuple<double,double,double> loc))
+                    {
+                        string key = starsystem + ":" + stationname;
+                        if (!rep.ContainsKey(key))
+                        {
+                            double dist = Math.Sqrt(Math.Pow(loc.Item1 - X, 2) + Math.Pow(loc.Item2 - Y, 2) + Math.Pow(loc.Item3 - Z, 2));
+                            rep.Add(key, new Results() { dist = dist, system = starsystem, station = stationname });
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public string Report()
+        {
+            var orderedlist = rep.Values.ToList();
+            orderedlist.Sort(delegate (Results left, Results right) { return left.dist.CompareTo(right.dist); });
+
+            string str = "";
+            foreach (var v in orderedlist)
+            {
+                str += $"{v.dist} : {v.system} : {v.station}" + Environment.NewLine;
+            }
+            return str;
+        }
+    }
+
+
     //  journalanalyse "c:\users\rk\saved games\frontier developments\elite dangerous" *.log loadout
     //  journalanalyse "c:\code\logs" *.log loadout
 
@@ -1213,9 +1280,13 @@ namespace EDDTest
             string filename = args.Next();
             DateTime starttime = args.Next().ParseDateTime(DateTime.MinValue, System.Globalization.CultureInfo.CurrentCulture);
 
-            if ( path== "J")
+            if (path == "J")
             {
                 path = @"c:\users\rk\saved games\frontier developments\elite dangerous";
+            }
+            else if (path == "L")
+            {
+                path = @"c:\code\logs";
             }
 
             FileInfo[] allFiles = Directory.EnumerateFiles(path, filename, SearchOption.AllDirectories).Select(f => new FileInfo(f)).
@@ -1249,6 +1320,15 @@ namespace EDDTest
                 sf.BodyName = args.Next();
                 sf.Modern = args.Bool();
                 System.Diagnostics.Debug.Assert(sf.BodyName != null);
+                ja = sf;
+            }
+            else if (type == "docked")      // journalanalyse docked J *.log X Coriolis 1 2 3
+            {
+                var sf = new DockedFind();
+                sf.StationType = args.Next();
+                sf.X = args.Double();
+                sf.Y = args.Double();
+                sf.Z = args.Double();
                 ja = sf;
             }
             else if (type == "stationdocked")

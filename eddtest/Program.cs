@@ -176,6 +176,28 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
+                else if (cmd.Equals("renamemddoc"))      // processes MD DOC for wiki and makes it better
+                {
+                    if (args.Left >= 2)
+                    {
+                        string from = args.Next();
+                        string to = args.Next();
+
+                        MDDoc.Rename(from, to);
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+
+                else if (cmd.Equals("renameusingmddoc"))      // processes MD DOC for wiki and makes it better
+                {
+                    if (args.Left >= 0)
+                    {
+                        MDDoc.RenameUsing();
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
 
                 #endregion
 

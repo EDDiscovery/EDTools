@@ -221,6 +221,56 @@ namespace EDDTest
             }
 
         }
+
+        public static void RenameUsing()
+        {
+            FileInfo[] allFiles = Directory.EnumerateFiles(".", "using-the-*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+            int number = 1;
+            foreach (FileInfo file in allFiles)
+            {
+                Rename(file.Name, "4. " + file.Name.Substring(10));
+                number++;
+            }
+
+        }
+
+
+
+        public static void Rename(string from, string to)
+        {
+            from = from.Replace("-", " ").Replace(".md", "");
+            string fromname = from.Replace(" ", "-");
+            string fromfile = fromname + ".md";
+
+            if ( to.StartsWith("#"))
+                to = to.Substring(1) + "-" + fromname;
+
+
+            to = to.Replace("-", " ").Replace(".md", "");
+            string toname = to.Replace(" ", "-");
+            string tofile = toname + ".md";
+
+            if (File.Exists(fromfile) && !File.Exists(tofile))
+            {
+                Console.WriteLine($"Updated {fromfile} -> {tofile}");
+                File.Move(fromfile, tofile);
+                FileInfo[] allFiles = Directory.EnumerateFiles(".", "*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                foreach ( FileInfo file in allFiles)
+                {
+                    string filecontents = File.ReadAllText(file.FullName);
+                    string newcontents = filecontents.Replace($"|{from}]", $"|{to}]", StringComparison.InvariantCultureIgnoreCase);
+                    if ( filecontents != newcontents )
+                    {
+                        File.WriteAllText(file.FullName,newcontents);
+                        Console.WriteLine($"Updated {file.FullName}");
+                    }
+                }
+            }
+            else
+                Console.WriteLine($"Cannot find file {fromfile} or {tofile} exists");
+        }
     }
 }
 

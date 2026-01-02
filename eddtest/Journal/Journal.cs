@@ -19,6 +19,24 @@ using System.IO;
 
 namespace EDDTest
 {
+    // use -file script.txt to make a journal creation script
+    //  // Jump thru systems
+    //  journal
+    //  c:\code\logs\buddy\journal-a7.log Buddy
+    //  stargrid "c:\code\route.csv"
+    //  Keydelay
+    //  fsd Sol
+    //  fsd "V1084 Tauri"
+    //  fsd "Arietis Sector QD-S b4-3"
+    //  fsd "Arietis Sector KM-V b2-0"
+    //  fsd "HIP 17684"
+    //  fsd "26 Tauri"
+    //  fsd "Aries Dark Region LS-S b4-4"
+    //  fsd "Pleiades Sector YF-N b7-3"
+    //  fsd "HIP 17704"
+    //  fsd "Atlas"
+
+
     public partial class JournalCreator
     {
         bool keydelay = false;
@@ -164,6 +182,10 @@ namespace EDDTest
                 {
                     gameversion = "2.2 (Beta 2)";
                 }
+                else if (args.PeekAndRemoveIf("end"))
+                {
+                    break;
+                }
                 else if (args.PeekAndRemoveIf("dayoffset"))
                 {
                     int days = args.Int();
@@ -182,7 +204,11 @@ namespace EDDTest
 
         public bool createJournalEntryWrapped(CommandArgs args, int repeatcount, bool keydelay, int msdelay)
         {
-            bool ok = createJournalEntry(args, repeatcount);
+            int pos = args.Pos;
+            string cmd = args.Next().ToLower();
+
+            bool ok = createJournalEntry(cmd, args, repeatcount);
+            
             if (ok)
             {
                 if (keydelay)
@@ -196,8 +222,15 @@ namespace EDDTest
                     System.Threading.Thread.Sleep(msdelay);
                 }
             }
-            
+            else
+            {
+                string error = args.Rest(" ", pos, args.Pos - pos);
+
+                Console.WriteLine($"Failed journal create for {error}");
+            }
+
             return ok;
         }
     }
 }
+ 

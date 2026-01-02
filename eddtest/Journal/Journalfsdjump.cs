@@ -34,14 +34,19 @@ namespace EDDTest
                     double x, y, z;
                     long sysaddr;
 
-                    int row = stargrid.FindInColumn(1, starnameroot);       // export of Search | Stars
+                    int row = stargrid.FindInColumn(1, starnameroot);       // export of Search | Stars has star in col 1
+                    if ( row == -1 )
+                        row = stargrid.FindInColumn(0, starnameroot);       // export of Route finder has star in col 0
 
-                    if (row >= 0)
+                    int xcol = stargrid.Rows[0].Cells.IndexOf("X");
+                    int sysaddcol = stargrid.Rows[0].Cells.IndexOf("System Address");
+
+                    if (row >= 0 && xcol>=0 && sysaddcol>=0)
                     {
-                        x = stargrid[row].GetDouble(6).Value;
-                        y = stargrid[row].GetDouble(7).Value;
-                        z = stargrid[row].GetDouble(8).Value;
-                        sysaddr = stargrid[row].GetLong(9).Value;
+                        x = stargrid[row].GetDouble(xcol).Value;
+                        y = stargrid[row].GetDouble(xcol+1).Value;
+                        z = stargrid[row].GetDouble(xcol+2).Value;
+                        sysaddr = stargrid[row].GetLong(sysaddcol).Value;
                         z = z + 100 * repeatcount;
 
                         string starname = starnameroot + ((repeatcount > 0 && z > 0) ? "_" + z.ToStringInvariant("0") : "");
@@ -54,18 +59,21 @@ namespace EDDTest
             {
                 string starnameroot = args.Next();
                 long? sysaddr = args.LongNull();
-                double? x, y, z;
-                x = args.DoubleNull();      // zero if wrong
-                y = args.DoubleNull();
-                z = args.DoubleNull();
-
-                if (z.HasValue && starnameroot!=null && sysaddr.HasValue)
+                if (starnameroot != null && sysaddr != null)
                 {
-                    z = z.Value + 100 * repeatcount;
+                    double? x, y, z;
+                    x = args.DoubleNull();      // zero if wrong
+                    y = args.DoubleNull();
+                    z = args.DoubleNull();
 
-                    string starname = starnameroot + ((repeatcount > 0 && z > 0) ? "_" + z.ToStringInvariant("0") : "");
+                    if (x.HasValue && y.HasValue && z.HasValue )
+                    {
+                        z = z.Value + 100 * repeatcount;
 
-                    return FSDJump(starname, sysaddr.Value, x.Value, y.Value, z.Value);
+                        string starname = starnameroot + ((repeatcount > 0 && z > 0) ? "_" + z.ToStringInvariant("0") : "");
+
+                        return FSDJump(starname, sysaddr.Value, x.Value, y.Value, z.Value);
+                    }
                 }
             }
             return null;

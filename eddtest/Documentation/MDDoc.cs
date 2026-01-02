@@ -222,19 +222,90 @@ namespace EDDTest
 
         }
 
-        public static void RenameUsing()
+        public static void RenameSection4()
         {
-            FileInfo[] allFiles = Directory.EnumerateFiles(".", "using-the-*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+            FileInfo[] allFiles = Directory.EnumerateFiles(".", "4.*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+            List<string> names = new List<string>(allFiles.Select(x => x.Name));
+
+            // sort ignoring the prefix number
+            names.Sort(delegate (string left, string right) { return left.Substring(5).CompareTo(right.Substring(3)); });
 
             int number = 1;
-            foreach (FileInfo file in allFiles)
+            foreach (var item in names)
             {
-                Rename(file.Name, "4. " + file.Name.Substring(10));
+                //Rename(item, "4." + number.ToString().PadLeft(2) + "-" + item.Substring(5)); // problem if we enter new entries..
+                Rename(item, "4." + "-" + item.Substring(5));
                 number++;
             }
 
         }
 
+        public static void CheckLinks()
+        {
+            FileInfo[] allFiles = Directory.EnumerateFiles(".", "*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+            foreach (FileInfo file in allFiles)
+            {
+                string[] filecontents = File.ReadAllLines(file.FullName);
+
+                for( int i=  0; i < filecontents.Length; i++ )
+                {
+                    string line = filecontents[i++];
+
+                    int nextpos = line.IndexOf("[[", 0);
+                    if (nextpos >= 0)
+                    {
+                        int endpos = line.IndexOf("]]", nextpos);
+                        if (endpos == -1)
+                        {
+                            Console.WriteLine($"{file.FullName}:{i} Bad [[ ]] pair at {nextpos}");
+                            break;
+                        }
+
+                        string link = line.Substring(nextpos + 2, endpos - nextpos - 2);
+                        int bar = link.IndexOf("|");
+                        if (bar == -1)
+                        {
+                            Console.WriteLine($"{file.FullName}:{i} Bad | in [[ ]] pair at {nextpos}");
+                            break;
+                        }
+
+                        string prefix = link.Substring(0, bar);
+                        string postfix = link.Substring(bar + 1);
+
+                        if (prefix.StartsWith("/images"))
+                        {
+                            string filename = "." + prefix;
+                            if (!File.Exists(filename))
+                                Console.WriteLine($"{file.FullName}:{i} At {nextpos} bad link {link}");
+
+                        }
+                        else if (prefix.StartsWith("images/"))
+                        {
+                            string filename = prefix;
+                            if (!File.Exists(filename))
+                                Console.WriteLine($"{file.FullName}:{i} At {nextpos} bad link {link}");
+                        }
+                        else if (postfix.StartsWith("http"))
+                        {
+
+                        }
+                        else
+                        {
+                            int hash = postfix.IndexOf('#');
+                            if (hash >= 0)
+                                postfix = postfix.Substring(0, hash);   
+
+                            string filename = postfix.Replace(" ", "-") + ".md";
+
+                            if (!File.Exists(filename))
+                                Console.WriteLine($"{file.FullName}:{i} At {nextpos} bad link {link}");
+                        }
+                    }
+                }
+            }
+         } 
 
 
         public static void Rename(string from, string to)
@@ -246,30 +317,37 @@ namespace EDDTest
             if ( to.StartsWith("#"))
                 to = to.Substring(1) + "-" + fromname;
 
-
             to = to.Replace("-", " ").Replace(".md", "");
             string toname = to.Replace(" ", "-");
             string tofile = toname + ".md";
 
-            if (File.Exists(fromfile) && !File.Exists(tofile))
-            {
-                Console.WriteLine($"Updated {fromfile} -> {tofile}");
-                File.Move(fromfile, tofile);
-                FileInfo[] allFiles = Directory.EnumerateFiles(".", "*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+            Console.WriteLine($"{from.PadRight(30)} - > `{to}`");
 
-                foreach ( FileInfo file in allFiles)
+            if (File.Exists(fromfile))
+            {
+                if (!File.Exists(tofile))
                 {
-                    string filecontents = File.ReadAllText(file.FullName);
-                    string newcontents = filecontents.Replace($"|{from}]", $"|{to}]", StringComparison.InvariantCultureIgnoreCase);
-                    if ( filecontents != newcontents )
+                    Console.WriteLine($"Updated {fromfile} -> {tofile}");
+                    File.Move(fromfile, tofile);
+                    FileInfo[] allFiles = Directory.EnumerateFiles(".", "*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+                    foreach (FileInfo file in allFiles)
                     {
-                        File.WriteAllText(file.FullName,newcontents);
-                        Console.WriteLine($"Updated {file.FullName}");
+                        string filecontents = File.ReadAllText(file.FullName);
+                        string newcontents = filecontents.Replace($"|{from}]", $"|{to}]", StringComparison.InvariantCultureIgnoreCase);
+                        newcontents = newcontents.Replace($"|{from}#", $"|{to}#", StringComparison.InvariantCultureIgnoreCase);
+                        if (filecontents != newcontents)
+                        {
+                            File.WriteAllText(file.FullName, newcontents);
+                            Console.WriteLine($"Updated {file.FullName}");
+                        }
                     }
                 }
+                else
+                    Console.WriteLine($"Cannot rename as as file exists {tofile}");
             }
             else
-                Console.WriteLine($"Cannot find file {fromfile} or {tofile} exists");
+                Console.WriteLine($"Cannot find file {fromfile}");
         }
     }
 }

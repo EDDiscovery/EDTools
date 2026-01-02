@@ -33,14 +33,15 @@ namespace EDDTest
                 + "          msDelay N (ms delay between events)\n"
                 + "          pause N (pause for N ms)\n"
                 + "          KeyDelay (pause for a key between events, NoKeyDelay to turn off)\n"
-                + "          stargrid <file> (give a star grid csv file to use for fsd jump)\n"
+                + "          stargrid <file> (give a csv exported from the route finder or search systems panel)\n"
                 + "          gameversion N (set gameversion, default 4.0.0.1050. Also use 3.8 for legacy or beta for 2.2 (Beta 2)\n"
                 + "          build N (set gameversion, default 4.0.0.1050)\n"
-                + "          dayoffset N (change date written by N days)\n";
+                + "          dayoffset N (change date written by N days)\n"
+                +"           end (script section)\n";
             }
 
             s += helpout("Travel", "FSD name sysaddr x y z (x y z is position as double)", eventtype);
-            s += helpout("", "FSD name (when -stargrid is present, x/y/z/system address is taken from sheet)", eventtype);
+            s += helpout("", "FSD name (when stargrid is present, x/y/z/system address is taken from sheet)", eventtype);
             s += helpout("", "FSDTravel name x y z destx desty destz percentint ", eventtype);
             s += helpout("", "Locdocked stasystem station stationfaction systemfaction", eventtype);
             s += helpout("", "Docked starsystem station faction", eventtype);

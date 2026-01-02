@@ -189,11 +189,21 @@ namespace EDDTest
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
 
-                else if (cmd.Equals("renameusingmddoc"))      // processes MD DOC for wiki and makes it better
+                else if (cmd.Equals("renamesection4mddoc"))      // processes MD DOC for wiki and makes it better
                 {
                     if (args.Left >= 0)
                     {
-                        MDDoc.RenameUsing();
+                        MDDoc.RenameSection4();
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+
+                else if (cmd.Equals("checklinksmddoc"))      // processes MD DOC for wiki and makes it better
+                {
+                    if (args.Left >= 0)
+                    {
+                        MDDoc.CheckLinks();
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
@@ -655,7 +665,7 @@ namespace EDDTest
 
                                         jo["timestamp"] = DateTime.UtcNow.StartOfSecond().ToStringZuluInvariant();  // change time to right now
 
-                                        BaseUtils.FileHelpers.TryAppendToFile(outpath, jo.ToString() + Environment.NewLine, true);
+                                        BaseUtils.FileHelpers.TryAppendToFile(outpath, jo.ToString() + Environment.NewLine, makefile: true);
 
                                         if (timerms > 0)
                                             System.Threading.Thread.Sleep(timerms);

@@ -21,11 +21,9 @@ namespace EDDTest
 {
     public partial class JournalCreator
     {
-        public bool createJournalEntry(CommandArgs args, int repeatcount)
+        public bool createJournalEntry(string eventtype, CommandArgs args, int repeatcount)
         {
             string filenamepath = Path.GetDirectoryName(filename);
-
-            string eventtype = args.Next().ToLower();
             string lineout = null;      //quick writer
             bool checkjson = true;
 

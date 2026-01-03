@@ -224,7 +224,7 @@ namespace EDDTest
             }
             else
             {
-                string error = args.Rest(" ", pos, args.Pos - pos);
+                string error = args.Arguments(pos, args.Pos - pos);
 
                 Console.WriteLine($"Failed journal create for {error}");
             }

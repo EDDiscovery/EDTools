@@ -37,7 +37,7 @@ namespace EDDTest
                     int post = translationtext.IndexOf(s);
 
                     if (post == -1)       // if not found in string {n}
-                        bad = "Bracket mismatch";
+                        bad = $"Bracket mismatch at {pos}:`{englishtext.Substring(pos)}`:`{s}`";
                 }
 
                 pos++;
@@ -53,7 +53,7 @@ namespace EDDTest
                     int post = englishtext.IndexOf(s);
 
                     if (post == -1)       // if not found in string {n}
-                        bad = "Bracket mismatch (more in trans)";
+                        bad = $"Bracket mismatch (more in trans) at {pos}:`{englishtext.Substring(pos)}`:`{s}`";
                 }
 
                 pos++;
@@ -88,7 +88,7 @@ namespace EDDTest
 
             if (bad != null)
             {
-                return $"*** {bad}: {reportid}: '{englishtext}' -> '{translationtext}' in {reportfile}:{reportline}";
+                return $"*** {reportfile}:{reportline} : {bad}: {reportid}: '{englishtext}' -> '{translationtext}'";
             }
             else
                 return null;

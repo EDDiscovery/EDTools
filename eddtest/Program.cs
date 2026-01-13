@@ -44,7 +44,9 @@ namespace EDDTest
                                   "         @json <verbose1/0> <@string1/0> -read json lines from file and output text in verbose or not. Optionally @ the strings. Non verbose has 132 line length limit\n" +
                                   "         jsontofluent file - read a json from file and output fluent code\n" +
 
-                                  "MDDocs:  mddoc path wildcard [REMOVE] - process MDDOCS from output of doc tool and clean up\n" +
+                                  "MDDocs:  mddoc path wildcard [REMOVE] - process MDDOCS from output of VS doc tool and clean up\n" +
+                                  "         renamemddoc from to - in the folder of the MDDOCs, rename a .md doc file to another .md doc file and fix all links to it\n" +
+                                  "         checklinksmddoc - in the folder of the MDDOCs, check all links exist\n" +
                                   "         finddoclinks path wildcard [REMOVE]\n" +
                                   "         finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
                                   "Translx: normalisetranslatemkii- process language files and normalise, run to see options\n" +
@@ -184,16 +186,6 @@ namespace EDDTest
                         string to = args.Next();
 
                         MDDoc.Rename(from, to);
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
-
-                else if (cmd.Equals("renamesection4mddoc"))      // processes MD DOC for wiki and makes it better
-                {
-                    if (args.Left >= 0)
-                    {
-                        MDDoc.RenameSection4();
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

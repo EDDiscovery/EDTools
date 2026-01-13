@@ -222,25 +222,6 @@ namespace EDDTest
 
         }
 
-        public static void RenameSection4()
-        {
-            FileInfo[] allFiles = Directory.EnumerateFiles(".", "4.*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-
-            List<string> names = new List<string>(allFiles.Select(x => x.Name));
-
-            // sort ignoring the prefix number
-            names.Sort(delegate (string left, string right) { return left.Substring(5).CompareTo(right.Substring(3)); });
-
-            int number = 1;
-            foreach (var item in names)
-            {
-                //Rename(item, "4." + number.ToString().PadLeft(2) + "-" + item.Substring(5)); // problem if we enter new entries..
-                Rename(item, "4." + "-" + item.Substring(5));
-                number++;
-            }
-
-        }
-
         public static void CheckLinks()
         {
             FileInfo[] allFiles = Directory.EnumerateFiles(".", "*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
@@ -248,10 +229,12 @@ namespace EDDTest
             foreach (FileInfo file in allFiles)
             {
                 string[] filecontents = File.ReadAllLines(file.FullName);
+                System.Diagnostics.Debug.WriteLine($"Checking {file.FullName}");
 
-                for( int i=  0; i < filecontents.Length; i++ )
+                for ( int i=  0; i < filecontents.Length; i++ )
                 {
-                    string line = filecontents[i++];
+                    string line = filecontents[i];
+                    //System.Diagnostics.Debug.WriteLine($" Line {i+1} : {line}");
 
                     int nextpos = line.IndexOf("[[", 0);
                     if (nextpos >= 0)
@@ -259,7 +242,7 @@ namespace EDDTest
                         int endpos = line.IndexOf("]]", nextpos);
                         if (endpos == -1)
                         {
-                            Console.WriteLine($"{file.FullName}:{i} Bad [[ ]] pair at {nextpos}");
+                            Console.WriteLine($"{file.FullName}:{i} : Bad [[ ]] pair at {nextpos}");
                             break;
                         }
 
@@ -267,25 +250,26 @@ namespace EDDTest
                         int bar = link.IndexOf("|");
                         if (bar == -1)
                         {
-                            Console.WriteLine($"{file.FullName}:{i} Bad | in [[ ]] pair at {nextpos}");
+                            Console.WriteLine($"{file.FullName}:{i} : Bad | in [[ ]] pair at {nextpos}");
                             break;
                         }
 
                         string prefix = link.Substring(0, bar);
                         string postfix = link.Substring(bar + 1);
+                        System.Diagnostics.Debug.WriteLine($"Read link `{prefix}` `{postfix}`");
 
                         if (prefix.StartsWith("/images"))
                         {
                             string filename = "." + prefix;
                             if (!File.Exists(filename))
-                                Console.WriteLine($"{file.FullName}:{i} At {nextpos} bad link {link}");
+                                Console.WriteLine($"{file.FullName}:{i} : At {nextpos} bad link {link}");
 
                         }
                         else if (prefix.StartsWith("images/"))
                         {
                             string filename = prefix;
                             if (!File.Exists(filename))
-                                Console.WriteLine($"{file.FullName}:{i} At {nextpos} bad link {link}");
+                                Console.WriteLine($"{file.FullName}:{i} : At {nextpos} bad link {link}");
                         }
                         else if (postfix.StartsWith("http"))
                         {
@@ -349,6 +333,27 @@ namespace EDDTest
             else
                 Console.WriteLine($"Cannot find file {fromfile}");
         }
+
+        // Only needed to be used once, during development of new code.  Keep for ref
+        public static void RenameSection4()
+        {
+            FileInfo[] allFiles = Directory.EnumerateFiles(".", "4.*.md", SearchOption.TopDirectoryOnly).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
+
+            List<string> names = new List<string>(allFiles.Select(x => x.Name));
+
+            // sort ignoring the prefix number
+            names.Sort(delegate (string left, string right) { return left.Substring(5).CompareTo(right.Substring(3)); });
+
+            int number = 1;
+            foreach (var item in names)
+            {
+                //Rename(item, "4." + number.ToString().PadLeft(2) + "-" + item.Substring(5)); // problem if we enter new entries..
+                Rename(item, "4." + "-" + item.Substring(5));
+                number++;
+            }
+
+        }
+
     }
 }
 

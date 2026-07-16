@@ -31,7 +31,7 @@ namespace EDDStatusDisplay
         {
             this.radioButtonLanded = new System.Windows.Forms.RadioButton();
             this.radioButtonLG = new System.Windows.Forms.RadioButton();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBoxShip = new System.Windows.Forms.GroupBox();
             this.radioButton46 = new System.Windows.Forms.RadioButton();
             this.radioButton47 = new System.Windows.Forms.RadioButton();
             this.radioButton31 = new System.Windows.Forms.RadioButton();
@@ -59,13 +59,13 @@ namespace EDDStatusDisplay
             this.radioButton30 = new System.Windows.Forms.RadioButton();
             this.radioButton29 = new System.Windows.Forms.RadioButton();
             this.radioButton28 = new System.Windows.Forms.RadioButton();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.groupBoxSRV = new System.Windows.Forms.GroupBox();
             this.radioButton14 = new System.Windows.Forms.RadioButton();
             this.radioButton21 = new System.Windows.Forms.RadioButton();
             this.radioButton22 = new System.Windows.Forms.RadioButton();
             this.radioButton20 = new System.Windows.Forms.RadioButton();
             this.radioButton15 = new System.Windows.Forms.RadioButton();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.groupBoxAll = new System.Windows.Forms.GroupBox();
             this.radioButton16 = new System.Windows.Forms.RadioButton();
             this.radioButton26 = new System.Windows.Forms.RadioButton();
             this.radioButton24 = new System.Windows.Forms.RadioButton();
@@ -74,7 +74,7 @@ namespace EDDStatusDisplay
             this.labelPips = new System.Windows.Forms.Label();
             this.labelFuelMain = new System.Windows.Forms.Label();
             this.radioButton17 = new System.Windows.Forms.RadioButton();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.groupBoxOnFoot = new System.Windows.Forms.GroupBox();
             this.labelWeapon = new System.Windows.Forms.Label();
             this.labelHealth = new System.Windows.Forms.Label();
             this.labelOxygen = new System.Windows.Forms.Label();
@@ -95,6 +95,7 @@ namespace EDDStatusDisplay
             this.radioButton32 = new System.Windows.Forms.RadioButton();
             this.labelLegalState = new System.Windows.Forms.Label();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.comboBoxSelDest = new System.Windows.Forms.ComboBox();
             this.labelDest = new System.Windows.Forms.Label();
             this.labelRadius = new System.Windows.Forms.Label();
             this.labelBody = new System.Windows.Forms.Label();
@@ -125,18 +126,20 @@ namespace EDDStatusDisplay
             this.buttonOnFootStarportSocialSpace = new System.Windows.Forms.Button();
             this.buttonOnFootPlanet = new System.Windows.Forms.Button();
             this.buttonNormalSpaceLanded = new System.Windows.Forms.Button();
-            this.buttonSetDest = new System.Windows.Forms.Button();
             this.buttonOnFootPlanetNoShip = new System.Windows.Forms.Button();
             this.buttonOnFootInstallationInside = new System.Windows.Forms.Button();
             this.buttonOnFootPlanetSocialSpace = new System.Windows.Forms.Button();
-            this.comboBoxSelDest = new System.Windows.Forms.ComboBox();
-            this.groupBox1.SuspendLayout();
+            this.panelSettings = new System.Windows.Forms.Panel();
+            this.panelModePos = new System.Windows.Forms.Panel();
+            this.groupBoxShip.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.groupBox5.SuspendLayout();
+            this.groupBoxSRV.SuspendLayout();
+            this.groupBoxAll.SuspendLayout();
+            this.groupBoxOnFoot.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox7.SuspendLayout();
+            this.panelSettings.SuspendLayout();
+            this.panelModePos.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioButtonLanded
@@ -167,38 +170,39 @@ namespace EDDStatusDisplay
             this.radioButtonLG.UseVisualStyleBackColor = true;
             this.radioButtonLG.MouseDown += new System.Windows.Forms.MouseEventHandler(this.radioButton_MouseDown);
             // 
-            // groupBox1
+            // groupBoxShip
             // 
-            this.groupBox1.Controls.Add(this.radioButton46);
-            this.groupBox1.Controls.Add(this.radioButton47);
-            this.groupBox1.Controls.Add(this.radioButton31);
-            this.groupBox1.Controls.Add(this.radioButton19);
-            this.groupBox1.Controls.Add(this.radioButton13);
-            this.groupBox1.Controls.Add(this.radioButton8);
-            this.groupBox1.Controls.Add(this.radioButtonLanded);
-            this.groupBox1.Controls.Add(this.radioButton7);
-            this.groupBox1.Controls.Add(this.radioButton49);
-            this.groupBox1.Controls.Add(this.radioButton48);
-            this.groupBox1.Controls.Add(this.radioButton38);
-            this.groupBox1.Controls.Add(this.radioButton11);
-            this.groupBox1.Controls.Add(this.radioButton12);
-            this.groupBox1.Controls.Add(this.radioButton6);
-            this.groupBox1.Controls.Add(this.radioButton10);
-            this.groupBox1.Controls.Add(this.radioButton9);
-            this.groupBox1.Controls.Add(this.radioButton5);
-            this.groupBox1.Controls.Add(this.radioButton4);
-            this.groupBox1.Controls.Add(this.radioButton3);
-            this.groupBox1.Controls.Add(this.radioButton2);
-            this.groupBox1.Controls.Add(this.radioButton1);
-            this.groupBox1.Controls.Add(this.radioButtonFA);
-            this.groupBox1.Controls.Add(this.radioButtonSC);
-            this.groupBox1.Controls.Add(this.radioButtonLG);
-            this.groupBox1.Location = new System.Drawing.Point(9, 412);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(667, 163);
-            this.groupBox1.TabIndex = 2;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Ship";
+            this.groupBoxShip.Controls.Add(this.radioButton46);
+            this.groupBoxShip.Controls.Add(this.radioButton47);
+            this.groupBoxShip.Controls.Add(this.radioButton31);
+            this.groupBoxShip.Controls.Add(this.radioButton19);
+            this.groupBoxShip.Controls.Add(this.radioButton13);
+            this.groupBoxShip.Controls.Add(this.radioButton8);
+            this.groupBoxShip.Controls.Add(this.radioButtonLanded);
+            this.groupBoxShip.Controls.Add(this.radioButton7);
+            this.groupBoxShip.Controls.Add(this.radioButton49);
+            this.groupBoxShip.Controls.Add(this.radioButton48);
+            this.groupBoxShip.Controls.Add(this.radioButton38);
+            this.groupBoxShip.Controls.Add(this.radioButton11);
+            this.groupBoxShip.Controls.Add(this.radioButton12);
+            this.groupBoxShip.Controls.Add(this.radioButton6);
+            this.groupBoxShip.Controls.Add(this.radioButton10);
+            this.groupBoxShip.Controls.Add(this.radioButton9);
+            this.groupBoxShip.Controls.Add(this.radioButton5);
+            this.groupBoxShip.Controls.Add(this.radioButton4);
+            this.groupBoxShip.Controls.Add(this.radioButton3);
+            this.groupBoxShip.Controls.Add(this.radioButton2);
+            this.groupBoxShip.Controls.Add(this.radioButton1);
+            this.groupBoxShip.Controls.Add(this.radioButtonFA);
+            this.groupBoxShip.Controls.Add(this.radioButtonSC);
+            this.groupBoxShip.Controls.Add(this.radioButtonLG);
+            this.groupBoxShip.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupBoxShip.Location = new System.Drawing.Point(0, 430);
+            this.groupBoxShip.Name = "groupBoxShip";
+            this.groupBoxShip.Size = new System.Drawing.Size(686, 163);
+            this.groupBoxShip.TabIndex = 2;
+            this.groupBoxShip.TabStop = false;
+            this.groupBoxShip.Text = "Ship";
             // 
             // radioButton46
             // 
@@ -514,7 +518,7 @@ namespace EDDStatusDisplay
             this.groupBox2.Controls.Add(this.radioButton30);
             this.groupBox2.Controls.Add(this.radioButton29);
             this.groupBox2.Controls.Add(this.radioButton28);
-            this.groupBox2.Location = new System.Drawing.Point(9, 214);
+            this.groupBox2.Location = new System.Drawing.Point(5, 9);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(99, 117);
             this.groupBox2.TabIndex = 3;
@@ -577,19 +581,20 @@ namespace EDDStatusDisplay
             this.radioButton28.UseVisualStyleBackColor = true;
             this.radioButton28.MouseDown += new System.Windows.Forms.MouseEventHandler(this.radioButton_MouseDown);
             // 
-            // groupBox3
+            // groupBoxSRV
             // 
-            this.groupBox3.Controls.Add(this.radioButton14);
-            this.groupBox3.Controls.Add(this.radioButton21);
-            this.groupBox3.Controls.Add(this.radioButton22);
-            this.groupBox3.Controls.Add(this.radioButton20);
-            this.groupBox3.Controls.Add(this.radioButton15);
-            this.groupBox3.Location = new System.Drawing.Point(9, 581);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(448, 70);
-            this.groupBox3.TabIndex = 3;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "SRV";
+            this.groupBoxSRV.Controls.Add(this.radioButton14);
+            this.groupBoxSRV.Controls.Add(this.radioButton21);
+            this.groupBoxSRV.Controls.Add(this.radioButton22);
+            this.groupBoxSRV.Controls.Add(this.radioButton20);
+            this.groupBoxSRV.Controls.Add(this.radioButton15);
+            this.groupBoxSRV.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupBoxSRV.Location = new System.Drawing.Point(0, 593);
+            this.groupBoxSRV.Name = "groupBoxSRV";
+            this.groupBoxSRV.Size = new System.Drawing.Size(686, 70);
+            this.groupBoxSRV.TabIndex = 3;
+            this.groupBoxSRV.TabStop = false;
+            this.groupBoxSRV.Text = "SRV";
             // 
             // radioButton14
             // 
@@ -661,22 +666,23 @@ namespace EDDStatusDisplay
             this.radioButton15.UseVisualStyleBackColor = true;
             this.radioButton15.MouseDown += new System.Windows.Forms.MouseEventHandler(this.radioButton_MouseDown);
             // 
-            // groupBox4
+            // groupBoxAll
             // 
-            this.groupBox4.Controls.Add(this.radioButton16);
-            this.groupBox4.Controls.Add(this.radioButton26);
-            this.groupBox4.Controls.Add(this.radioButton24);
-            this.groupBox4.Controls.Add(this.labelCargo);
-            this.groupBox4.Controls.Add(this.radioButton23);
-            this.groupBox4.Controls.Add(this.labelPips);
-            this.groupBox4.Controls.Add(this.labelFuelMain);
-            this.groupBox4.Controls.Add(this.radioButton17);
-            this.groupBox4.Location = new System.Drawing.Point(9, 336);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(650, 70);
-            this.groupBox4.TabIndex = 3;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "All";
+            this.groupBoxAll.Controls.Add(this.radioButton16);
+            this.groupBoxAll.Controls.Add(this.radioButton26);
+            this.groupBoxAll.Controls.Add(this.radioButton24);
+            this.groupBoxAll.Controls.Add(this.labelCargo);
+            this.groupBoxAll.Controls.Add(this.radioButton23);
+            this.groupBoxAll.Controls.Add(this.labelPips);
+            this.groupBoxAll.Controls.Add(this.labelFuelMain);
+            this.groupBoxAll.Controls.Add(this.radioButton17);
+            this.groupBoxAll.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupBoxAll.Location = new System.Drawing.Point(0, 360);
+            this.groupBoxAll.Name = "groupBoxAll";
+            this.groupBoxAll.Size = new System.Drawing.Size(686, 70);
+            this.groupBoxAll.TabIndex = 3;
+            this.groupBoxAll.TabStop = false;
+            this.groupBoxAll.Text = "All";
             // 
             // radioButton16
             // 
@@ -775,32 +781,33 @@ namespace EDDStatusDisplay
             this.radioButton17.UseVisualStyleBackColor = true;
             this.radioButton17.MouseDown += new System.Windows.Forms.MouseEventHandler(this.radioButton_MouseDown);
             // 
-            // groupBox5
+            // groupBoxOnFoot
             // 
-            this.groupBox5.Controls.Add(this.labelWeapon);
-            this.groupBox5.Controls.Add(this.labelHealth);
-            this.groupBox5.Controls.Add(this.labelOxygen);
-            this.groupBox5.Controls.Add(this.labelGravity);
-            this.groupBox5.Controls.Add(this.labelTemperature);
-            this.groupBox5.Controls.Add(this.radioButton37);
-            this.groupBox5.Controls.Add(this.radioButton45);
-            this.groupBox5.Controls.Add(this.radioButton44);
-            this.groupBox5.Controls.Add(this.radioButton43);
-            this.groupBox5.Controls.Add(this.radioButton42);
-            this.groupBox5.Controls.Add(this.radioButton41);
-            this.groupBox5.Controls.Add(this.radioButton40);
-            this.groupBox5.Controls.Add(this.radioButton39);
-            this.groupBox5.Controls.Add(this.radioButton36);
-            this.groupBox5.Controls.Add(this.radioButton35);
-            this.groupBox5.Controls.Add(this.radioButton34);
-            this.groupBox5.Controls.Add(this.radioButton33);
-            this.groupBox5.Controls.Add(this.radioButton32);
-            this.groupBox5.Location = new System.Drawing.Point(9, 656);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(667, 98);
-            this.groupBox5.TabIndex = 3;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "On Foot";
+            this.groupBoxOnFoot.Controls.Add(this.labelWeapon);
+            this.groupBoxOnFoot.Controls.Add(this.labelHealth);
+            this.groupBoxOnFoot.Controls.Add(this.labelOxygen);
+            this.groupBoxOnFoot.Controls.Add(this.labelGravity);
+            this.groupBoxOnFoot.Controls.Add(this.labelTemperature);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton37);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton45);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton44);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton43);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton42);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton41);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton40);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton39);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton36);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton35);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton34);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton33);
+            this.groupBoxOnFoot.Controls.Add(this.radioButton32);
+            this.groupBoxOnFoot.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupBoxOnFoot.Location = new System.Drawing.Point(0, 663);
+            this.groupBoxOnFoot.Name = "groupBoxOnFoot";
+            this.groupBoxOnFoot.Size = new System.Drawing.Size(686, 98);
+            this.groupBoxOnFoot.TabIndex = 3;
+            this.groupBoxOnFoot.TabStop = false;
+            this.groupBoxOnFoot.Text = "On Foot";
             // 
             // labelWeapon
             // 
@@ -1042,25 +1049,34 @@ namespace EDDStatusDisplay
             this.groupBox6.Controls.Add(this.labelLatLong);
             this.groupBox6.Controls.Add(this.radioButton27);
             this.groupBox6.Controls.Add(this.radioButton25);
-            this.groupBox6.Location = new System.Drawing.Point(307, 214);
+            this.groupBox6.Location = new System.Drawing.Point(303, 9);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(352, 117);
+            this.groupBox6.Size = new System.Drawing.Size(362, 133);
             this.groupBox6.TabIndex = 3;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Position/Dest";
             // 
+            // comboBoxSelDest
+            // 
+            this.comboBoxSelDest.FormattingEnabled = true;
+            this.comboBoxSelDest.Location = new System.Drawing.Point(6, 108);
+            this.comboBoxSelDest.Name = "comboBoxSelDest";
+            this.comboBoxSelDest.Size = new System.Drawing.Size(180, 21);
+            this.comboBoxSelDest.TabIndex = 3;
+            this.comboBoxSelDest.SelectedIndexChanged += new System.EventHandler(this.comboBoxSelDest_SelectedIndexChanged);
+            // 
             // labelDest
             // 
-            this.labelDest.Location = new System.Drawing.Point(6, 88);
+            this.labelDest.Location = new System.Drawing.Point(11, 87);
             this.labelDest.Name = "labelDest";
-            this.labelDest.Size = new System.Drawing.Size(237, 31);
+            this.labelDest.Size = new System.Drawing.Size(326, 19);
             this.labelDest.TabIndex = 2;
             this.labelDest.Text = "dest";
             // 
             // labelRadius
             // 
             this.labelRadius.AutoSize = true;
-            this.labelRadius.Location = new System.Drawing.Point(137, 65);
+            this.labelRadius.Location = new System.Drawing.Point(225, 44);
             this.labelRadius.Name = "labelRadius";
             this.labelRadius.Size = new System.Drawing.Size(40, 13);
             this.labelRadius.TabIndex = 2;
@@ -1069,7 +1085,7 @@ namespace EDDStatusDisplay
             // labelBody
             // 
             this.labelBody.AutoSize = true;
-            this.labelBody.Location = new System.Drawing.Point(7, 42);
+            this.labelBody.Location = new System.Drawing.Point(227, 21);
             this.labelBody.Name = "labelBody";
             this.labelBody.Size = new System.Drawing.Size(30, 13);
             this.labelBody.TabIndex = 2;
@@ -1078,7 +1094,7 @@ namespace EDDStatusDisplay
             // labelAltitude
             // 
             this.labelAltitude.AutoSize = true;
-            this.labelAltitude.Location = new System.Drawing.Point(137, 44);
+            this.labelAltitude.Location = new System.Drawing.Point(130, 46);
             this.labelAltitude.Name = "labelAltitude";
             this.labelAltitude.Size = new System.Drawing.Size(19, 13);
             this.labelAltitude.TabIndex = 2;
@@ -1087,7 +1103,7 @@ namespace EDDStatusDisplay
             // labelHeading
             // 
             this.labelHeading.AutoSize = true;
-            this.labelHeading.Location = new System.Drawing.Point(137, 20);
+            this.labelHeading.Location = new System.Drawing.Point(11, 68);
             this.labelHeading.Name = "labelHeading";
             this.labelHeading.Size = new System.Drawing.Size(45, 13);
             this.labelHeading.TabIndex = 2;
@@ -1096,7 +1112,7 @@ namespace EDDStatusDisplay
             // labelLatLong
             // 
             this.labelLatLong.AutoSize = true;
-            this.labelLatLong.Location = new System.Drawing.Point(7, 20);
+            this.labelLatLong.Location = new System.Drawing.Point(11, 46);
             this.labelLatLong.Name = "labelLatLong";
             this.labelLatLong.Size = new System.Drawing.Size(41, 13);
             this.labelLatLong.TabIndex = 2;
@@ -1106,7 +1122,7 @@ namespace EDDStatusDisplay
             // 
             this.radioButton27.AutoCheck = false;
             this.radioButton27.AutoSize = true;
-            this.radioButton27.Location = new System.Drawing.Point(232, 43);
+            this.radioButton27.Location = new System.Drawing.Point(127, 19);
             this.radioButton27.Name = "radioButton27";
             this.radioButton27.Size = new System.Drawing.Size(59, 17);
             this.radioButton27.TabIndex = 1;
@@ -1120,7 +1136,7 @@ namespace EDDStatusDisplay
             // 
             this.radioButton25.AutoCheck = false;
             this.radioButton25.AutoSize = true;
-            this.radioButton25.Location = new System.Drawing.Point(232, 20);
+            this.radioButton25.Location = new System.Drawing.Point(9, 19);
             this.radioButton25.Name = "radioButton25";
             this.radioButton25.Size = new System.Drawing.Size(89, 17);
             this.radioButton25.TabIndex = 1;
@@ -1147,7 +1163,7 @@ namespace EDDStatusDisplay
             this.groupBox7.Controls.Add(this.labelGUI);
             this.groupBox7.Controls.Add(this.labelFiregroup);
             this.groupBox7.Controls.Add(this.labelLegalState);
-            this.groupBox7.Location = new System.Drawing.Point(122, 215);
+            this.groupBox7.Location = new System.Drawing.Point(118, 10);
             this.groupBox7.Name = "groupBox7";
             this.groupBox7.Size = new System.Drawing.Size(178, 115);
             this.groupBox7.TabIndex = 4;
@@ -1194,7 +1210,7 @@ namespace EDDStatusDisplay
             // 
             // buttonNormalSpace
             // 
-            this.buttonNormalSpace.Location = new System.Drawing.Point(9, 12);
+            this.buttonNormalSpace.Location = new System.Drawing.Point(3, 3);
             this.buttonNormalSpace.Name = "buttonNormalSpace";
             this.buttonNormalSpace.Size = new System.Drawing.Size(100, 40);
             this.buttonNormalSpace.TabIndex = 5;
@@ -1204,7 +1220,7 @@ namespace EDDStatusDisplay
             // 
             // buttonSupercruise
             // 
-            this.buttonSupercruise.Location = new System.Drawing.Point(115, 13);
+            this.buttonSupercruise.Location = new System.Drawing.Point(109, 4);
             this.buttonSupercruise.Name = "buttonSupercruise";
             this.buttonSupercruise.Size = new System.Drawing.Size(100, 40);
             this.buttonSupercruise.TabIndex = 5;
@@ -1214,7 +1230,7 @@ namespace EDDStatusDisplay
             // 
             // buttonLatLonOn
             // 
-            this.buttonLatLonOn.Location = new System.Drawing.Point(576, 12);
+            this.buttonLatLonOn.Location = new System.Drawing.Point(533, 4);
             this.buttonLatLonOn.Name = "buttonLatLonOn";
             this.buttonLatLonOn.Size = new System.Drawing.Size(99, 23);
             this.buttonLatLonOn.TabIndex = 5;
@@ -1224,7 +1240,7 @@ namespace EDDStatusDisplay
             // 
             // buttonLatLonOff
             // 
-            this.buttonLatLonOff.Location = new System.Drawing.Point(576, 41);
+            this.buttonLatLonOff.Location = new System.Drawing.Point(533, 33);
             this.buttonLatLonOff.Name = "buttonLatLonOff";
             this.buttonLatLonOff.Size = new System.Drawing.Size(99, 23);
             this.buttonLatLonOff.TabIndex = 5;
@@ -1234,7 +1250,7 @@ namespace EDDStatusDisplay
             // 
             // buttonNormalSpaceCompass
             // 
-            this.buttonNormalSpaceCompass.Location = new System.Drawing.Point(8, 58);
+            this.buttonNormalSpaceCompass.Location = new System.Drawing.Point(2, 49);
             this.buttonNormalSpaceCompass.Name = "buttonNormalSpaceCompass";
             this.buttonNormalSpaceCompass.Size = new System.Drawing.Size(100, 40);
             this.buttonNormalSpaceCompass.TabIndex = 5;
@@ -1244,7 +1260,7 @@ namespace EDDStatusDisplay
             // 
             // buttonOnfootPlanetHangar
             // 
-            this.buttonOnfootPlanetHangar.Location = new System.Drawing.Point(327, 108);
+            this.buttonOnfootPlanetHangar.Location = new System.Drawing.Point(321, 99);
             this.buttonOnfootPlanetHangar.Name = "buttonOnfootPlanetHangar";
             this.buttonOnfootPlanetHangar.Size = new System.Drawing.Size(100, 47);
             this.buttonOnfootPlanetHangar.TabIndex = 5;
@@ -1254,7 +1270,7 @@ namespace EDDStatusDisplay
             // 
             // buttonFighter
             // 
-            this.buttonFighter.Location = new System.Drawing.Point(221, 59);
+            this.buttonFighter.Location = new System.Drawing.Point(215, 50);
             this.buttonFighter.Name = "buttonFighter";
             this.buttonFighter.Size = new System.Drawing.Size(100, 40);
             this.buttonFighter.TabIndex = 5;
@@ -1264,7 +1280,7 @@ namespace EDDStatusDisplay
             // 
             // buttonSRVShipLanded
             // 
-            this.buttonSRVShipLanded.Location = new System.Drawing.Point(221, 13);
+            this.buttonSRVShipLanded.Location = new System.Drawing.Point(215, 4);
             this.buttonSRVShipLanded.Name = "buttonSRVShipLanded";
             this.buttonSRVShipLanded.Size = new System.Drawing.Size(100, 40);
             this.buttonSRVShipLanded.TabIndex = 5;
@@ -1274,7 +1290,7 @@ namespace EDDStatusDisplay
             // 
             // buttonDockedInstallation
             // 
-            this.buttonDockedInstallation.Location = new System.Drawing.Point(115, 105);
+            this.buttonDockedInstallation.Location = new System.Drawing.Point(109, 96);
             this.buttonDockedInstallation.Name = "buttonDockedInstallation";
             this.buttonDockedInstallation.Size = new System.Drawing.Size(100, 40);
             this.buttonDockedInstallation.TabIndex = 5;
@@ -1284,7 +1300,7 @@ namespace EDDStatusDisplay
             // 
             // buttonDockedStarport
             // 
-            this.buttonDockedStarport.Location = new System.Drawing.Point(8, 105);
+            this.buttonDockedStarport.Location = new System.Drawing.Point(2, 96);
             this.buttonDockedStarport.Name = "buttonDockedStarport";
             this.buttonDockedStarport.Size = new System.Drawing.Size(100, 40);
             this.buttonDockedStarport.TabIndex = 5;
@@ -1294,7 +1310,7 @@ namespace EDDStatusDisplay
             // 
             // buttonSupercruiseCompass
             // 
-            this.buttonSupercruiseCompass.Location = new System.Drawing.Point(115, 59);
+            this.buttonSupercruiseCompass.Location = new System.Drawing.Point(109, 50);
             this.buttonSupercruiseCompass.Name = "buttonSupercruiseCompass";
             this.buttonSupercruiseCompass.Size = new System.Drawing.Size(100, 40);
             this.buttonSupercruiseCompass.TabIndex = 5;
@@ -1304,7 +1320,7 @@ namespace EDDStatusDisplay
             // 
             // buttonOnFootStarportHangar
             // 
-            this.buttonOnFootStarportHangar.Location = new System.Drawing.Point(327, 13);
+            this.buttonOnFootStarportHangar.Location = new System.Drawing.Point(321, 4);
             this.buttonOnFootStarportHangar.Name = "buttonOnFootStarportHangar";
             this.buttonOnFootStarportHangar.Size = new System.Drawing.Size(100, 40);
             this.buttonOnFootStarportHangar.TabIndex = 5;
@@ -1314,7 +1330,7 @@ namespace EDDStatusDisplay
             // 
             // buttonOnFootInstallation
             // 
-            this.buttonOnFootInstallation.Location = new System.Drawing.Point(433, 108);
+            this.buttonOnFootInstallation.Location = new System.Drawing.Point(427, 99);
             this.buttonOnFootInstallation.Name = "buttonOnFootInstallation";
             this.buttonOnFootInstallation.Size = new System.Drawing.Size(100, 47);
             this.buttonOnFootInstallation.TabIndex = 5;
@@ -1324,7 +1340,7 @@ namespace EDDStatusDisplay
             // 
             // buttonOnFootStarportSocialSpace
             // 
-            this.buttonOnFootStarportSocialSpace.Location = new System.Drawing.Point(327, 60);
+            this.buttonOnFootStarportSocialSpace.Location = new System.Drawing.Point(321, 51);
             this.buttonOnFootStarportSocialSpace.Name = "buttonOnFootStarportSocialSpace";
             this.buttonOnFootStarportSocialSpace.Size = new System.Drawing.Size(100, 40);
             this.buttonOnFootStarportSocialSpace.TabIndex = 5;
@@ -1334,7 +1350,7 @@ namespace EDDStatusDisplay
             // 
             // buttonOnFootPlanet
             // 
-            this.buttonOnFootPlanet.Location = new System.Drawing.Point(433, 13);
+            this.buttonOnFootPlanet.Location = new System.Drawing.Point(427, 4);
             this.buttonOnFootPlanet.Name = "buttonOnFootPlanet";
             this.buttonOnFootPlanet.Size = new System.Drawing.Size(100, 40);
             this.buttonOnFootPlanet.TabIndex = 5;
@@ -1344,7 +1360,7 @@ namespace EDDStatusDisplay
             // 
             // buttonNormalSpaceLanded
             // 
-            this.buttonNormalSpaceLanded.Location = new System.Drawing.Point(8, 151);
+            this.buttonNormalSpaceLanded.Location = new System.Drawing.Point(2, 142);
             this.buttonNormalSpaceLanded.Name = "buttonNormalSpaceLanded";
             this.buttonNormalSpaceLanded.Size = new System.Drawing.Size(100, 40);
             this.buttonNormalSpaceLanded.TabIndex = 5;
@@ -1352,19 +1368,9 @@ namespace EDDStatusDisplay
             this.buttonNormalSpaceLanded.UseVisualStyleBackColor = true;
             this.buttonNormalSpaceLanded.Click += new System.EventHandler(this.buttonNormalSpaceLanded_Click);
             // 
-            // buttonSetDest
-            // 
-            this.buttonSetDest.Location = new System.Drawing.Point(576, 76);
-            this.buttonSetDest.Name = "buttonSetDest";
-            this.buttonSetDest.Size = new System.Drawing.Size(99, 23);
-            this.buttonSetDest.TabIndex = 5;
-            this.buttonSetDest.Text = "SetDest";
-            this.buttonSetDest.UseVisualStyleBackColor = true;
-            this.buttonSetDest.Click += new System.EventHandler(this.buttonSetDest_Click);
-            // 
             // buttonOnFootPlanetNoShip
             // 
-            this.buttonOnFootPlanetNoShip.Location = new System.Drawing.Point(433, 59);
+            this.buttonOnFootPlanetNoShip.Location = new System.Drawing.Point(427, 50);
             this.buttonOnFootPlanetNoShip.Name = "buttonOnFootPlanetNoShip";
             this.buttonOnFootPlanetNoShip.Size = new System.Drawing.Size(100, 40);
             this.buttonOnFootPlanetNoShip.TabIndex = 5;
@@ -1374,7 +1380,7 @@ namespace EDDStatusDisplay
             // 
             // buttonOnFootInstallationInside
             // 
-            this.buttonOnFootInstallationInside.Location = new System.Drawing.Point(433, 161);
+            this.buttonOnFootInstallationInside.Location = new System.Drawing.Point(427, 152);
             this.buttonOnFootInstallationInside.Name = "buttonOnFootInstallationInside";
             this.buttonOnFootInstallationInside.Size = new System.Drawing.Size(100, 47);
             this.buttonOnFootInstallationInside.TabIndex = 5;
@@ -1384,7 +1390,7 @@ namespace EDDStatusDisplay
             // 
             // buttonOnFootPlanetSocialSpace
             // 
-            this.buttonOnFootPlanetSocialSpace.Location = new System.Drawing.Point(327, 161);
+            this.buttonOnFootPlanetSocialSpace.Location = new System.Drawing.Point(321, 152);
             this.buttonOnFootPlanetSocialSpace.Name = "buttonOnFootPlanetSocialSpace";
             this.buttonOnFootPlanetSocialSpace.Size = new System.Drawing.Size(100, 47);
             this.buttonOnFootPlanetSocialSpace.TabIndex = 5;
@@ -1392,63 +1398,73 @@ namespace EDDStatusDisplay
             this.buttonOnFootPlanetSocialSpace.UseVisualStyleBackColor = true;
             this.buttonOnFootPlanetSocialSpace.Click += new System.EventHandler(this.buttonOnFootPlanetSocialSpace_Click);
             // 
-            // comboBoxSelDest
+            // panelSettings
             // 
-            this.comboBoxSelDest.FormattingEnabled = true;
-            this.comboBoxSelDest.Location = new System.Drawing.Point(249, 85);
-            this.comboBoxSelDest.Name = "comboBoxSelDest";
-            this.comboBoxSelDest.Size = new System.Drawing.Size(93, 21);
-            this.comboBoxSelDest.TabIndex = 3;
-            this.comboBoxSelDest.SelectedIndexChanged += new System.EventHandler(this.comboBoxSelDest_SelectedIndexChanged);
+            this.panelSettings.Controls.Add(this.buttonNormalSpace);
+            this.panelSettings.Controls.Add(this.buttonSupercruiseCompass);
+            this.panelSettings.Controls.Add(this.buttonNormalSpaceCompass);
+            this.panelSettings.Controls.Add(this.buttonSupercruise);
+            this.panelSettings.Controls.Add(this.buttonNormalSpaceLanded);
+            this.panelSettings.Controls.Add(this.buttonLatLonOff);
+            this.panelSettings.Controls.Add(this.buttonFighter);
+            this.panelSettings.Controls.Add(this.buttonLatLonOn);
+            this.panelSettings.Controls.Add(this.buttonDockedInstallation);
+            this.panelSettings.Controls.Add(this.buttonOnFootStarportSocialSpace);
+            this.panelSettings.Controls.Add(this.buttonSRVShipLanded);
+            this.panelSettings.Controls.Add(this.buttonOnFootPlanetNoShip);
+            this.panelSettings.Controls.Add(this.buttonDockedStarport);
+            this.panelSettings.Controls.Add(this.buttonOnFootPlanet);
+            this.panelSettings.Controls.Add(this.buttonOnfootPlanetHangar);
+            this.panelSettings.Controls.Add(this.buttonOnFootInstallationInside);
+            this.panelSettings.Controls.Add(this.buttonOnFootPlanetSocialSpace);
+            this.panelSettings.Controls.Add(this.buttonOnFootInstallation);
+            this.panelSettings.Controls.Add(this.buttonOnFootStarportHangar);
+            this.panelSettings.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelSettings.Location = new System.Drawing.Point(0, 0);
+            this.panelSettings.Name = "panelSettings";
+            this.panelSettings.Size = new System.Drawing.Size(686, 212);
+            this.panelSettings.TabIndex = 6;
+            // 
+            // panelModePos
+            // 
+            this.panelModePos.Controls.Add(this.groupBox6);
+            this.panelModePos.Controls.Add(this.groupBox2);
+            this.panelModePos.Controls.Add(this.groupBox7);
+            this.panelModePos.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelModePos.Location = new System.Drawing.Point(0, 212);
+            this.panelModePos.Name = "panelModePos";
+            this.panelModePos.Size = new System.Drawing.Size(686, 148);
+            this.panelModePos.TabIndex = 7;
             // 
             // Status
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(680, 777);
-            this.Controls.Add(this.buttonSupercruiseCompass);
-            this.Controls.Add(this.buttonSupercruise);
-            this.Controls.Add(this.buttonLatLonOff);
-            this.Controls.Add(this.buttonSetDest);
-            this.Controls.Add(this.buttonLatLonOn);
-            this.Controls.Add(this.buttonOnFootStarportSocialSpace);
-            this.Controls.Add(this.buttonOnFootPlanetNoShip);
-            this.Controls.Add(this.buttonOnFootPlanet);
-            this.Controls.Add(this.buttonOnFootInstallationInside);
-            this.Controls.Add(this.buttonOnFootInstallation);
-            this.Controls.Add(this.buttonOnFootStarportHangar);
-            this.Controls.Add(this.buttonOnFootPlanetSocialSpace);
-            this.Controls.Add(this.buttonOnfootPlanetHangar);
-            this.Controls.Add(this.buttonDockedStarport);
-            this.Controls.Add(this.buttonSRVShipLanded);
-            this.Controls.Add(this.buttonDockedInstallation);
-            this.Controls.Add(this.buttonFighter);
-            this.Controls.Add(this.buttonNormalSpaceLanded);
-            this.Controls.Add(this.buttonNormalSpaceCompass);
-            this.Controls.Add(this.buttonNormalSpace);
-            this.Controls.Add(this.groupBox7);
-            this.Controls.Add(this.groupBox6);
-            this.Controls.Add(this.groupBox5);
-            this.Controls.Add(this.groupBox4);
-            this.Controls.Add(this.groupBox3);
-            this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.groupBox1);
+            this.ClientSize = new System.Drawing.Size(686, 787);
+            this.Controls.Add(this.groupBoxOnFoot);
+            this.Controls.Add(this.groupBoxSRV);
+            this.Controls.Add(this.groupBoxShip);
+            this.Controls.Add(this.groupBoxAll);
+            this.Controls.Add(this.panelModePos);
+            this.Controls.Add(this.panelSettings);
             this.Name = "Status";
             this.Text = "Status";
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.groupBoxShip.ResumeLayout(false);
+            this.groupBoxShip.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
+            this.groupBoxSRV.ResumeLayout(false);
+            this.groupBoxSRV.PerformLayout();
+            this.groupBoxAll.ResumeLayout(false);
+            this.groupBoxAll.PerformLayout();
+            this.groupBoxOnFoot.ResumeLayout(false);
+            this.groupBoxOnFoot.PerformLayout();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
             this.groupBox7.ResumeLayout(false);
             this.groupBox7.PerformLayout();
+            this.panelSettings.ResumeLayout(false);
+            this.panelModePos.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -1456,7 +1472,7 @@ namespace EDDStatusDisplay
         #endregion
         private System.Windows.Forms.RadioButton radioButtonLanded;
         private System.Windows.Forms.RadioButton radioButtonLG;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBoxShip;
         private System.Windows.Forms.RadioButton radioButton3;
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.RadioButton radioButton1;
@@ -1473,19 +1489,19 @@ namespace EDDStatusDisplay
         private System.Windows.Forms.RadioButton radioButton4;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.RadioButton radioButton13;
-        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.GroupBox groupBoxSRV;
         private System.Windows.Forms.RadioButton radioButton14;
         private System.Windows.Forms.RadioButton radioButton21;
         private System.Windows.Forms.RadioButton radioButton22;
         private System.Windows.Forms.RadioButton radioButton20;
         private System.Windows.Forms.RadioButton radioButton15;
-        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.GroupBox groupBoxAll;
         private System.Windows.Forms.RadioButton radioButton16;
         private System.Windows.Forms.RadioButton radioButton26;
         private System.Windows.Forms.RadioButton radioButton24;
         private System.Windows.Forms.RadioButton radioButton23;
         private System.Windows.Forms.RadioButton radioButton17;
-        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.GroupBox groupBoxOnFoot;
         private System.Windows.Forms.RadioButton radioButton18;
         private System.Windows.Forms.RadioButton radioButton19;
         private System.Windows.Forms.GroupBox groupBox6;
@@ -1548,12 +1564,13 @@ namespace EDDStatusDisplay
         private System.Windows.Forms.Label labelAltitude;
         private System.Windows.Forms.Label labelHeading;
         private System.Windows.Forms.Label labelRadius;
-        private System.Windows.Forms.Button buttonSetDest;
         private System.Windows.Forms.Button buttonOnFootPlanetNoShip;
         private System.Windows.Forms.Button buttonOnFootInstallationInside;
         private System.Windows.Forms.Button buttonOnFootPlanetSocialSpace;
         private System.Windows.Forms.Button buttonGUIRight;
         private System.Windows.Forms.Button buttonGUILeft;
         private System.Windows.Forms.ComboBox comboBoxSelDest;
+        private System.Windows.Forms.Panel panelSettings;
+        private System.Windows.Forms.Panel panelModePos;
     }
 }

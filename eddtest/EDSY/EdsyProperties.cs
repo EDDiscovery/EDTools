@@ -181,6 +181,10 @@ namespace EDDTest
             ["engminmul"] = "EngineMinMultiplier",
             ["engmaxmul"] = "EngineMaxMultiplier",
 
+            ["engminbst"] = null,   // added april 26, Minimum boosted performance modifier, %  (Seems display only, not copying for now)
+            ["engoptbst"] = null,   // added april 26, Optimal boosted performance modifier, %
+            ["engmaxbst"] = null,   // added april 26, Maximum boosted performance modifier, %
+
             ["fuelpower"] = "PowerConstant",
             ["fuelmul"] = "LinearConstant",
             ["maxfuel"] = "MaxFuelPerJump",
@@ -233,19 +237,20 @@ namespace EDDTest
             ["optmulrot"] = "OptimalRotationModifier",
             ["maxmulrot"] = "MaximumRotationModifier",
 
-            ["proberad"] = "ProbeRadius"
-        };
+            ["proberad"] = "ProbeRadius",
 
+            ["neutronmult"] = "FSDNeutronMultiplier",           // EDD dodge to add this extra field in
+        };
 
         bool ProcessData(long edsyfid, string esdyfdname, string edsyname, string parameters, ref string textout, bool checkname = true)
         {
-            int lineno = -1;
+                int lineno = -1;
 
             if (edsyfid > 0)       // find by fid if its there
             {
                 string fids = "(" + edsyfid.ToStringInvariant() + ",";
-                lineno = Array.FindIndex(itemmodules, x => x.Contains(fids));
-            }
+            lineno = Array.FindIndex(itemmodules, x => x.Contains(fids));
+        };
 
             if (lineno == -1)      // if can't find
             {
@@ -282,6 +287,25 @@ namespace EDDTest
                         if (!checkname || modulefdname.EqualsIIC(esdyfdname))
                         {
                             edsyname = edsyname.Replace("-", " ");      // Multi-Cannon
+
+                            int cr = edsyname.IndexOf("Cargo Rack (");
+                            if (cr >= 0)     // manip the cargo name to be like we want it to be
+                            {
+                                //textout += "Cargo Rack name EDSY " + edsyname + "\r\n";
+                                edsyname = edsyname.Substring(0, cr) + "Cargo Rack Class " + parameters.Substring(parameters.IndexOf("Class ") + 8, 1) + " " + edsyname.Substring(cr + 11);
+                                //textout += " ->>>> " + edsyname + "\r\n";
+                            }
+
+
+                            cr = edsyname.IndexOf("Fuel Tank (");
+                            if (cr >= 0)     // manip the fuel tank name to be like we want it to be
+                            {
+                                //textout += "name EDSY " + edsyname + "\r\n";
+                                edsyname = edsyname.Substring(0, cr) + "Fuel Tank Class " + parameters.Substring(parameters.IndexOf("Class ") + 8, 1) + " " + edsyname.Substring(cr + 10);
+                                //textout += " ->>>> " + edsyname + "\r\n";
+                            }
+
+
                             name = name.Replace("-", " ");      // type-6
 
                             if (name.Length < edsyname.Length || !edsyname.EqualsIIC(name.Substring(0, edsyname.Length)))
@@ -295,9 +319,10 @@ namespace EDDTest
 
                             if (diff)
                             {
-                                string msg = $"\r\n{lineno + 1} Difference Properties {edsyfid} {esdyfdname}\r\n `{itemmodules[lineno].Trim()}`\r\n`{lineshouldbe}`\r\n";
+                                string msg = $"Difference Properties {edsyfid} {esdyfdname} :\r\n    `{itemmodules[lineno].Substring(replacepos).Trim()}`\r\n => `{lineshouldbe}`\r\n";
                                 textout += msg;
                                 System.Diagnostics.Debug.Write(msg);
+                                Console.WriteLine(msg);
 
                                 itemmodules[lineno] = itemmodules[lineno].Left(replacepos) + $"{fidread.Value},{edtype},{name.AlwaysQuoteString()}){lineshouldbe}";
                             }

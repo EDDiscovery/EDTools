@@ -18,18 +18,86 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace EDDTest
 {
     // adjust to your preference
+    enum ProcessResult { Nothing, Found, StopProcessing }
 
     interface JournalAnalyse
     {
-        bool Process(string filename, int lineno, JObject jr, string eventname);
+        ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname);
         string Report();
 
         string OutputName { get; }
     }
+
+    class CommonAnalyse : JournalAnalyse
+    {
+        public string OutputName { get; set; }
+        Dictionary<string, int> rep1 = new Dictionary<string, int>();
+        Dictionary<string, int> rep2 = new Dictionary<string, int>();
+        Dictionary<string, int> rep3 = new Dictionary<string, int>();
+
+        public void Incr(string value)
+        {
+            if (rep1.ContainsKey(value))
+                rep1[value]++;
+            else
+                rep1[value] = 1;
+        }
+        public void Incr2(string value)
+        {
+            if (rep2.ContainsKey(value))
+                rep2[value]++;
+            else
+                rep2[value] = 1;
+        }
+        public void Incr3(string value)
+        {
+            if (rep3.ContainsKey(value))
+                rep3[value]++;
+            else
+                rep3[value] = 1;
+        }
+
+        public virtual ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
+        {
+            return ProcessResult.Nothing;
+        }
+
+        public string Report()
+        {
+            var keys = rep1.Keys.ToList();
+            keys.Sort();
+            string str = "";
+            foreach (var key in keys)
+            {
+                str += $"{key} : {rep1[key]}" + Environment.NewLine;
+            }
+
+            str += "------------" + Environment.NewLine;
+
+            keys = rep2.Keys.ToList();
+            keys.Sort();
+            foreach (var key in keys)
+            {
+                str += $"{key} : {rep2[key]}" + Environment.NewLine;
+            }
+
+            str += "------------" + Environment.NewLine;
+
+            keys = rep3.Keys.ToList();
+            keys.Sort();
+            foreach (var key in keys)
+            {
+                str += $"{key} : {rep3[key]}" + Environment.NewLine;
+            }
+            return str;
+        }
+    }
+
 
     class ScanAnalyse : JournalAnalyse
     {
@@ -184,21 +252,59 @@ namespace EDDTest
 
         private static SortedDictionary<string, string> atmtypes = new SortedDictionary<string, string>();
         private static SortedDictionary<string, string> voltypes = new SortedDictionary<string, string>();
+        private static SortedDictionary<string, string> unusualbelts = new SortedDictionary<string, string>();
+        public class StarPlanetRing
+        {
+            public string Name { get; set; }
+            public string RingClass { get; set; }               // FDName 
+            public enum RingClassEnum { Unknown, Rocky, Metallic, Icy, MetalRich }
 
+            public RingClassEnum RingClassID { get; set; }      // Default will be unknown
 
-        public bool Process(string filename, int lineno, JObject evt, string eventname)
+            public double MassMT { get; set; }
+            public double InnerRad { get; set; }
+            public double OuterRad { get; set; }
+        }
+
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject evt, string eventname)
         {
             if (eventname == "Scan")
             {
+                string systemname = evt["StarSystem"].StrNull();
                 string StarType = evt["StarType"].StrNull();
                 string PlanetClass = evt["PlanetClass"].StrNull();
                 string timestamp = evt["timestamp"].Str();
+                string bodyname = evt["BodyName"].Str();
 
-                //if (evt["BodyName"].Str().Contains("Ring", StringComparison.InvariantCultureIgnoreCase))
-                //{
-                //    Console.WriteLine(evt.ToString());
-                //    return true;
-                //}
+                if (systemname != null)
+                {
+                    string key = bodyname + "@" + systemname;
+
+                    if (bodyname.ContainsIIC("Belt cluster") && !bodyname.ContainsIIC(systemname))
+                    {
+                        if (!unusualbelts.ContainsKey(key))
+                            unusualbelts.Add(key, filename + ":" + lineno + " : " + cmdrname + " @ " + systemname);
+                    }
+                    if (bodyname.EndWithIIC(" Ring") || bodyname.EndWithIIC(" R1"))
+                    {
+                        if (!bodyname.ContainsIIC(systemname))
+                        {
+                            if (!unusualbelts.ContainsKey(key))
+                                unusualbelts.Add(key, filename + ":" + lineno + " : " + cmdrname + " @ " + systemname);
+                        }
+                    }
+                    StarPlanetRing[] Rings = evt["Rings"]?.ToObjectQ<StarPlanetRing[]>();            // Stars/Planets, may be Null, not belt clusters
+
+                    foreach (var ring in Rings.EmptyIfNull())
+                    {
+                        if (!ring.Name.ContainsIIC(systemname) && !ring.Name.EndsWith(" Ring"))
+                        {
+                            string key2 = ring.Name + "@" + systemname;  
+                            if (!unusualbelts.ContainsKey(key2))
+                                unusualbelts.Add(key2, filename + ":" + lineno + " : " + cmdrname + " @ " + systemname);
+                        }
+                    }
+                }
 
                 if (PlanetClass != null)
                 {
@@ -303,7 +409,7 @@ namespace EDDTest
 
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -319,6 +425,12 @@ namespace EDDTest
             {
                 str += $"{kvp.Key}: \"{kvp.Value}\" @" + Environment.NewLine;
             }
+            str += "---" + Environment.NewLine;
+
+            foreach (var kvp in unusualbelts)
+            {
+                str += $"{kvp.Key}: {kvp.Value}" + Environment.NewLine;
+            }
             return str;
         }
     }
@@ -327,7 +439,7 @@ namespace EDDTest
     {
         public string OutputName { get; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (jr.Contains("BodyType"))
             {
@@ -336,10 +448,10 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                return true;
+                return ProcessResult.Found;;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -361,7 +473,7 @@ namespace EDDTest
 
         List<Tuple<string, int, string>> rep = new List<Tuple<string, int, string>>();
 
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (eventname == "Scan")
             {
@@ -383,7 +495,7 @@ namespace EDDTest
                 }
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -403,7 +515,7 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (jr.Contains("Economy"))
             {
@@ -412,7 +524,7 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                return true;
+                return ProcessResult.Found;;
             }
             if (jr.Contains("StationEconomy"))
             {
@@ -421,10 +533,10 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                return true;
+                return ProcessResult.Found;;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -444,7 +556,7 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         SortedDictionary<string, int> rep = new SortedDictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (jr.Contains("StationServices"))
             {
@@ -458,10 +570,10 @@ namespace EDDTest
                         rep[bt] = 1;
 
                 }
-                return true;
+                return ProcessResult.Found;;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -481,7 +593,7 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (jr.Contains("StationType"))
             {
@@ -490,11 +602,11 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                return true;
+                return ProcessResult.Found;;
 
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -513,20 +625,30 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
-        {
-            if (jr.Contains("PassengerType"))
-            {
-                string bt = jr["PassengerType"].Str();
-                if (rep.TryGetValue(bt, out int v))
-                    rep[bt]++;
-                else
-                    rep[bt] = 1;
-                return true;
 
+        void Incr(string value)
+        {
+            if (rep.ContainsKey(value))
+                rep[value]++;
+            else
+                rep[value] = 1;
+        }
+
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
+        {
+            if ( eventname == "Passengers")
+            {
+                JArray mani = jr["Manifest"].Array();
+                foreach(var item in mani)
+                {
+                    JObject o = item.Object();
+                    Incr(o["Type"].Str());
+                }
+
+                return ProcessResult.Found;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -551,7 +673,7 @@ namespace EDDTest
             rep["Retreat"] = 0;
         }
 
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (eventname == "BookTaxi")
             {
@@ -559,11 +681,11 @@ namespace EDDTest
 
                 if (jr.Contains("Retreat"))
                     rep["Retreat"]++;
-                return true;
+                return ProcessResult.Found;;
 
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -583,7 +705,7 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (jr.Contains("SystemAllegiance"))
             {
@@ -594,11 +716,11 @@ namespace EDDTest
                         rep[bt]++;
                     else
                         rep[bt] = 1;
-                    return true;
+                    return ProcessResult.Found;;
                 }
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -616,7 +738,7 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             string bt = jr.MultiStr(new string[] { "SpawningFaction", "Faction", "VictimFaction" });
 
@@ -626,10 +748,10 @@ namespace EDDTest
                     rep[bt]++;
                 else
                     rep[bt] = 1;
-                return true;
+                return ProcessResult.Found;;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -648,7 +770,7 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (eventname == "CommitCrime")
             {
@@ -659,10 +781,10 @@ namespace EDDTest
                 else
                     rep[bt] = 1;
 
-                return true;
+                return ProcessResult.Found;;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -681,7 +803,7 @@ namespace EDDTest
     {
         public string OutputName { get; set; }
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             string bt = jr["PowerplayState"].StrNull();
 
@@ -697,10 +819,10 @@ namespace EDDTest
                 else
                     rep[bt] = 1;
 
-                return true;
+                return ProcessResult.Found;;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -731,12 +853,12 @@ namespace EDDTest
         }
 
         Dictionary<string, int> rep = new Dictionary<string, int>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if ( eventname == "FSDJump" || eventname == "Location" || eventname=="CarrierJump")
             {
                 JArray conflicts = jr["Conflicts"].Array();
-                bool ret = false;
+                ProcessResult ret = ProcessResult.Nothing;
 
                 if ( conflicts != null)
                 {
@@ -750,7 +872,7 @@ namespace EDDTest
 
                     }
 
-                    ret = true;
+                    ret = ProcessResult.Found;
                 }
 
                 JArray factions = jr["Factions"].Array();
@@ -760,7 +882,7 @@ namespace EDDTest
                     {
                         string happiness = o["Happiness"].StrNull();
                         Incr("Factions-Happiness-", happiness);
-                        ret = true;
+                        ret = ProcessResult.Found;
 
                         JArray pendingstates = o["PendingStates"].Array();
                         foreach (JObject o1 in pendingstates.EmptyIfNull())
@@ -794,14 +916,13 @@ namespace EDDTest
                     Incr("thargoidwar-nextsuccessstate-", nextsuccessstate);
                     string nextfailurestate = th["NextStateFailure"].StrNull();
                     Incr("thargoidwar-nextfailurestate-", nextfailurestate);
-                    ret = true;
-
+                    ret = ProcessResult.Found;
                 }
 
                 return ret;
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -824,7 +945,7 @@ namespace EDDTest
         public string OutputName { get; set; }
         void Incr(string value, string entry)
         {
-            if ( value.Contains("Shield"))
+            if (value.Contains("Shield"))
             {
 
             }
@@ -837,9 +958,9 @@ namespace EDDTest
                 rep[value] = new HashSet<string> { entry };
         }
         Dictionary<string, HashSet<string>> rep = new Dictionary<string, HashSet<string>>();
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
-            bool ok = false;
+            ProcessResult ok = ProcessResult.Nothing;
             string b1 = jr["Slot"].StrNull();
             string sh = jr["Ship"].StrNull();
             if (sh != null)
@@ -847,21 +968,21 @@ namespace EDDTest
             if (b1 != null && sh != null)
             {
                 Incr(b1, sh);
-                ok = true;
+                ok = ProcessResult.Found;
             }
 
             string b2 = jr["FromSlot"].StrNull();
             if (b2 != null && sh != null)
             {
                 Incr(b2, sh);
-                ok = true;
+                ok = ProcessResult.Found;
             }
 
             string b3 = jr["ToSlot"].StrNull();
             if (b3 != null && sh != null)
             {
                 Incr(b3, sh);
-                ok = true;
+                ok = ProcessResult.Found;
             }
 
             if (eventname == "Loadout")
@@ -874,7 +995,7 @@ namespace EDDTest
                     if (sb3 != null)
                     {
                         Incr(sb3, sh);
-                        ok = true;
+                        ok = ProcessResult.Found;
                     }
 
                 }
@@ -890,7 +1011,7 @@ namespace EDDTest
                     if (sb3 != null)
                     {
                         Incr(sb3, sh);
-                        ok = true;
+                        ok = ProcessResult.Found;
                     }
 
                 }
@@ -931,9 +1052,10 @@ namespace EDDTest
                 rep[value] = 1;
         }
 
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
-            bool ret = false;
+            ProcessResult ret = ProcessResult.Nothing;
+
             {
                 string bt = jr["ShipType"].StrNull();
 
@@ -945,7 +1067,7 @@ namespace EDDTest
                         Incr(eventname + " Shiptype No Loc");
                     else
                         Incr(eventname + " Shiptype Loc");
-                    ret = true;
+                    ret = ProcessResult.Found;
                 }
             }
 
@@ -960,7 +1082,7 @@ namespace EDDTest
                         Incr(eventname + " StoreOldShip No Loc");
                     else
                         Incr(eventname + " StoreOldShip Loc");
-                    ret = true;
+                    ret = ProcessResult.Found;
                 }
             }
             {
@@ -974,7 +1096,7 @@ namespace EDDTest
                         Incr(eventname + " SellOldShip No Loc");
                     else
                         Incr(eventname + " SellOldShip Loc");
-                    ret = true;
+                    ret = ProcessResult.Found;
                 }
             }
 
@@ -1007,15 +1129,16 @@ namespace EDDTest
                 rep[value] = 1;
         }
 
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
-            bool ret = false;
+            ProcessResult ret = ProcessResult.Nothing;
             {
                 if (eventname == "Loadout")
                 {
                     JArray ja = jr["Modules"].Array();
                     foreach (var m in ja.EmptyIfNull())
                     {
+                        string item = m["Item"].Str().ToLowerInvariant();
                         JObject eng = m["Engineering"].Object();
                         if (eng != null)
                         {
@@ -1028,10 +1151,10 @@ namespace EDDTest
                                     foreach (var mod in mods)
                                     {
                                         // System.Diagnostics.Debug.WriteLine($"Modifier: {mod.ToString()}");
-                                        Incr(name + ":" + mod["Label"].Str());
+                                        Incr(item + ":" + name + ":" + mod["Label"].Str());
                                     }
 
-                                    ret = true;
+                                    ret = ProcessResult.Found;
                                 }
                             }
                         }
@@ -1062,9 +1185,9 @@ namespace EDDTest
         public string OutputName { get; set; }
         Dictionary<long, string> rep = new Dictionary<long, string>();
         Dictionary<long, HashSet<string>> types = new Dictionary<long, HashSet<string>>();
-        public bool Process(string filename, int lineno, JObject evt, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject evt, string eventname)
         {
-            bool ret = false;
+            ProcessResult ret = ProcessResult.Nothing;
             {
                 if (eventname == "Location" || eventname == "Docked")
                 {
@@ -1135,7 +1258,7 @@ namespace EDDTest
             b.Add(new Tuple<string, int>(name, id));
         }
  
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (eventname == "Scan")
             {
@@ -1176,7 +1299,7 @@ namespace EDDTest
             }
 
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -1218,7 +1341,7 @@ namespace EDDTest
 
         Dictionary<string, Results> rep = new Dictionary<string, Results>();
 
-        public bool Process(string filename, int lineno, JObject jr, string eventname)
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
         {
             if (eventname == "FSDJump")
             {
@@ -1250,7 +1373,7 @@ namespace EDDTest
                 }
             }
 
-            return false;
+            return ProcessResult.Nothing;
         }
 
         public string Report()
@@ -1268,8 +1391,195 @@ namespace EDDTest
     }
 
 
+    class LoadGameAnalyse : JournalAnalyse
+    {
+        public string OutputName { get; set; }
+        Dictionary<string, DateTime> repgame = new Dictionary<string, DateTime>();
+        Dictionary<string, DateTime> repbuild = new Dictionary<string, DateTime>();
+
+        void IncrGame(string value, DateTime t)
+        {
+            if (repgame.ContainsKey(value))
+            {
+                if (t < repgame[value])
+                    repgame[value] = t;
+            }
+            else
+                repgame[value] = t;
+        }
+        void IncrBuild(string value, DateTime t)
+        {
+            if (repbuild.ContainsKey(value))
+            {
+                if (t < repbuild[value])
+                    repbuild[value] = t;
+            }
+            else
+                repbuild[value] = t;
+        }
+
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
+        {
+            ProcessResult ret = ProcessResult.Nothing;
+            if (eventname == "Fileheader")
+            {
+                DateTime t = jr["timestamp"].DateTimeUTC();
+                string gameversion = jr["gameversion"].StrNull();
+                if (gameversion != null)
+                {
+                    IncrGame(gameversion,t);
+                    string build = jr["build"].StrNull();
+                    if (build != null)
+                        IncrBuild(gameversion + ":" + build,t);
+
+                    ret = ProcessResult.StopProcessing;
+                }
+
+            }
+
+            return ret;
+        }
+
+        public string Report()
+        {
+            string str = "";
+
+            {
+                str += "Games:" + Environment.NewLine;
+                var bydates = repgame.ToDictionary(key => key.Value, value => value.Key);
+
+                var keys = bydates.Keys.ToList();
+                keys.Sort();
+
+                foreach (var key in keys)
+                {
+                    str += $"{key.ToStringZulu()} : {bydates[key]}" + Environment.NewLine;
+                }
+            }
+
+            {
+                str += "Builds:" + Environment.NewLine;
+                var bydates = repbuild.ToDictionary(key => key.Value, value => value.Key);
+                
+                var keys = bydates.Keys.ToList();
+                keys.Sort();
+
+                foreach (var key in keys)
+                {
+                    str += $"{key.ToStringZulu()} : \"{bydates[key]}\"" + Environment.NewLine;
+                }
+            }
+
+
+            return str;
+        }
+    }
+
+
+    class MissionCompleteAnalyse : JournalAnalyse
+    {
+        public class EffectTrend
+        {
+            public string Effect;
+            public string Effect_Localised;
+            public string Trend;
+        }
+
+        public class InfluenceTrend
+        {
+            public long SystemAddress;
+            public string Trend;
+            public string Influence; // not in very early ones
+        }
+
+        public class FactionEffectsEntry
+        {
+            public string Faction;
+            public EffectTrend[] Effects;
+            public InfluenceTrend[] Influence;
+            public string Reputation;
+            public string ReputationTrend;
+        }
+
+        public string OutputName { get; set; }
+        Dictionary<string, int> rep = new Dictionary<string, int>();
+
+        void Incr(string value)
+        {
+            if (rep.ContainsKey(value))
+                rep[value]++;
+            else
+                rep[value] = 1;
+        }
+
+        public ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
+        {
+            ProcessResult ret = ProcessResult.Nothing;
+
+            if (eventname == "MissionCompleted")
+            {
+                DateTime t = jr["timestamp"].DateTimeUTC();
+
+                if (t > new DateTime(2022, 1, 1))
+                {
+                    var FactionEffects = jr["FactionEffects"]?.ToObjectQ<FactionEffectsEntry[]>();
+
+                    foreach (var fee in FactionEffects.EmptyIfNull())
+                    {
+                        Incr($"Influence {fee.Influence.Length} Effects {fee.Effects.Length}");
+
+                        if (fee.Influence.Length == 0 && fee.Effects.Length == 1)
+                        {
+
+                        }
+                    }
+                }
+
+                return ProcessResult.Found;
+            }
+            return ret;
+        }
+
+        public string Report()
+        {
+            var keys = rep.Keys.ToList();
+            keys.Sort();
+            string str = "";
+            foreach (var key in keys)
+            {
+                str += $"{key}: {rep[key]}" + Environment.NewLine;
+            }
+            return str;
+        }
+    }
+
+
+    class MissionAcceptedAnalyse : CommonAnalyse
+    {
+        public override ProcessResult Process(string filename, int lineno, string cmdrname, JObject jr, string eventname)
+        {
+            ProcessResult ret = ProcessResult.Nothing;
+
+            if (eventname == "MissionAccepted")
+            {
+                DateTime t = jr["timestamp"].DateTimeUTC();
+                string targettype = jr["TargetType"].Str();
+                Incr(targettype);
+                string target = jr["Target"].Str();
+                Incr2(target);
+                string targetloc = jr["Target_Localised"].Str();
+                if ( targetloc.HasChars())
+                    Incr3(target + ":" + targetloc);
+
+                return ProcessResult.Found;
+            }
+            return ret;
+        }
+    }
+
+
     //  journalanalyse "c:\users\rk\saved games\frontier developments\elite dangerous" *.log loadout
-    //  journalanalyse "c:\code\logs" *.log loadout
+    //  journalanalyse loadout "c:\code\logs" *.log 
 
     public static class JournalAnalysis
     {
@@ -1314,6 +1624,14 @@ namespace EDDTest
                 ja = new MarketIDAnalyse();
             else if (type == "bodytype")
                 ja = new BodyTypeAnalyse();
+            else if (type == "passengers")
+                ja = new PassengerAnalyse();
+            else if (type == "loadgame")
+                ja = new LoadGameAnalyse();
+            else if (type == "missioncomplete")
+                ja = new MissionCompleteAnalyse();
+            else if (type == "missionaccepted")
+                ja = new MissionAcceptedAnalyse();
             else if (type == "scanfind")
             {
                 var sf = new ScanFind();
@@ -1342,6 +1660,8 @@ namespace EDDTest
                 return;
             }
 
+            int filecount = 0;
+
             foreach (var fi in allFiles)
             {
                 if (Console.KeyAvailable)
@@ -1349,9 +1669,16 @@ namespace EDDTest
                     if (Console.ReadKey().Key == ConsoleKey.Escape)
                         break;
                 }
-                //System.Diagnostics.Debug.WriteLine($"Processing {fi.FullName}");
+
+                if (filecount++ % 50 == 0)
+                {
+                    Console.WriteLine($"Processing {fi.FullName} count {filecount}");
+                    System.Diagnostics.Debug.WriteLine($"Processing {fi.FullName} count {filecount}");
+                }
 
                 int found = 0;
+                string cmdrname = "?";
+
                 using (StreamReader sr = new StreamReader(fi.FullName))         // read directly from file.. presume UTF8 no bom
                 {
                     int lineno = 1;
@@ -1365,8 +1692,15 @@ namespace EDDTest
                             if (jr != null)
                             {
                                 string eventname = jr["event"].Str();
-                                if (ja.Process(fi.FullName, lineno, jr, eventname))
+
+                                if (eventname == "Commander")
+                                    cmdrname = jr["Name"].Str();
+
+                                ProcessResult pr = ja.Process(fi.FullName, lineno, cmdrname, jr, eventname);
+                                if (pr == ProcessResult.Found)
                                     found++;
+                                else if (pr == ProcessResult.StopProcessing)
+                                    break;
                             }
                         }
 

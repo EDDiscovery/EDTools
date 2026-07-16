@@ -37,19 +37,22 @@ namespace EDDTest
     //to get eddb JSON out: at the end of the onDomContentLoaded, place:
     //        var onDOMContentLoaded = function(e) {
     //        ... at end
-    //        var out = JSON.stringify(eddb);
+    //        var out = JSON.stringify(eddb,null," ");
     //		console.log(out);
     //
     // run it. Open inspector (ctrl-shift_i). Go to console output.
-    // Inspector will cut the line to size, it will show "Show More(467kb) Copy" text. Copy it to clipboard, paster into np++, edit and save
-    // open file in notepad++, remove to just JSON
+    // Inspector will cut the line to size, it will show "Show More(467kb) Copy" text (hard to find I know).
+    // Copy it to clipboard, paster into np++, edit and save open file in notepad++, remove to just JSON the front part
     //
     // usage
-    // eddtest edsy c:\code\edsy.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\ItemModules.cs"
+    // eddtest edsy c:\code\edsy.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\ModulesList.cs"
+    // or
+    // eddtest edsy c:\code\edsy.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\ModuleList.cs"  "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\Ships.cs"
+    // edsy c:\code\edsy.json "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\ModuleList.cs"  "c:\Code\EDDiscovery\EliteDangerousCore\EliteDangerous\FrontierData\Items\Ships.cs"
 
     public partial class ItemModulesEDSY
     {
-        public void ReadEDSY(string jsoneddbfilepath, string itemmodulesfilepath)
+        public void ReadEDSY(string jsoneddbfilepath, string itemmodulesfilepath, string shipsmodulesfilepath)
         {
             // convert EDSY file to json
             string jsontext = FileHelpers.TryReadAllTextFromFile(jsoneddbfilepath);
@@ -59,7 +62,7 @@ namespace EDDTest
                 return;
             }
 
-            if ( !File.Exists(itemmodulesfilepath))
+            if (!File.Exists(itemmodulesfilepath))
             {
                 Console.WriteLine($"Cannot find items file {itemmodulesfilepath}");
                 return;
@@ -80,6 +83,12 @@ namespace EDDTest
                 {
                     Console.WriteLine($"Can't find file {itemmodulesfilepath}");
                     return;
+                }
+
+                string[] shipmodulescsfile = null;
+                if ( File.Exists(shipsmodulesfilepath??"klwkw"))
+                {
+                    shipmodulescsfile = File.ReadAllLines(shipsmodulesfilepath);
                 }
 
                 JObject modules = jo["module"].Object();
@@ -129,6 +138,11 @@ namespace EDDTest
                     if (fdname.StartsWithIIC("int_hullreinforcement") && !mod.Contains("hullbst"))
                     {
                         mod["hullbst"] = 0;
+                    }
+
+                    if (fdname.StartsWithIIC("int_hyperdrive_") )
+                    {
+                        mod["neutronmult"] = fid == 129038968 ? 6 : 4;          // EDD Dodge - add in a neutron fake edsy field, this module has a 6
                     }
 
                     if (fdname.StartsWithIIC("hpt_slugshot") || fdname.StartsWithIIC("hpt_guardian_gausscannon"))
@@ -243,6 +257,7 @@ namespace EDDTest
                 //---------------------------------------------------------------------------
                 // other data
 
+                string shiptotaltext = "";
 
                 foreach (var item in shiplist)
                 {
@@ -254,32 +269,133 @@ namespace EDDTest
                     //  System.Diagnostics.Debug.WriteLine($"fid {shipfid} {shipfdname} {shipname}");
 
                     string pad = "        ";
-                    string shipdata = pad + $"private static ShipProperties {shipfdname.ToLowerInvariant().Replace(" ", "_")} = new ShipProperties()" + Environment.NewLine;
-                    shipdata += pad + "{" + Environment.NewLine;
-                    shipdata += pad + $"    FDID = \"{shipfdname}\"," + Environment.NewLine;
-                    shipdata += pad + $"    HullMass = {ship["mass"].Int()}F," + Environment.NewLine;
-                    shipdata += pad + $"    Name = \"{ship["name"].Str()}\"," + Environment.NewLine;
-                    shipdata += pad + $"    Speed = {ship["topspd"].Int()}," + Environment.NewLine;
-                    shipdata += pad + $"    Boost = {ship["bstspd"].Int()}," + Environment.NewLine;
-                    shipdata += pad + $"    HullCost = {ship["cost"].Int()}," + Environment.NewLine;
-                    shipdata += pad + $"    Class = {ship["class"].Int()}," + Environment.NewLine;
-                    shipdata += pad + $"    Shields = {ship["shields"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    Armour = {ship["armour"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    MinThrust = {ship["minthrust"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    BoostCost = {ship["boostcost"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    FuelReserve = {ship["fuelreserve"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    HeatCap = {ship["heatcap"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    HeatDispMin = {ship["heatdismin"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    HeatDispMax = {ship["heatdismax"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    FuelCost = {ship["fuelcost"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    Hardness = {ship["hardness"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    Crew = {ship["crew"].Int()}," + Environment.NewLine;
-                    shipdata += pad + $"    FwdAcc = {ship["fwdacc"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    RevAcc = {ship["revacc"].Double()}," + Environment.NewLine;
-                    shipdata += pad + $"    LatAcc = {ship["latacc"].Double()}" + Environment.NewLine;
-                    shipdata += pad + "};" + Environment.NewLine + Environment.NewLine;
+                    string stext = pad + $"private static ShipProperties {shipfdname.ToLowerInvariant().Replace(" ", "_")} = new ShipProperties()" + Environment.NewLine;
 
-                    textout += shipdata;
+                    stext += pad + "{" + Environment.NewLine;
+
+                    stext += pad + $"    FDID = \"{shipfdname}\"," + Environment.NewLine;
+                    stext += pad + $"    HullMass = {ship["mass"].Int()}F," + Environment.NewLine;
+                    stext += pad + $"    Name = \"{ship["name"].Str()}\"," + Environment.NewLine;
+                    stext += pad + $"    Speed = {ship["topspd"].Int()}," + Environment.NewLine;
+                    stext += pad + $"    Boost = {ship["bstspd"].Int()}," + Environment.NewLine;
+                    stext += pad + $"    HullCost = {ship["cost"].Int()}," + Environment.NewLine;
+                    stext += pad + $"    Class = {ship["class"].Int()}," + Environment.NewLine;
+                    stext += pad + $"    Shields = {ship["shields"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    Armour = {ship["armour"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    MinThrust = {ship["minthrust"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    BoostCost = {ship["boostcost"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    FuelReserve = {ship["fuelreserve"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    HeatCap = {ship["heatcap"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    HeatDispMin = {ship["heatdismin"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    HeatDispMax = {ship["heatdismax"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    FuelCost = {ship["fuelcost"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    Hardness = {ship["hardness"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    Crew = {ship["crew"].Int()}," + Environment.NewLine;
+                    stext += pad + $"    FwdAcc = {ship["fwdacc"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    RevAcc = {ship["revacc"].Double()}," + Environment.NewLine;
+                    stext += pad + $"    LatAcc = {ship["latacc"].Double()}," + Environment.NewLine;
+
+                    {
+                        JArray array = ship["slots"].I("hardpoint").Array();
+                        JArray slotnames = ship["slotnames"].I("hardpoint").Array();        // may be null
+
+                        string[] name = { "Small", "Medium", "Large", "Huge" };
+                        int[] count = { 1, 1, 1, 1 };
+                        int index = 1;
+
+                        stext += pad + "    Hardpoints = new ShipSlots.SlotAndSize[] {";
+                        foreach (var x in array)
+                        {
+                            var value = x.Int();
+                            if (slotnames != null)
+                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{slotnames[index - 1].Str()}, {value}), ";
+                            else
+                                stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot." + name[value - 1] + "Hardpoint" + (count[value - 1]++).ToString() + ", " + value.ToString() + "), ";
+                            index++;
+                        }
+
+                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                    }
+                    {
+                        int index = 1;
+                        JArray array = ship["slots"].I("utility").Array();
+                        stext += pad + "    Utility = new ShipSlots.SlotAndSize[] {";
+                        foreach (var x in array)
+                        {
+                            var value = x.Int();
+                            stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot.TinyHardpoint" + (index).ToString() + ", " + value.ToString() + "), ";
+                            index++;
+                        }
+
+                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                    }
+
+                    {
+                        string[] name = { "Armour", "PowerPlant", "MainEngines", "FrameShiftDrive", "LifeSupport", "PowerDistributor", "Radar", "FuelTank" };
+                        JArray array = ship["slots"].I("component").Array();
+                        stext += pad + "    Component = new ShipSlots.SlotAndSize[] {";
+                        int index = 0;
+                        foreach (var x in array)
+                        {
+                            var value = x.Int();
+                            stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot." + name[index] + ", " + value.ToString() + "), ";
+                            index++;
+                        }
+
+                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                    }
+
+                    {
+                        JArray array = ship["slots"].I("internal").Array();
+                        JArray slotnames = ship["slotnames"].I("internal").Array();        // may be null
+
+                        stext += pad + "    Internal = new ShipSlots.SlotAndSize[] {";
+                        int index = 1;
+
+                        foreach (var x in array)
+                        {
+                            var value = x.Int();
+                            if (slotnames != null)
+                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{slotnames[index - 1].Str()}, {value}), ";
+                            else
+                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.Slot{index:00}_Size{value}, {value}), ";
+                            index++;
+                        }
+
+                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                    }
+
+
+                    {
+                        JArray array = ship["slots"].I("military").Array();
+                        stext += pad + "    Military = new ShipSlots.SlotAndSize[] {";
+                        int count = 1;
+                        foreach (var x in array)
+                        {
+                            var value = x.Int();
+                            stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.Military{count:00}, {value}), ";
+                            count++;
+                        }
+
+                        if (stext.EndsWith(", "))
+                            stext = stext.Left(stext.Length - 2);
+                        stext += "}, " + Environment.NewLine;
+                    }
+
+                    {
+                        string[] items = { "CargoHatch", "PlanetaryApproachSuite", "ShipCockpit", };
+                        stext += pad + "    Other = new ShipSlots.SlotAndSize[] {";
+                        int count = 0;
+                        foreach (var x in items)
+                            stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{items[count++]},1), ";
+                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                    }
+
+                    stext += pad + "};" + Environment.NewLine + Environment.NewLine;
+
+                    shiptotaltext += stext;
+
+                    textout += stext;
 
                     JObject minship = ship["module"].Object();
 
@@ -313,7 +429,22 @@ namespace EDDTest
                                 System.Diagnostics.Debug.WriteLine($".. ERROR!");
                         }
                     }
+
                 }
+
+                if (shipmodulescsfile != null)
+                {
+                    string[] shiplines = shiptotaltext.Split(Environment.NewLine);
+                    int countfront = Array.FindIndex(shipmodulescsfile, x => x.Contains("EDSY START")) + 1;
+                    int lineend = Array.FindIndex(shipmodulescsfile, x => x.Contains("EDSY END"));
+                    int endportion = shipmodulescsfile.Length - lineend;
+                    string[] newarray = new string[shiplines.Length + countfront + endportion];
+                    Array.Copy(shipmodulescsfile, 0, newarray, 0, countfront);
+                    Array.Copy(shiplines, 0, newarray, countfront, shiplines.Length);
+                    Array.Copy(shipmodulescsfile, lineend, newarray, countfront + shiplines.Length, shipmodulescsfile.Length - lineend);
+                    File.WriteAllLines(shipsmodulesfilepath, newarray);
+                }
+
 
                 textout += Environment.NewLine + "Special Effects:" + Environment.NewLine;
                 

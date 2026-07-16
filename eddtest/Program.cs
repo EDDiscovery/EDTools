@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright © 2015 - 2025 robbyxp @ github.com
+ * Copyright 2015 - 2026 robbyxp @ github.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -35,9 +35,10 @@ namespace EDDTest
                 Console.WriteLine("Journal: Journal - write journal with an event, run for help\n"+
                                   "         journalindented file - read lines from file in journal format and output indented\n" +
                                   "         journalplay file file - read journal file and play into another file line by line, altering timestamp\n" +
-                                  "         journalanalyse type path filenamewildcard - read all .log journal files and check - see code for type\n" +
+                                  "         journalanalyse type path filenamewildcard [starttime] - read all .log journal files and check - see code for type\n" +
                                   "         journaltofluent file - read a journal file and output fluent code\n" +
                                   "         readjournallogs file - read a continuous log or journal file out to stdout\n" +
+                                  "         dumpbytype outputtype (Normal,@,@S) path filenamewildcard [starttime]  read all .log journal files and dump to .event files by type\n" +
 
                                   "JSON:    jsonlines/jsonlinescompressed file - read a json on a single line from the file and output\n" +
                                   "         json - read a json from file and output indented\n" +
@@ -514,8 +515,9 @@ namespace EDDTest
                     {
                         string infilename = args.Next();
                         string itemsmod = args.Next();
+                        string shipmodules = args.Left >= 1 ? args.Next() : null;
                         var edsy = new ItemModulesEDSY();
-                        edsy.ReadEDSY(infilename, itemsmod);
+                        edsy.ReadEDSY(infilename, itemsmod, shipmodules);
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
@@ -680,8 +682,20 @@ namespace EDDTest
                         JournalAnalysis.Analyse(args);
                     }
                     else
-                    { 
-                        Console.WriteLine($"Too few args for {cmd}"); break; 
+                    {
+                        Console.WriteLine($"Too few args for {cmd}"); break;
+                    }
+
+                }
+                else if (cmd.Equals("journaldumpbytype"))
+                {
+                    if (args.Left >= 3)
+                    {
+                        JournalDumpByType.Analyse(args);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Too few args for {cmd}"); break;
                     }
 
                 }

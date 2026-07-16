@@ -88,6 +88,8 @@ namespace EDDStatusDisplay
             altitude = json["Altitude"].DoubleNull();
             labelAltitude.Text = altitude.HasValue ? ("A: " + altitude.ToStringInvariant("0.0")) : "";
 
+            radioButton27.Visible = altitude.HasValue;
+
             planetradius = json["PlanetRadius"].DoubleNull();
             labelRadius.Text = planetradius.HasValue ? ("R: " + planetradius.ToStringInvariant("0.0")) : "";
 
@@ -113,7 +115,8 @@ namespace EDDStatusDisplay
             labelOxygen.Text = oxygen.HasValue ? ((oxygen * 100).ToStringInvariant("0.##") + " O2%") : "";
 
             destination = json["Destination"].Object();
-            labelDest.Text = destination != null ? ("Dest: " + destination["Name_Localised"].Str().Alt(destination["Name"].Str()) + " (" + destination["Body"].Long() + ")") : "Select Dest";
+            labelDest.Text = destination != null ? ("Sys: " + destination["System"].Long() + " Dest: " + destination["Name_Localised"].Str().Alt(destination["Name"].Str()) 
+                                        + " (" + destination["Body"].Long() + ")") : "Select Dest";
 
             fuel = json["Fuel"].I("FuelMain").DoubleNull();
             fuelres = json["Fuel"].I("FuelReservoir").DoubleNull();
@@ -130,6 +133,7 @@ namespace EDDStatusDisplay
 
             fg = json["FireGroup"].IntNull();
             labelFiregroup.Text = fg.HasValue ? ("Firegroup: " + "ABCDEFGHIJKL"[fg.Value]) : "";
+
 
             pips = json["Pips"].Array();
             if (pips != null)
@@ -325,6 +329,7 @@ namespace EDDStatusDisplay
             cargo = 20;
             legalstate = "Clean";
             bal = 29029000;
+            destination = new JObject() { ["system"] = 5306464653474, ["Name"] = "Fred Port", ["Body"] = 20 };
         }
 
         private void LatLon(double alt)
@@ -336,11 +341,6 @@ namespace EDDStatusDisplay
             if (alt>= 100000)
                 flags |= (1UL << (int)StatusFlags1ReportedInOtherEvents.AltitudeFromAverageRadius);
             planetradius = 2796748.25;
-        }
-
-        private void Destination()
-        {
-            destination = new JObject() { ["system"] = 5306464653474, ["Name"] = "Fred Port", ["Body"] = 20 };
         }
 
         private void Docked()
@@ -461,7 +461,6 @@ namespace EDDStatusDisplay
             //sept25 { "Flags":16777240, "Flags2":0, "Pips":[2,2,8], "FireGroup":1, "GuiFocus":0, "Fuel":{ "FuelMain":12.300001, "FuelReservoir":0.174431 }, "Cargo":105.000000, "LegalState":"Clean", "Balance":921167072, "Destination":{ "System":5306465653474, "Body":58, "Name":"Bluford Orbital" } }
             // synth {"Flags":16777240,"Flags2":0,"Pips":[2,8,2],"FireGroup":1,"GuiFocus":0,"Fuel":{"FuelMain":16,"FuelReservoir":0.32},"Cargo":20,"LegalState":"Clean","Balance":29029000,"Destination":{"System":2928282,"Body":20,"Name":"Fred Port"}}
             Supercruise();
-            Destination();
             WriteStatus();
         }
 
@@ -623,12 +622,6 @@ namespace EDDStatusDisplay
             WriteStatus();
         }
 
-        private void buttonSetDest_Click(object sender, EventArgs e)
-        {
-            Destination();
-            WriteStatus();
-        }
-
         private void buttonGUIRight_Click(object sender, EventArgs e)
         {
             gui = gui == null ? 0 : ((gui + 1) % 12);
@@ -652,12 +645,14 @@ namespace EDDStatusDisplay
         static string[] destlist = new string[]
         {
             "Belt Cluster, 5306465653474, 24, LHS 3447 B A Belt Cluster 5",
-            "Body, 5306465653474, 26, LHS 3447 B 1 a",
+            "LHS 3447 B 1 a, 5306465653474, 26, LHS 3447 B 1 a",
             "Carrier, 5306465653474, 30, ALEPH BOREAL Q8M-T7K",
-            "Starport, 5306465653474, 58, Bluford Orbital",
+            "Bluford Orbital, 5306465653474, 58, Bluford Orbital",
             "Resource Site, 5306465653474, 32, $MULTIPLAYER_SCENARIO77_TITLE; ,Resource Extraction Site [Low]",
-            "Settlement, 5306465653474, 33, Yanez's Hold",
+            "Yanez's Hold Settlement, 5306465653474, 33, Yanez's Hold",
             "Eravate, 5856221467362, 0, Eravate",
+            "George Lucas Leesti, 3932277478114, 29, George Lucas",
+            "Maraudi Barycentre, 6406178673378, 0, Maraudi",
         };
 
         private void comboBoxSelDest_SelectedIndexChanged(object sender, EventArgs e)

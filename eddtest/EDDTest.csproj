@@ -103,6 +103,7 @@
     <Compile Include="Journal\Journalcreate.cs" />
     <Compile Include="Journal\Journalhelp.cs" />
     <Compile Include="Journal\Journalfsdjump.cs" />
+    <Compile Include="Journal\JournalsAnalysisImpl.cs" />
     <Compile Include="Journal\JournalsDumpByType.cs" />
     <Compile Include="Misc\xml.cs" />
     <Compile Include="Misc\Github.cs" />
@@ -121,7 +122,7 @@
     <Compile Include="Translations\ScanForTX.cs" />
     <Compile Include="Translations\translatororiginal.cs" />
     <Compile Include="Translations\VerifyTranslationFormatting.cs" />
-    <Compile Include="Journal\JournalsAnalysis.cs" />
+    <Compile Include="Journal\JournalsAnalysisBase.cs" />
     <Compile Include="Journal\Journal.cs" />
     <Compile Include="Journal\Journalhelperfuncs.cs" />
     <Compile Include="Program.cs" />

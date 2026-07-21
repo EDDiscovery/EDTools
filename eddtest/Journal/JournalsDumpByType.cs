@@ -22,9 +22,7 @@ using System.Runtime.CompilerServices;
 
 namespace EDDTest
 {
-    // adjust to your preference
-
-
+    // journaldumpbytype @S J *.log 1/1/2012
     public static class JournalDumpByType
     {
         private static string DateOf(string j)
@@ -84,6 +82,10 @@ namespace EDDTest
                 {
                     int lineno = 1;
                     string line;
+                    string gamebuildversion = "Unknown";
+                    string commander = "Unknown";
+                    string file = fi.FullName;
+
                     while ((line = sr.ReadLine()) != null)
                     {
                         if (line != "")
@@ -96,6 +98,15 @@ namespace EDDTest
 
                                 if (!eventname.Contains("\0") && eventname.HasChars())
                                 {
+                                    if (eventname == "Fileheader")
+                                    {
+                                        gamebuildversion = jr["timestamp"].Str() + ";" + jr["gameversion"].Str() + ";" + jr["build"].Str();
+                                    }
+                                    else if (eventname == "Commander")
+                                    {
+                                        commander = jr["Name"].Str();
+                                    }
+
                                     if (!outevents.TryGetValue(eventname, out List<string> textlist))
                                         outevents[eventname] = textlist = new List<string>();
 
@@ -106,7 +117,7 @@ namespace EDDTest
                                     if (outtype == "@S")
                                     {
                                         line = "@\"" + line.Replace("\"", "\"\"") + "\";";
-                                        int pos = 80;
+                                        int pos = 132;
                                         while (pos < line.Length)
                                         {
                                             while (pos < line.Length && line[pos] != ',')
@@ -118,12 +129,13 @@ namespace EDDTest
                                                 pos += 4;
                                             }
 
-                                            pos += 80;
+                                            pos += 132;
                                         }
 
                                         line += Environment.NewLine;
                                     }
 
+                                    textlist.Add(">" + gamebuildversion + ";" + commander + ";" + file);
                                     textlist.Add(line);
                                 }
                             }

@@ -73,6 +73,9 @@ namespace EDDStatusDisplay
             this.radioButton23 = new System.Windows.Forms.RadioButton();
             this.labelPips = new System.Windows.Forms.Label();
             this.labelFuelMain = new System.Windows.Forms.Label();
+            this.radioButton52 = new System.Windows.Forms.RadioButton();
+            this.radioButton51 = new System.Windows.Forms.RadioButton();
+            this.radioButton50 = new System.Windows.Forms.RadioButton();
             this.radioButton17 = new System.Windows.Forms.RadioButton();
             this.groupBoxOnFoot = new System.Windows.Forms.GroupBox();
             this.labelWeapon = new System.Windows.Forms.Label();
@@ -197,7 +200,7 @@ namespace EDDStatusDisplay
             this.groupBoxShip.Controls.Add(this.radioButtonSC);
             this.groupBoxShip.Controls.Add(this.radioButtonLG);
             this.groupBoxShip.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBoxShip.Location = new System.Drawing.Point(0, 430);
+            this.groupBoxShip.Location = new System.Drawing.Point(0, 450);
             this.groupBoxShip.Name = "groupBoxShip";
             this.groupBoxShip.Size = new System.Drawing.Size(686, 163);
             this.groupBoxShip.TabIndex = 2;
@@ -589,7 +592,7 @@ namespace EDDStatusDisplay
             this.groupBoxSRV.Controls.Add(this.radioButton20);
             this.groupBoxSRV.Controls.Add(this.radioButton15);
             this.groupBoxSRV.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBoxSRV.Location = new System.Drawing.Point(0, 593);
+            this.groupBoxSRV.Location = new System.Drawing.Point(0, 613);
             this.groupBoxSRV.Name = "groupBoxSRV";
             this.groupBoxSRV.Size = new System.Drawing.Size(686, 70);
             this.groupBoxSRV.TabIndex = 3;
@@ -675,11 +678,14 @@ namespace EDDStatusDisplay
             this.groupBoxAll.Controls.Add(this.radioButton23);
             this.groupBoxAll.Controls.Add(this.labelPips);
             this.groupBoxAll.Controls.Add(this.labelFuelMain);
+            this.groupBoxAll.Controls.Add(this.radioButton52);
+            this.groupBoxAll.Controls.Add(this.radioButton51);
+            this.groupBoxAll.Controls.Add(this.radioButton50);
             this.groupBoxAll.Controls.Add(this.radioButton17);
             this.groupBoxAll.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBoxAll.Location = new System.Drawing.Point(0, 360);
             this.groupBoxAll.Name = "groupBoxAll";
-            this.groupBoxAll.Size = new System.Drawing.Size(686, 70);
+            this.groupBoxAll.Size = new System.Drawing.Size(686, 90);
             this.groupBoxAll.TabIndex = 3;
             this.groupBoxAll.TabStop = false;
             this.groupBoxAll.Text = "All";
@@ -767,6 +773,47 @@ namespace EDDStatusDisplay
             this.labelFuelMain.TabIndex = 2;
             this.labelFuelMain.Text = "Fuel";
             // 
+            // radioButton52
+            // 
+            this.radioButton52.AutoCheck = false;
+            this.radioButton52.AutoSize = true;
+            this.radioButton52.Location = new System.Drawing.Point(547, 65);
+            this.radioButton52.Name = "radioButton52";
+            this.radioButton52.Size = new System.Drawing.Size(67, 17);
+            this.radioButton52.TabIndex = 1;
+            this.radioButton52.TabStop = true;
+            this.radioButton52.Tag = "F2-23-33";
+            this.radioButton52.Text = "F2-23-33";
+            this.radioButton52.UseVisualStyleBackColor = true;
+            // 
+            // radioButton51
+            // 
+            this.radioButton51.AutoCheck = false;
+            this.radioButton51.AutoSize = true;
+            this.radioButton51.Location = new System.Drawing.Point(221, 65);
+            this.radioButton51.Name = "radioButton51";
+            this.radioButton51.Size = new System.Drawing.Size(112, 17);
+            this.radioButton51.TabIndex = 1;
+            this.radioButton51.TabStop = true;
+            this.radioButton51.Tag = "F2-18";
+            this.radioButton51.Text = "Physical Multicrew";
+            this.radioButton51.UseVisualStyleBackColor = true;
+            this.radioButton51.MouseDown += new System.Windows.Forms.MouseEventHandler(this.radioButton_MouseDown);
+            // 
+            // radioButton50
+            // 
+            this.radioButton50.AutoCheck = false;
+            this.radioButton50.AutoSize = true;
+            this.radioButton50.Location = new System.Drawing.Point(8, 65);
+            this.radioButton50.Name = "radioButton50";
+            this.radioButton50.Size = new System.Drawing.Size(109, 17);
+            this.radioButton50.TabIndex = 1;
+            this.radioButton50.TabStop = true;
+            this.radioButton50.Tag = "F2-17";
+            this.radioButton50.Text = "Telepresence MC";
+            this.radioButton50.UseVisualStyleBackColor = true;
+            this.radioButton50.MouseDown += new System.Windows.Forms.MouseEventHandler(this.radioButton_MouseDown);
+            // 
             // radioButton17
             // 
             this.radioButton17.AutoCheck = false;
@@ -802,7 +849,7 @@ namespace EDDStatusDisplay
             this.groupBoxOnFoot.Controls.Add(this.radioButton33);
             this.groupBoxOnFoot.Controls.Add(this.radioButton32);
             this.groupBoxOnFoot.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBoxOnFoot.Location = new System.Drawing.Point(0, 663);
+            this.groupBoxOnFoot.Location = new System.Drawing.Point(0, 683);
             this.groupBoxOnFoot.Name = "groupBoxOnFoot";
             this.groupBoxOnFoot.Size = new System.Drawing.Size(686, 98);
             this.groupBoxOnFoot.TabIndex = 3;
@@ -1440,7 +1487,7 @@ namespace EDDStatusDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(686, 787);
+            this.ClientSize = new System.Drawing.Size(686, 794);
             this.Controls.Add(this.groupBoxOnFoot);
             this.Controls.Add(this.groupBoxSRV);
             this.Controls.Add(this.groupBoxShip);
@@ -1572,5 +1619,8 @@ namespace EDDStatusDisplay
         private System.Windows.Forms.ComboBox comboBoxSelDest;
         private System.Windows.Forms.Panel panelSettings;
         private System.Windows.Forms.Panel panelModePos;
+        private System.Windows.Forms.RadioButton radioButton51;
+        private System.Windows.Forms.RadioButton radioButton50;
+        private System.Windows.Forms.RadioButton radioButton52;
     }
 }

@@ -20,19 +20,31 @@ namespace ConvertToAtString
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void buttonPasteConvertCopy_Click(object sender, EventArgs e)
         {
-            string s= Clipboard.GetText();
+            string s= Clipboard.GetText().Trim();
+
+            if (s.StartsWith("string t = @\""))
+            {
+                s = s.Substring(13);
+            }
+
+            if (s.EndsWith("\";"))
+                s = s.Substring(0, s.Length - 2);
+
+            if (s.Contains("\"\":"))       // if already double quoted
+                s = s.Replace("\"\"", "\"");
+
+
             JToken t = JToken.Parse(s, JToken.ParseOptions.CheckEOL);
             if ( t != null)
             {
                 if (t.IsArray && t[0].Object().Contains("header") && t[0].Object().Contains("data"))
                 {
-                    s = t[0]["data"].ToString(false);
+                    s = t[0]["data"].ToString("", checkBoxVerbose.Checked ? "\r\n" : "", "", false, 132);
                 }
                 else
-
-                    s = t.ToString(false);
+                     s = t.ToString("",checkBoxVerbose.Checked?"\r\n":"","",false,132);
             }
 
             richTextBox1.Text = s;
@@ -41,7 +53,7 @@ namespace ConvertToAtString
                 Clipboard.SetText(richTextBox2.Text);
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void buttonCopy_Click(object sender, EventArgs e)
         {
             Clipboard.SetText(richTextBox2.Text);
         }

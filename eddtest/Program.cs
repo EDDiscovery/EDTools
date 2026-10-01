@@ -83,6 +83,7 @@ namespace EDDTest
                                   "         mergecsharp files... - merge CS files\n" +
                                   "         inserttext path wildcard find insert : If insert = \"\" then lines are removed\n",
                                   "         wikiconvert path filespecwildcard\n",
+                                  "         buttonnames path\n",
                                   "         corrupt path\n",
                                   "         svg file - read svg file of Elite regions and output EDSM JSON galmap file\n" +
                                   "\n" +
@@ -1052,6 +1053,15 @@ namespace EDDTest
                     if (args.Left >= 2)
                     {
                         WikiConvert.Convert(args.Next(), args.Next());
+                    }
+                    else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
+                }
+                else if (cmd.Equals("buttonnames"))
+                {
+                    if (args.Left >= 1)
+                    {
+                        ButtonNames.Process(args);
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

@@ -2,6 +2,7 @@
 using QuickJSON;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace EDDStatusDisplay
@@ -248,6 +249,11 @@ namespace EDDStatusDisplay
 
         bool Bit(string ctrl, bool? setit = null)
         {
+            if ( ctrl == "F2-23-33")        // special for unused bits
+            {
+                return (flags2 & 0xFF800000) != 0;
+            }
+
             int bit = ctrl.Substring(3).InvariantParseInt(0);
 
             if (ctrl.StartsWith("F1-"))
@@ -688,6 +694,8 @@ namespace EDDStatusDisplay
 
         #region Flags
 
+        // all status1 flags 0-31 present
+
         private enum StatusFlags1Ship                             // Flags -> Events
         {
             Docked = 0, // (on a landing pad)
@@ -740,6 +748,8 @@ namespace EDDStatusDisplay
             ShipMask = (1 << InMainShip) | (1 << InFighter) | (1 << InSRV),
         }
 
+        // 17,18,19,34
+
         public enum StatusFlags2ShipType                   // used to compute ship type
         {
             OnFoot = 0,
@@ -771,6 +781,8 @@ namespace EDDStatusDisplay
             VeryCold = 10,
             VeryHot = 11,
             TempBits = (1 << Cold) | (1 << Hot) | (1 << VeryCold) | (1 << VeryHot),
+            TelepresenceMulticrew = 17,
+            PhysicalMulticrew = 18,
             FSDHyperdriveCharging = 19,         // U14 nov 22
         }
 

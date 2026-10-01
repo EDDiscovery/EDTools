@@ -105,6 +105,7 @@
     <Compile Include="Journal\Journalfsdjump.cs" />
     <Compile Include="Journal\JournalsAnalysisImpl.cs" />
     <Compile Include="Journal\JournalsDumpByType.cs" />
+    <Compile Include="Misc\buttonnames.cs" />
     <Compile Include="Misc\xml.cs" />
     <Compile Include="Misc\Github.cs" />
     <Compile Include="Coriolis\CorolisEng.cs" />

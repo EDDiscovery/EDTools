@@ -305,6 +305,11 @@ namespace EDDTest
                                 //textout += " ->>>> " + edsyname + "\r\n";
                             }
 
+                            cr = edsyname.IndexOf("Sensors ");
+                            if (edsyname.StartsWith("Sensors "))
+                            {
+                                edsyname = edsyname.Replace("Sensors ", "Sensor ");
+                            }
 
                             name = name.Replace("-", " ");      // type-6
 

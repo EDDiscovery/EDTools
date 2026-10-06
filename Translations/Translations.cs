@@ -51,6 +51,19 @@ namespace Translations
                         .OrderBy(p => Path.GetFileNameWithoutExtension(p.FullName))
                         .Where(p => !Path.GetFileNameWithoutExtension(p.FullName).EqualsIIC("example-ex"))
                         .Select(y => Path.GetFileNameWithoutExtension(y.FullName)).ToList();
+
+                if ( translations.Count == 0)
+                {
+                    OpenFileDialog ofd = new OpenFileDialog();
+                    ofd.Filter = "TLF Files|*.tlf";
+                    if (ofd.ShowDialog() == DialogResult.OK)
+                    {
+                        txpath = Path.GetDirectoryName(ofd.FileName);
+                        translations = new List<string> { Path.GetFileNameWithoutExtension(ofd.FileName) };
+                    }
+                    else
+                        Close();
+                }
             }
             else if (args.Left == 1)
             {

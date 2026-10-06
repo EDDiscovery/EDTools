@@ -209,7 +209,7 @@ namespace EDDTest
                         if (!unusualbelts.ContainsKey(key))
                             unusualbelts.Add(key, filename + ":" + lineno + " : " + cmdrname + " @ " + systemname);
                     }
-                    if (bodyname.EndWithIIC(" Ring") || bodyname.EndWithIIC(" R1"))
+                    if (bodyname.EndsWithIIC(" Ring") || bodyname.EndsWithIIC(" R1"))
                     {
                         if (!bodyname.ContainsIIC(systemname))
                         {
@@ -1404,25 +1404,25 @@ namespace EDDTest
     {
         public class EffectTrend
         {
-            public string Effect;
-            public string Effect_Localised;
-            public string Trend;
+            public string Effect = null;
+            public string Effect_Localised = null;
+            public string Trend = null;
         }
 
         public class InfluenceTrend
         {
-            public long SystemAddress;
-            public string Trend;
-            public string Influence; // not in very early ones
+            public long SystemAddress = 0;
+            public string Trend = null;
+            public string Influence = null; // not in very early ones
         }
 
         public class FactionEffectsEntry
         {
-            public string Faction;
-            public EffectTrend[] Effects;
-            public InfluenceTrend[] Influence;
-            public string Reputation;
-            public string ReputationTrend;
+            public string Faction = null;
+            public EffectTrend[] Effects = null;
+            public InfluenceTrend[] Influence = null;
+            public string Reputation = null;
+            public string ReputationTrend = null;
         }
 
         public string OutputName { get; set; }

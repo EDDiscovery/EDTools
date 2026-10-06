@@ -80,13 +80,12 @@ namespace EDDTest
 
                     if (!TranslatorMkII.IsSourceID(id))
                     {
-                        if (secondary.TryGetValue(id, out string sectranslation) && sectranslation != null) // if we have a defined ID in the secondary
-                        {
-                            secondary.TryGetSource(id, out string secfile, out int seclineno);
-                            primary.TryGetOriginalEnglish(id, out string orgenglish);
+                        // if we have a defined ID in the secondary
 
+                        if (secondary.TryGetEntry(id, out BaseUtils.TranslatorMkII.TranslationEntry secentry) && secentry.Foreign != null) 
+                        {
                             // check formatting
-                            string res = VerifyFormattingClass.VerifyFormatting(secfile, seclineno, orgenglish, sectranslation, id);
+                            string res = VerifyFormattingClass.VerifyFormatting(secentry.File, secentry.Line, secentry.English, secentry.Foreign, id);
                             if (res != null)
                             {
                                 System.Diagnostics.Debug.WriteLine(res);
@@ -96,8 +95,8 @@ namespace EDDTest
                                 reporttext += res + Environment.NewLine;
                             }
 
-                            primary.ReDefine(id, sectranslation);
-                            reporttext += $"Secondary {id} translation '{sectranslation.EscapeControlChars()}'" + Environment.NewLine;
+                            primary.ReDefine(id, secentry.Foreign);
+                            reporttext += $"Secondary {id} translation '{secentry.Foreign.EscapeControlChars()}'" + Environment.NewLine;
                         }
                         else
                         {
@@ -119,13 +118,12 @@ namespace EDDTest
 
                 foreach (string id in primarykeys)
                 {
-                    primary.TryGetSource(id, out string primaryfilename, out int _);
-                    primary.TryGetValue(id, out string translation);             // this has the translation in it, or for comments the text line. May be null if not defined
+                    primary.TryGetEntry(id, out BaseUtils.TranslatorMkII.TranslationEntry primentry);
 
                     // transmute filename to foreign name
-                    if (currentfilename == null || !primaryfilename.EqualsIIC(currentfilename))
+                    if (currentfilename == null || !primentry.File.EqualsIIC(currentfilename))
                     {
-                        string nerfname = primaryfilename.Replace(language, foreignlang);
+                        string nerfname = primentry.File.Replace(language, foreignlang);
 
                         int alreadyexists = filename.FindIndex(x => x.EqualsIIC(nerfname));
                         if (alreadyexists >= 0)
@@ -142,10 +140,12 @@ namespace EDDTest
                             System.Diagnostics.Debug.WriteLine($"Changed to new output file {nerfname} {outputfileindex}");
                         }
 
-                        currentfilename = primaryfilename;
+                        currentfilename = primentry.File;
                     }
 
                     // these are captured blank lines, includes, // comments, SECTION comments
+
+                    string translation = primentry.Foreign;
 
                     if (TranslatorMkII.IsSourceID(id))
                     {
@@ -161,7 +161,7 @@ namespace EDDTest
                     }
                     else
                     {
-                        primary.TryGetOriginalEnglish(id, out string orgenglish);
+                        string orgenglish = primentry.English;
 
                         // Manual Fixups
 
@@ -228,35 +228,7 @@ namespace EDDTest
                         reporttext += $"Writing contents to {filename[i]}" + Environment.NewLine;
                     }
                 }
-
-                // to check reread - not needed
-
-                //BaseUtils.TranslatorMkII secondaryreread = new BaseUtils.TranslatorMkII();
-                //secondaryreread.LoadTranslation(foreignlang, System.Globalization.CultureInfo.CurrentCulture, new string[] { txpath }, searchdepth, @"c:\code", $"reread-{foreignlang}.log", true, true);
-
-                //if (!secondaryreread.Translating)
-                //{
-                //    Console.WriteLine("Secondary translation did not reload after change" + foreignlang);
-                //}
-                //else
-                //{
-                //    int read1 = secondary.EnumerateKeys.Count();
-                //    int read2 = secondaryreread.EnumerateKeys.Count();
-                //    if ( read1 != read2 )
-                //        Console.WriteLine("Secondary reread has different number of keys " + foreignlang);
-                //    else
-                //        Console.WriteLine("Secondary translation reloaded " + foreignlang);
-                //}
-
             }
-
-            //if ( (language2?.Length??0) == 0)
-            //{
-            //    foreach (string id in primarykeys)
-            //    {
-            //        reporttext += $"{id} in {primary.GetOriginalFile(id)} : {primary.GetOriginalLine(id)} : org '{primary.GetOriginalEnglish(id)}' : tx '{primary.GetTranslation(id)}'" + Environment.NewLine;
-            //    }
-            //}
 
             File.WriteAllText("report.txt", reporttext);
 
@@ -264,124 +236,6 @@ namespace EDDTest
 
         }
 
-
-        public static void WriteInfo(TranslatorMkII primary)
-        {
-            List<string> primarykeys = primary.EnumerateKeys.ToList();
-
-            List<string> reordered = new List<string>();
-            foreach (var x in primarykeys)
-            {
-                if (!TranslatorMkII.IsSourceID(x))
-                {
-                    primary.TryGetOriginalEnglish(x, out string v);
-                    if ((v.EndsWith(":") && primary.IsDefinedEnglish(v.Substring(0, v.Length - 1)) ||
-                        (v.EndsWith(": ") && primary.IsDefinedEnglish(v.Substring(0, v.Length - 2)))
-                        ))
-                    {
-                        reordered.Add(v);
-                    }
-                }
-            }
-
-
-            reordered.Sort();
-            string sl = string.Join(Environment.NewLine, reordered);
-            FileHelpers.TryWriteToFile(@"c:\code\keys.txt", sl);
-
-            List<string> coloned = new List<string>();
-            foreach (var x in primarykeys)
-            {
-                if (!TranslatorMkII.IsSourceID(x))
-                {
-                    primary.TryGetOriginalEnglish(x, out string v);
-                    if (v.EndsWith(":") || v.EndsWith(": "))
-                    {
-                        coloned.Add(v);
-                    }
-                }
-            }
-
-            coloned.Sort();
-            sl = string.Join(Environment.NewLine, coloned);
-            FileHelpers.TryWriteToFile(@"c:\code\keyscolon.txt", sl);
-        }
-
-        // demo writing out primary files
-
-        public static void WriteTranslatorFiles(TranslatorMkII primary)
-        {
-            List<StringBuilder> fileoutputs = new List<StringBuilder>();        // with stringbuilder 
-            string currentfilename = null;
-            List<string> filename = new List<string>();                         // filenames created
-            int outputfileindex = 0;
-
-            var primarykeys = primary.EnumerateKeys.ToList();       // reload, may have deleted
-
-            foreach (string id in primarykeys)
-            {
-                primary.TryGetSource(id, out string primaryfilename, out int _);
-                primary.TryGetValue(id, out string translation);             // this has the translation in it, or for comments the text line. May be null if not defined
-
-                if (currentfilename == null || !primaryfilename.EqualsIIC(currentfilename))
-                {
-                    string nerfname = primaryfilename;
-
-                    int alreadyexists = filename.FindIndex(x => x.EqualsIIC(nerfname));
-                    if (alreadyexists >= 0)
-                    {
-                        outputfileindex = alreadyexists;
-                        System.Diagnostics.Debug.WriteLine($"Continue with previous output file {nerfname} {outputfileindex}");
-                    }
-                    else
-                    {
-                        outputfileindex = fileoutputs.Count;
-                        fileoutputs.Add(new StringBuilder());
-                        filename.Add(nerfname);
-                        System.Diagnostics.Debug.WriteLine($"Changed to new output file {nerfname} {outputfileindex}");
-                    }
-
-                    currentfilename = primaryfilename;
-                }
-
-                if (TranslatorMkII.IsSourceID(id))
-                {
-                    fileoutputs[outputfileindex].Append(translation);
-                    fileoutputs[outputfileindex].Append(Environment.NewLine);
-
-                    //System.Diagnostics.Debug.WriteLine($"{primary.GetOriginalFile(id)}:{primary.GetOriginalLine(id)} {txt}");
-                }
-                else
-                {
-                    primary.TryGetOriginalEnglish(id, out string orgenglish);
-
-                    string shatouse = orgenglish.CalcSha8();
-
-                    fileoutputs[outputfileindex].Append(shatouse);     // output id, colon, primary english text
-                    fileoutputs[outputfileindex].Append(": ");
-                    fileoutputs[outputfileindex].Append(orgenglish.EscapeControlChars().AlwaysQuoteString());
-
-                    if (translation == null)       // null, its an @
-                    {
-                        fileoutputs[outputfileindex].Append(" @");
-                    }
-                    else
-                    {
-                        // else its a full translation
-
-                        fileoutputs[outputfileindex].Append(" => ");
-                        fileoutputs[outputfileindex].Append(translation.EscapeControlChars().AlwaysQuoteString());
-                    }
-                    fileoutputs[outputfileindex].Append(Environment.NewLine);
-                }
-            }
-
-            for (int i = 0; i < fileoutputs.Count; i++)
-            {
-                string contents = fileoutputs[i].ToString();
-                File.WriteAllText(filename[i], contents, Encoding.UTF8);
-            }
-        }
 
     }
 }

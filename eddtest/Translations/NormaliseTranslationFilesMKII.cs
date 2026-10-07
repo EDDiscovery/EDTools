@@ -42,7 +42,7 @@ namespace EDDTest
                 return "";
             }
 
-            List<string> primarykeys = primary.EnumerateKeys.ToList();
+            List<string> primarykeys = primary.EnumerateIDs.ToList();
 
             // lets check if english text differs in primary
 
@@ -82,7 +82,7 @@ namespace EDDTest
                     {
                         // if we have a defined ID in the secondary
 
-                        if (secondary.TryGetEntry(id, out BaseUtils.TranslatorMkII.TranslationEntry secentry) && secentry.Foreign != null) 
+                        if (secondary.TryGetEntry(id, out BaseUtils.TranslatorMkII.Entry secentry) && secentry.Foreign != null) 
                         {
                             // check formatting
                             string res = VerifyFormattingClass.VerifyFormatting(secentry.File, secentry.Line, secentry.English, secentry.Foreign, id);
@@ -118,7 +118,7 @@ namespace EDDTest
 
                 foreach (string id in primarykeys)
                 {
-                    primary.TryGetEntry(id, out BaseUtils.TranslatorMkII.TranslationEntry primentry);
+                    primary.TryGetEntry(id, out BaseUtils.TranslatorMkII.Entry primentry);
 
                     // transmute filename to foreign name
                     if (currentfilename == null || !primentry.File.EqualsIIC(currentfilename))

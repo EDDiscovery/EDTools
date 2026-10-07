@@ -14,6 +14,7 @@
  */
 
 using BaseUtils;
+using EDDTest.Translations;
 using QuickJSON;
 using System;
 using System.Collections.Generic;
@@ -180,7 +181,7 @@ namespace EDDTest
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
-                else if (cmd.Equals("renamemddoc"))      // processes MD DOC for wiki and makes it better
+                else if (cmd.Equals("renamemddoc"))      // used during mddoc renames for wiki
                 {
                     if (args.Left >= 2)
                     {
@@ -358,8 +359,32 @@ namespace EDDTest
                         }
                     }
                     else
-                    { 
-                        Console.WriteLine($"Too few args for {cmd}"); break; 
+                    {
+                        Console.WriteLine($"Too few args for {cmd}"); break;
+                    }
+                }
+                else if (cmd.Equals("scanformkiitx"))
+                {
+                    if (args.Left >= 2)
+                    {
+                        string primarypath = args.Next();
+                        string primarysearch = args.Next();
+
+                        if (primarypath == null || primarysearch == null)
+                        {
+                            Console.WriteLine("Usage:\n" +
+                                            "scanformkiitx path searchdepth"
+                                            );
+                        }
+                        else
+                        {
+                            ScanForMKIITx.ScanFiles( primarypath, primarysearch );
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Too few args for {cmd}"); break;
                     }
                 }
 

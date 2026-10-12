@@ -879,8 +879,57 @@ namespace Translations
         }
 
 
+        // to use this, just load on the command line the language you want to patch. Then point at the patch .tlp/.tlf and it will update
+        // items in green were not previously defined, red have been changed
+
+        private void buttonPatch_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "TLFTLP|*.tlf;*.tlp";
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                TranslatorMkII patch = new TranslatorMkII();
+                patch.LoadFile(ofd.FileName,-1);
+
+                if (patch.Translating)
+                {
+                    foreach (var id in patch.EnumerateIDs)
+                    {
+                        if (!TranslatorMkII.IsSourceID(id))     // same ID, same english text
+                        {
+                            patch.TryGetEntry(id, out TranslatorMkII.Entry patchentry);
+                            if (translators[1].TryGetEntry(id, out TranslatorMkII.Entry entry))
+                            {
+                                if (entry.Foreign != patchentry.Foreign)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Difference {id} `{entry.English}`: `{entry.Foreign}` vs `{patchentry.Foreign}`");
+                                    entry.Foreign = patchentry.Foreign;
+                                    for( int row = 0; row < dataGridView.Rows.Count; row++)
+                                    {
+                                        if (dataGridView.Rows[row].Tag.ToString() == id)
+                                        {
+                                            string orgvalue = dataGridView.Rows[row].Cells[ColEnglish.Index + 1].Value.ToString();
+                                            dataGridView.Rows[row].Cells[ColEnglish.Index + 1].ToolTipText = orgvalue;
+                                            dataGridView.Rows[row].Cells[ColEnglish.Index + 1].Value = patchentry.Foreign;
+                                            dataGridView.Rows[row].Cells[ColEnglish.Index + 1].Style.BackColor = orgvalue.HasChars() ? Color.Red : Color.Green;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Same       {id} `{entry.English}` :  `{entry.Foreign}` vs `{patchentry.Foreign}`");
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
         #endregion
 
-
-    }
+        }
 }

@@ -41,6 +41,7 @@
             this.findNextMissingTranslationFromScanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.findNextPunctationMarkToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelTop = new System.Windows.Forms.Panel();
+            this.checkBoxEnglishOnly = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -61,7 +62,7 @@
             this.ColID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColEnglish = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.checkBoxEnglishOnly = new System.Windows.Forms.CheckBox();
+            this.buttonPatch = new System.Windows.Forms.Button();
             this.contextMenuStrip.SuspendLayout();
             this.panelTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
@@ -160,6 +161,7 @@
             // 
             // panelTop
             // 
+            this.panelTop.Controls.Add(this.buttonPatch);
             this.panelTop.Controls.Add(this.checkBoxEnglishOnly);
             this.panelTop.Controls.Add(this.label3);
             this.panelTop.Controls.Add(this.label2);
@@ -177,6 +179,16 @@
             this.panelTop.Name = "panelTop";
             this.panelTop.Size = new System.Drawing.Size(1835, 40);
             this.panelTop.TabIndex = 1;
+            // 
+            // checkBoxEnglishOnly
+            // 
+            this.checkBoxEnglishOnly.AutoSize = true;
+            this.checkBoxEnglishOnly.Location = new System.Drawing.Point(728, 14);
+            this.checkBoxEnglishOnly.Name = "checkBoxEnglishOnly";
+            this.checkBoxEnglishOnly.Size = new System.Drawing.Size(69, 17);
+            this.checkBoxEnglishOnly.TabIndex = 5;
+            this.checkBoxEnglishOnly.Text = "Eng Only";
+            this.checkBoxEnglishOnly.UseVisualStyleBackColor = true;
             // 
             // label3
             // 
@@ -377,15 +389,15 @@
             this.ColEnglish.HeaderText = "English";
             this.ColEnglish.Name = "ColEnglish";
             // 
-            // checkBoxEnglishOnly
+            // buttonPatch
             // 
-            this.checkBoxEnglishOnly.AutoSize = true;
-            this.checkBoxEnglishOnly.Location = new System.Drawing.Point(728, 14);
-            this.checkBoxEnglishOnly.Name = "checkBoxEnglishOnly";
-            this.checkBoxEnglishOnly.Size = new System.Drawing.Size(69, 17);
-            this.checkBoxEnglishOnly.TabIndex = 5;
-            this.checkBoxEnglishOnly.Text = "Eng Only";
-            this.checkBoxEnglishOnly.UseVisualStyleBackColor = true;
+            this.buttonPatch.Location = new System.Drawing.Point(1294, 11);
+            this.buttonPatch.Name = "buttonPatch";
+            this.buttonPatch.Size = new System.Drawing.Size(75, 23);
+            this.buttonPatch.TabIndex = 6;
+            this.buttonPatch.Text = "Patch";
+            this.buttonPatch.UseVisualStyleBackColor = true;
+            this.buttonPatch.Click += new System.EventHandler(this.buttonPatch_Click);
             // 
             // Translations
             // 
@@ -445,6 +457,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxFind;
         private System.Windows.Forms.CheckBox checkBoxEnglishOnly;
+        private System.Windows.Forms.Button buttonPatch;
     }
 }
 

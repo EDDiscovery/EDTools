@@ -51,9 +51,8 @@ namespace EDDTest
                                   "         checklinksmddoc - in the folder of the MDDOCs, check all links exist\n" +
                                   "         finddoclinks path wildcard [REMOVE]\n" +
                                   "         finddoclinks path wildcard typename existingdocexternfile searchstr\n" +
-                                  "Translx: normalisetranslatemkii- process language files and normalise, run to see options\n" +
-                                  "         normalisetranslateold- process language files and normalise, run to see options\n" +
-                                  "         scanforenums enumssemicolonlist path wildcard\n" +
+
+                                  "Translx: normalisetranslateold- process language files and normalise, run to see options\n" +
 
                                   "Coriolis:CoriolisModules rootfolder - process coriolis-data\\modules\\<folder>\n" +
                                   "         CoriolisModule name - process coriolis-data\\modules\\<folder>\n" +
@@ -209,39 +208,6 @@ namespace EDDTest
                 #region Translate
 
 
-                else if (cmd.Equals("normalisetranslatemkii"))
-                {
-                    if (args.Left >= 3)
-                    {
-                        string primarypath = args.Next();       // mandatory
-                        int primarysearchdepth = args.Int();    // mandatory
-                        string primarylanguage = args.Next();   // mandatory
-
-                        List<string> languages = new List<string>();
-                        while (args.Left > 0)
-                            languages.Add(args.Next());
-
-                        if (primarypath == null || primarylanguage == null)
-                        {
-                            Console.WriteLine("Usage:\n" +
-                                                "normalisetranslate path-language-files searchdepth language-to-use [secondary-language-to-compare or - for none]\n" +
-                                                "Read the language-to-use and check it\n" +
-                                                "secondary-language: Read this language and overwrite the secondary files with normalised versions against the first, but carrying over the translations\n" +
-                                                "Always write report.txt\n" +
-                                                "Example:\n" +
-                                                "eddtest normalisetranslate c:\\code\\eddiscovery\\EDDiscovery\\Translations 2 example-ex deutsch-de \n"
-                                                );
-                        }
-                        else
-                        {
-                            string ret = NormaliseTranslationFilesMKII.ProcessNew(primarylanguage, primarypath, primarysearchdepth, languages.ToArray());
-                            Console.WriteLine(ret);
-                            System.Diagnostics.Debug.WriteLine(ret);
-                        }
-                    }
-                    else
-                    { Console.WriteLine($"Too few args for {cmd}"); break; }
-                }
                 else if (cmd.Equals("normalisetranslate"))
                 {
                     if (args.Left >= 3)
@@ -335,59 +301,7 @@ namespace EDDTest
                         Console.WriteLine($"Too few args for {cmd}"); break;
                     }
                 }
-                else if (cmd.Equals("scanforenums"))
-                {
-                    if (args.Left >= 3)
-                    {
-                        string enums = args.Next();
-                        string primarypath = args.Next();
-                        string primarysearch = args.Next();
-
-                        if (enums == null || primarypath == null || primarysearch == null)
-                        {
-                            Console.WriteLine("Usage:\n" +
-                                            "scanforenums enumfilelist path searchdepth \n" +
-                                            "semicolon-list-of-enums-files give list of enumerations to cross check against. Use stdenums for built in EDD list\n" +
-                                            "Write report.txt with results\n"
-                                            );
-                        }
-                        else
-                        {
-                            FileInfo[] allFiles = Directory.EnumerateFiles(primarypath, primarysearch, SearchOption.AllDirectories).Select(f => new FileInfo(f)).OrderBy(p => p.FullName).ToArray();
-                            Enums.ScanForEnums(enums, allFiles);
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Too few args for {cmd}"); break;
-                    }
-                }
-                else if (cmd.Equals("scanformkiitx"))
-                {
-                    if (args.Left >= 2)
-                    {
-                        string primarypath = args.Next();
-                        string primarysearch = args.Next();
-
-                        if (primarypath == null || primarysearch == null)
-                        {
-                            Console.WriteLine("Usage:\n" +
-                                            "scanformkiitx path searchdepth"
-                                            );
-                        }
-                        else
-                        {
-                            ScanForMKIITx.ScanFiles( primarypath, primarysearch );
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Too few args for {cmd}"); break;
-                    }
-                }
-
+     
                 #endregion
 
                 #region Coriolis

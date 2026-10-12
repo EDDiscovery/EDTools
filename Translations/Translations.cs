@@ -21,21 +21,28 @@ namespace Translations
         public Translations()
         {
             InitializeComponent();
+            splitContainer.Panel2Collapsed = true;
+            ColFound.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            dataGridView.AllowRowHeaderVisibleSelection = true;
+            buttonNextMissing.Enabled = false;
         }
 
         List<BaseUtils.TranslatorMkII> translators;
-
-        protected override void OnLoad(EventArgs e)
+        protected override void OnShown(EventArgs e)
         {
-            base.OnLoad(e);
-
-            splitContainer.Panel2Collapsed = true;
-
+            base.OnShown(e);
             LoadFiles();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
         }
 
         private void LoadFiles()
         {
+            Cursor = Cursors.WaitCursor;
+            SetDirty(false);
             translators = new List<BaseUtils.TranslatorMkII>();
 
             CommandArgs args = new CommandArgs(Environment.CommandLine);
@@ -71,7 +78,10 @@ namespace Translations
             {
                 txpath = Directory.GetCurrentDirectory();
 
-                translations = new List<string> { args.Next() };
+                if (args.Peek.EqualsIIC("None"))
+                    translations = new List<string>();
+                else
+                    translations = new List<string> { args.Next() };
             }
             else
             {
@@ -91,6 +101,8 @@ namespace Translations
 
             if (primary.Translating)
             {
+                primary.TryGetValue("336EE34F690338", out string text);
+
                 translators.Add(primary);
                 foreach( var nl in translations)
                 {
@@ -105,20 +117,54 @@ namespace Translations
                     else
                         break;
                 }
+
+                SetDirty(false);
+
+                // all entries must be present in all translators and not be in the wrong section for it to be clean
+                foreach (string id in translators[0].EnumerateIDs)
+                {
+                    translators[0].TryGetEntry(id, out var primaryentry);
+
+                    for (int tx = 1; tx < translations.Count; tx++)
+                    {
+                        if (translators[tx].TryGetEntry(id,out var entry))
+                        {
+                            if ( entry.Section != primaryentry.Section)
+                            {
+                                SetDirty();
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            SetDirty();
+                            break;
+                        }
+                    }
+                }
+                        
+
+                comboBoxSection.Items.Add("All");
+                var files = translators[0].FileNames.ToArray();
+                comboBoxSection.Items.AddRange(files);
+                var sections = translators[0].Sections.ToArray();
+                Array.Sort(sections);
+                comboBoxSection.Items.AddRange(sections);
+                comboBoxSection.SelectedItem = "All";
+                //comboBoxSection.SelectedItem = "KeyForm";
+                comboBoxSection.SelectedIndexChanged += ComboBoxSection_SelectedIndexChanged;
+
             }
 
             Display();
 
-            buttonSave.Enabled = buttonReload.Enabled = false;
+            Cursor = Cursors.Default;
         }
 
         private void Display()
         {
+            Cursor = Cursors.WaitCursor;
             dataGridView.Rows.Clear();
-            string sectiononly = comboBoxSection.SelectedItem?.ToString();
-
-            comboBoxSection.Items.Clear();
-            comboBoxSection.SelectedIndexChanged -= ComboBoxSection_SelectedIndexChanged;
 
             dataGridView.SuspendLayout();
             if (translators.Count > 0)
@@ -131,53 +177,53 @@ namespace Translations
                         var data = MakeCells(id);
                         int rowno = dataGridView.Rows.Add(data.ToArray());
                         dataGridView.Rows[rowno].Tag = id;
-                        dataGridView.Rows[rowno].Cells[0].Tag = entry;
+                        dataGridView.Rows[rowno].HeaderCell.Value = (rowno+1).ToStringInvariant();
+                        HighlightPunctuation(rowno);
                     }
                 }
 
-                if ( sectiononly != null && sectiononly != "All")
-                {
-                    dataGridView.FilterGridView((row) => { var entry = row.Cells[0].Tag as TranslatorMkII.Entry; return entry.Section == sectiononly; });
-                }
-
-                WriteHeaders();
-                dataGridView.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
-
-                var sections = translators[0].Sections.ToArray();
-                comboBoxSection.Items.Add("All");
-                comboBoxSection.Items.AddRange(sections);
-                comboBoxSection.SelectedItem = sectiononly;
-                comboBoxSection.SelectedIndexChanged += ComboBoxSection_SelectedIndexChanged;
+                Filter();
             }
+
             dataGridView.ResumeLayout();
-
+            Cursor = Cursors.Default;
         }
-
-        private void ComboBoxSection_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            string sectiononly = comboBoxSection.SelectedItem?.ToString();
-            dataGridView.FilterGridView((row) => { var entry = row.Cells[0].Tag as TranslatorMkII.Entry; return sectiononly == "All" || entry.Section == sectiononly; });
-        }
-
-        private void WriteHeaders()
-        {
-            foreach (DataGridViewRow row in dataGridView.Rows)
-                row.HeaderCell.Value = (row.Index + 1).ToStringInvariant();
-        }
-
         private List<object> MakeCells(string id)
         {
             translators[0].TryGetEntry(id, out BaseUtils.TranslatorMkII.Entry entry);
-            List<Object> data = new List<object> { Path.GetFileNameWithoutExtension(entry.File) + ":" + entry.Line.ToStringInvariant(), entry.Section,
+            System.Diagnostics.Debug.Assert(entry != null && entry.File != null && entry.Section != null && entry.English != null);
+            List<Object> data = new List<object> { Path.GetFileName(entry.File) + ":" + entry.Line.ToStringInvariant(), 
+                                                entry.Section,
                                                 "",
-                                                id, entry.English };
+                                                id, entry.English.EscapeControlChars() };       // display escaped
             for (int i = 1; i < translators.Count; i++)
             {
                 string v = null;
                 translators[i].TryGetValue(id, out v);
-                data.Add(v ?? "");
+                data.Add((v ?? "").EscapeControlChars());   // display escaped
             }
             return data;
+        }
+
+        #region ToolBar Main
+
+        private void ComboBoxSection_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Filter();
+        }
+
+        private void textBoxFilter_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                Filter();
+        }
+
+        private void textBoxFind_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                FindNext(textBoxFind.Text);
+            }
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -241,7 +287,7 @@ namespace Translations
                         var row = dataGridView.Rows[rowno];
                         System.Diagnostics.Debug.Assert(row.Tag.ToString().Equals(id));
 
-                        string orgenglish = row.Cells[ColEnglish.Index].Value.ToString();
+                        string orgenglish = row.Cells[ColEnglish.Index].Value.ToString().ReplaceEscapeControlChars();
                         string shatouse = orgenglish.CalcSha8();
                         System.Diagnostics.Debug.Assert(row.Cells[ColID.Index].Value.ToString().Equals(shatouse));
 
@@ -249,7 +295,7 @@ namespace Translations
                         fileoutputs[outputfileindex].Append(": ");
                         fileoutputs[outputfileindex].Append(orgenglish.EscapeControlChars().AlwaysQuoteString());
 
-                        string txstring = row.Cells[txn + ColEnglish.Index].Value.ToString();
+                        string txstring = row.Cells[txn + ColEnglish.Index].Value.ToString().ReplaceEscapeControlChars();
 
                         if (txn == 0 || txstring.IsEmpty())
                         {
@@ -273,22 +319,309 @@ namespace Translations
                     File.WriteAllText(filename[i], contents, Encoding.UTF8);
                 }
             }
-            buttonSave.Enabled = buttonReload.Enabled = false;
+
+            SetDirty(false);
         }
 
         private void buttonReload_Click(object sender, EventArgs e)
         {
-            if ( MessageBox.Show("Abandon Changes","Warning",MessageBoxButtons.OKCancel,MessageBoxIcon.Warning) == DialogResult.OK )
+            if (dirty == false || MessageBox.Show("Abandon Changes", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
+            {
+                var rowno = dataGridView.CurrentCell?.RowIndex;
+
                 LoadFiles();
+
+                if (rowno!=null)
+                {
+                    dataGridView.DisplayRow(rowno.Value, true);
+                }
+            }
         }
+
+        private void buttonNextPunct_Click(object sender, EventArgs e)
+        {
+            if (dataGridView.CurrentCell != null)
+                NextPunc(dataGridView.CurrentCell.RowIndex + 1);
+        }
+
+        private void buttonNextMissing_Click(object sender, EventArgs e)
+        {
+            if (dataGridView.CurrentCell != null)
+                NextMissing(dataGridView.CurrentCell.RowIndex + 1);
+        }
+        #endregion
+
+        #region Right Clicks
+
+        private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
+        {
+            int[] rowset = dataGridView.SelectedRows(true, true);
+            bool vs = dataGridView.ClickedRightRow != null;
+            bool vmult = rowset.Length > 0;
+            editEntryToolStripMenuItem.Enabled = vs && dataGridView.HitColumn >= ColEnglish.Index;
+            deleteEntryToolStripMenuItem.Enabled = vs;
+            trimTextForSpacesToolStripMenuItem.Enabled = removeAllFieldBuilderControlsToolStripMenuItem.Enabled = vmult;
+            removeAllFieldBuilderControlsToolStripMenuItem.Enabled = vmult;
+            removeBracketsAndSpacesToolStripMenuItem.Enabled = vmult;
+            insertEntryAboveToolstripMenuItem.Enabled = insertEntryBelowToolStripMenuItem.Enabled = vs;
+            changeSectionNameToolStripMenuItem.Enabled = vs;
+            findNextMissingTranslationFromScanToolStripMenuItem.Enabled = findNextPunctationMarkToolStripMenuItem.Enabled = vs;
+        }
+
+        private void editEntryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            EditInBox(dataGridView.RightClickRow, dataGridView.HitColumn);
+        }
+
+        private void deleteEntryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var row = dataGridView.ClickedRightRow;
+            if (row != null)
+            {
+                string shatoremove = row.Cells[ColID.Index].Value.ToString();
+
+                foreach (var tx in translators)
+                {
+                    tx.Delete(shatoremove);
+                }
+
+                dataGridView.Rows.RemoveAt(row.Index);
+
+                WriteHeaders();
+                SetDirty();
+            }
+        }
+
+        private void trimTextForSpacesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Trim((s) => s.Trim().ReplaceIfStartsWith("- ", "").ReplaceIfStartsWith(",", "").ReplaceIfStartsWith(";", "").Replace("  "," ")
+                            .ReplaceIfEndsWith(",", "").ReplaceIfEndsWith(".", "").ReplaceIfEndsWith(":","").Trim());
+        }
+        private void removeBracketsAndSpacesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Trim((s) => s.Trim().ReplaceIfStartsWith("(", "").ReplaceIfEndsWith(")", "").ReplaceIfStartsWith("<", "").ReplaceIfEndsWith(">", ""));
+        }
+
+        private void removeAllFieldBuilderControlsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Trim((s) =>
+            {
+                s = s.Trim().ReplaceIfStartsWith("<", "").ReplaceIfStartsWith(";", "");
+
+                s = s.Trim();
+                int si = s.LastIndexOf("{");
+                if (si > 0)
+                    s = s.Substring(0, si).Trim();
+
+
+                si = s.LastIndexOf(";");
+                if (si > 0)
+                    s = s.Substring(0, si).Trim();
+
+                s = s.ReplaceIfEndsWith(":", "").Trim();
+                s = s.ReplaceIfEndsWith(",", "").Trim();
+                return s;
+            });
+
+        }
+        private void Trim(Func<string,string> actionon)
+        {
+            int[] rowset = dataGridView.SelectedRows(true, true);
+            bool changedsomething = false;
+
+            foreach ( int rowno in rowset)
+            {
+                DataGridViewRow row = dataGridView.Rows[rowno];
+                string originalkey = row.Tag.ToString();
+                string originalenglish = row.Cells[ColEnglish.Index].Value.ToString().ReplaceEscapeControlChars().ReplaceEscapeControlChars();      // go back to normal
+                string newenglish = actionon(originalenglish);
+                string newsha = newenglish.CalcSha8();
+
+
+                // change the foreign bits
+                for (int i = ColEnglish.Index+1; i < dataGridView.ColumnCount; i++)
+                {
+                    string nt = actionon(row.Cells[i].Value.ToString().ReplaceEscapeControlChars()).EscapeControlChars();      // display escaped
+                    if (nt != row.Cells[i].Value.ToString())
+                    {
+                        row.Cells[i].Value = nt;
+                        changedsomething = true;
+                    }
+                }
+
+                if (originalenglish == newenglish)
+                {
+                    if ( !changedsomething)
+                        MessageBox.Show($"{rowno + 1} {originalkey} No change in english text or any other text\r\n{newenglish}", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else if (translators[0].IsDefined(newsha))
+                {
+                    MessageBox.Show($"{rowno + 1} {originalkey} Duplicate definition of {newenglish}", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    row.Cells[ColEnglish.Index].Value = newenglish;
+                    row.Cells[ColFound.Index].Value = "0";          // cancel the find, rerun it !
+
+                    string sha = translators[0].ChangeEnglish(originalkey, newenglish.ReplaceEscapeControlChars());
+
+                    row.Cells[ColID.Index].Value = sha;
+                    row.Tag = sha;
+                }
+
+                if ( changedsomething)
+                    HighlightPunctuation(row.Index);
+            }
+
+            if (changedsomething)
+            {
+                SetDirty();
+            }
+        }
+
+        private void insertEntryAboveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            InsertNewEntry(false);
+        }
+        private void insertEntryBelowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            InsertNewEntry(true);
+        }
+
+        private void InsertNewEntry(bool after)
+        {
+            var row = dataGridView.ClickedRightRow;
+            if (row != null)
+            {
+                string shatoinsertat = row.Cells[ColID.Index].Value.ToString();
+                string english = "Edit text!";
+                while (translators[0].IsDefined(english.CalcSha8()))
+                    english += "!";
+
+                string sha = english.CalcSha8();
+
+                foreach (var tx in translators)
+                {
+                    tx.Insert(shatoinsertat, after, english, tx == translators[0] ? english : null);
+                }
+
+                var data = MakeCells(sha);
+                int rowi = row.Index + (after ? 1 : 0);
+                dataGridView.Rows.Insert(rowi, data.ToArray());
+                dataGridView.Rows[rowi].Tag = sha;
+                dataGridView.Rows[rowi].Cells[ColFound.Index].Value = "0";      // mark as needs rescan
+
+                WriteHeaders();
+
+                SetDirty();
+            }
+        }
+
+        private void changeSectionNameStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var row = dataGridView.ClickedRightRow;
+            if (row != null)
+            {
+                EditForm ef = new EditForm();
+                ef.EditText = "Name..";
+                ef.SingleLineEdit();
+                if (ef.ShowDialog(this) == DialogResult.OK)
+                {
+                    string cursectionname = row.Cells[ColSection.Index].Value.ToString();
+                    string shatoinsertat = row.Cells[ColID.Index].Value.ToString();
+
+                    string newsectionname = ef.EditText;
+
+                    foreach (var tx in translators)
+                    {
+                        tx.ChangeSectionName(shatoinsertat, newsectionname);
+                    }
+
+                    for (int r = row.Index; r < dataGridView.RowCount; r++)
+                    {
+                        var id = dataGridView.Rows[r].Tag.ToString();
+                        translators[0].TryGetEntry(id, out TranslatorMkII.Entry entry);
+                        System.Diagnostics.Debug.Assert(entry.Section != null);
+                        if (entry.Section == cursectionname)
+                        {
+                            entry.Section = newsectionname;
+                            dataGridView.Rows[r].Cells[ColSection.Index].Value = newsectionname;
+                        }
+                        else
+                            break;
+                    }
+
+                    SetDirty();
+                }
+            }
+        }
+        private void findNextMissingTranslationFromScanToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var row = dataGridView.RightClickRow;
+            if (row >= 0)
+                NextMissing(row);
+        }
+        private void findNextPunctationMarkToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var row = dataGridView.RightClickRow;
+            if (row >= 0)
+                NextPunc(row);
+        }
+
+
+        #endregion
+
+
+        #region Cell Clicks
 
         private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == ColEnglish.Index)
+            Edited(e.RowIndex,e.ColumnIndex);
+        }
+
+        private void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if ( e.RowIndex == -1 && e.ColumnIndex == -1)
             {
-                var row = dataGridView.Rows[e.RowIndex];
+                dataGridView.Sort(new RowComparer());
+                dataGridView.ClearSelection();
+            }
+        }
+
+        private void dataGridView_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            dataGridView.EndEdit();
+            EditInBox(e.RowIndex, e.ColumnIndex);
+        }
+
+        #endregion
+
+
+
+        #region Helpers
+        private void EditInBox(int rowindex, int colindex)
+        {
+            if (rowindex >= 0 && colindex >= 0 && dataGridView[colindex, rowindex].ReadOnly == false)
+            {
+                string text = dataGridView[colindex, rowindex].Value.ToString().ReplaceEscapeControlChars();
+
+                EditForm ef = new EditForm();
+                ef.EditText = text;
+                if (ef.ShowDialog(this) == DialogResult.OK)
+                {
+                    dataGridView[colindex, rowindex].Value = ef.EditText.EscapeControlChars();
+                    Edited(rowindex, colindex);
+                }
+            }
+        }
+
+        private void Edited(int rowindex, int colindex)
+        {
+            if (colindex == ColEnglish.Index)
+            {
+                var row = dataGridView.Rows[rowindex];
                 string orginalkey = row.Tag.ToString();
-                string newenglish = row.Cells[ColEnglish.Index].Value.ToString();
+                string newenglish = row.Cells[ColEnglish.Index].Value.ToString().ReplaceEscapeControlChars();       // move back to normal, not display escaped
 
                 if (translators[0].TryGetEntry(orginalkey, out TranslatorMkII.Entry orgentry) && orgentry.English != newenglish)
                 {
@@ -310,67 +643,149 @@ namespace Translations
 
                         row.Tag = newsha;
 
-                        buttonSave.Enabled = buttonReload.Enabled = true;
+                        row.Cells[ColFound.Index].Value = "0";      // mark as needs rescan
+
+                        HighlightPunctuation(row.Index);
+                        SetDirty();
+                    }
+                }
+            }
+            else
+            {
+                HighlightPunctuation(rowindex);
+                SetDirty();
+            }
+        }
+
+        Color FieldBuilderPunctuationColour = Color.LightYellow;
+        Color FormatPunctuationColour = Color.LightCyan;
+        Color SpacesPunctuationColour = Color.Lavender;
+        private void HighlightPunctuation(int rowno)
+        {
+            for (int i = ColEnglish.Index; i < dataGridView.ColumnCount; i++)
+            {
+                string value = dataGridView.Rows[rowno].Cells[i].Value.ToString();
+
+                bool badspaced = value.StartsWith(" ") || value.Trim().StartsWith("-") || value.Trim().StartsWith(",") || value.EndsWith(" ") || value.Trim().EndsWith(","); 
+                bool badfield = value.Trim().StartsWith("<") || value.Contains(";N0") || value.Contains(";N1") || value.Contains(";0.") || value.Contains(";;");
+                bool badformat = value.Contains("{") && value.Contains("}");
+
+                dataGridView.Rows[rowno].Cells[i].Style.BackColor = badfield ? FieldBuilderPunctuationColour : badformat ? FormatPunctuationColour : badspaced ? SpacesPunctuationColour: Color.Empty;
+            }
+        }
+
+
+        private void Filter()
+        {
+            Cursor = Cursors.WaitCursor;
+            var curcell = dataGridView.CurrentCell;
+
+            string section = comboBoxSection.SelectedItem.ToString();
+            string textfind = textBoxFilter.Text;
+            dataGridView.FilterGridView((row) =>
+            {
+                if (textfind.HasChars())
+                {
+                    bool found = false;
+                    for (int i = 0; i < dataGridView.ColumnCount; i++)
+                    {
+                        var cc = row.Cells[i].Value.ToString();
+                        if (cc.StartsWithOrContains(textfind))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                        return false;
+                }
+
+                if (section.Contains("."))
+                {
+                    return row.Cells[ColSource.Index].Value.ToString().Contains(section);
+                }
+                else
+                {
+                    return section == "All" || row.Cells[ColSection.Index].Value.ToString() == section;
+                }
+            });
+
+            if (curcell != null)
+            {
+                dataGridView.SetCurrentSelOnRow(curcell.RowIndex, curcell.ColumnIndex);
+                dataGridView.DisplayRow(curcell.RowIndex, true);
+            }
+
+            Cursor = Cursors.Default;
+        }
+
+        private void WriteHeaders()
+        {
+            foreach (DataGridViewRow row in dataGridView.Rows)
+                row.HeaderCell.Value = (row.Index + 1).ToStringInvariant();
+        }
+
+
+        private void NextMissing(int row)
+        {
+            while (row < dataGridView.RowCount)
+            {
+                if (dataGridView[ColFound.Index, row].Value.ToString() == "0" && dataGridView.Rows[row].Visible)
+                {
+                    dataGridView.DisplayRow(row, true);
+                    dataGridView.CurrentCell = dataGridView[ColEnglish.Index, row];
+                    break;
+                }
+                row++;
+            }
+        }
+        private void NextPunc(int row)
+        {
+            while (row < dataGridView.RowCount)
+            {
+                for (int i = ColEnglish.Index; i < dataGridView.ColumnCount; i++)
+                {
+                    if (dataGridView[i, row].Style.BackColor != Color.Empty && dataGridView.Rows[row].Visible)
+                    {
+                        dataGridView.DisplayRow(row, true);
+                        dataGridView.CurrentCell = dataGridView[i, row];
+                        return;
+                    }
+                }
+                row++;
+            }
+        }
+
+        private void FindNext(string text)
+        {
+            if (dataGridView.DisplayedRowCount(true) > 0)
+            {
+                int startrow = dataGridView.CurrentCell != null ? dataGridView.CurrentCell.RowIndex : 0;
+                for (int row = startrow + 1; row != startrow; row = (row + 1) % dataGridView.RowCount)
+                {
+                    for (int i = ColEnglish.Index; i < dataGridView.ColumnCount; i++)
+                    {
+                        if (dataGridView[i, row].Value.ToString().StartsWithOrContains(text))
+                        {
+                            dataGridView.DisplayRow(row, true);
+                            dataGridView.CurrentCell = dataGridView[i, row];
+                            return;
+                        }
+                        if (checkBoxEnglishOnly.Checked)
+                            break;
                     }
                 }
             }
         }
 
-        private void insertHereToolStripMenuItem_Click(object sender, EventArgs e)
+        bool dirty = false;
+        void SetDirty(bool dirty = true)
         {
-            var row = dataGridView.ClickedRightRow;
-            if (row != null)
-            {
-                string shatoinsertat = row.Cells[ColID.Index].Value.ToString();
-                string english = "Edit text!";
-                while (translators[0].IsDefined(english.CalcSha8()))
-                    english += "!";
-
-                string sha = english.CalcSha8();
-
-                foreach (var tx in translators)
-                {
-                    tx.Insert(shatoinsertat, english, tx == translators[0] ? english : null);
-                }
-
-                var data = MakeCells(sha);
-                int rowi = row.Index;
-                dataGridView.Rows.Insert(rowi, data.ToArray());
-                dataGridView.Rows[rowi].Tag = sha;
-
-                WriteHeaders();
-                buttonSave.Enabled = buttonReload.Enabled = true;
-            }
-
+            this.dirty = dirty;
+            buttonSave.BackColor = dirty ? Color.Red : Color.FromArgb(240, 240, 240);
         }
 
-        private void deleteEntryToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var row = dataGridView.ClickedRightRow;
-            if (row != null)
-            {
-                string shatoremove = row.Cells[ColID.Index].Value.ToString();
-
-                foreach (var tx in translators)
-                {
-                    tx.Delete(shatoremove);
-                }
-
-                dataGridView.Rows.RemoveAt(row.Index);
-
-                WriteHeaders();
-                buttonSave.Enabled = buttonReload.Enabled = true;
-            }
-        }
-
-        private void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if ( e.RowIndex == -1 && e.ColumnIndex == -1)
-            {
-                dataGridView.Sort(new RowComparer());
-                dataGridView.ClearSelection();
-            }
-        }
 
         private class RowComparer : System.Collections.IComparer
         {
@@ -383,42 +798,89 @@ namespace Translations
             }
         }
 
+        #endregion
+
+
+        #region Scan Files
 
         string initdir = @"c:\code\eddiscovery";
+        bool selectedonce = false;
         private void buttonScanFiles_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog ofd = new FolderBrowserDialog();
             ofd.SelectedPath = initdir;
-            if (ofd.ShowDialog() == DialogResult.OK)
+            if (selectedonce || Directory.Exists(initdir) || ofd.ShowDialog() == DialogResult.OK)
             {
-                var list = new List<string>();
+                selectedonce = true;
+                splitContainer.Panel2Collapsed = true;
+                richTextBoxErrors.Clear();
 
-                list.AddRange(ScanMkIIFiles.ScanFiles(Path.Combine(ofd.SelectedPath, "EDDiscovery"), "*.cs"));
-                list.AddRange(ScanMkIIFiles.ScanFiles(Path.Combine(ofd.SelectedPath, "EliteDangerousCore"), "*.cs"));
 
+                Dictionary<string, ScanMkIIFiles.Item> items = new Dictionary<string, ScanMkIIFiles.Item>();
+
+                ScanMkIIFiles.ScanFiles(items, Path.Combine(ofd.SelectedPath, "EDDiscovery"), "*.cs");
+
+#if true
+                ScanMkIIFiles.ScanFiles(items, Path.Combine(ofd.SelectedPath, "ActionLanguage", "ActionLanguage"), "*.cs");
+                ScanMkIIFiles.ScanFiles(items, Path.Combine(ofd.SelectedPath, "EliteDangerousCore"), "*.cs");
+                ScanMkIIFiles.ScanFiles(items, Path.Combine(ofd.SelectedPath, "BaseUtilities", "BaseUtilities", "WinForms"), "*.cs");
+                ScanMkIIFiles.ScanFiles(items, Path.Combine(ofd.SelectedPath, "ExtendedControls", "ExtendedForms"), "*.cs");
+                ScanMkIIFiles.ScanFiles(items, Path.Combine(ofd.SelectedPath, "ExtendedControls", "ExtendedControls"), "*.cs");
+                ScanMkIIFiles.ScanFiles(items, Path.Combine(ofd.SelectedPath, "ExtendedControls", "AudioForms"), "*.cs");
+#endif
                 initdir = ofd.SelectedPath;
 
                 foreach(DataGridViewRow row in dataGridView.Rows)
                 {
                     string id = row.Tag.ToString();
                     translators[0].TryGetEntry(id, out BaseUtils.TranslatorMkII.Entry entry);
-                    bool found = list.Contains(entry.English);
-                    row.Cells[ColFound.Index].Style.BackColor = found ? Color.Green : Color.Empty;
-                    row.Cells[ColFound.Index].Value = found ? "1" : "0";
+
+                    bool found = items.TryGetValue(entry.English, out ScanMkIIFiles.Item im);
+                    row.Cells[ColFound.Index].Style.BackColor = found ? Color.LightGreen : Color.Empty;
+
+                    string flist = im != null ? string.Join(Environment.NewLine, 
+                        im.FileLines.Keys.Select(x => output(x,im.FileLines[x]))) : "0";
+
+                    row.Cells[ColFound.Index].Value = flist;
+
                     if (found)
-                        list.Remove(entry.English);
+                        items.Remove(entry.English);
+
+                    row.Cells[ColSource.Index].Style.BackColor = flist!=null && entry.File.ContainsIIC(@"EDDiscovery\EDDiscovery") &&
+                                        flist.ContainsIIC(@"EDDiscovery\EliteDangerousCore") ? Color.Red : Color.Empty;
                 }
 
-                if ( list.Count>0)
+                if ( items.Count>0)
                 {
-                    richTextBoxErrors.Text = string.Join(Environment.NewLine, list);
+                    foreach(KeyValuePair<string, ScanMkIIFiles.Item> kvp in items)
+                    {
+                        foreach (var item in kvp.Value.FileLines)
+                        {
+                            richTextBoxErrors.AppendText(kvp.Key.CalcSha8() + " `" + kvp.Key + "` : " + output(item.Key, item.Value));
+                            richTextBoxErrors.AppendText("\r\n");
+
+                            //System.Diagnostics.Debug.WriteLine($"Key : `{kvp.Key}` :\r\n  ");
+                            //for (int i = 0; i < kvp.Key.Length; i++)
+                            //    System.Diagnostics.Debug.Write($"{(int)kvp.Key[i]:x2}");
+                            //System.Diagnostics.Debug.WriteLine("\n");
+                        }
+
+                    }
                     splitContainer.Panel2Collapsed = false;
                 }
+                buttonNextMissing.Enabled = true;
             }
-            else
-                Close();
-
 
         }
+
+        string output(string file, List<int> items)
+        {
+            return Path.GetFileNameWithoutExtension(file) + ":" + string.Join(",",items.Select(x=>x.ToStringInvariant()));
+        }
+
+
+        #endregion
+
+
     }
 }

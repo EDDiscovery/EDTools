@@ -70,6 +70,10 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EliteDangerous, Version=1.1.9782.23625, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>EDC\EliteDangerous.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="QuickJSON, Version=2.8.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RJKJSoft.QuickJSON.2.8.0\lib\net48\QuickJSON.dll</HintPath>
@@ -83,20 +87,8 @@
     <Compile Include="EDDI Data\EDDISignalCheck.cs" />
     <Compile Include="EDDI Data\EDDISignalSources.cs" />
     <Compile Include="EDSY\EdsyProperties.cs" />
-    <Compile Include="From EDD Project Manually copied\Identifiers.cs" />
-    <Compile Include="From EDD Project Manually copied\MaterialCommoditiesRecipes.cs" />
     <Compile Include="Frontier\ArtieData.cs" />
     <Compile Include="Frontier\OutfittingCSV.cs" />
-    <Compile Include="From EDD Project Manually copied\ItemActors.cs" />
-    <Compile Include="From EDD Project Manually copied\ItemData.cs" />
-    <Compile Include="From EDD Project Manually copied\ItemEngineers.cs" />
-    <Compile Include="From EDD Project Manually copied\ItemModules.cs" />
-    <Compile Include="From EDD Project Manually copied\ItemShips.cs" />
-    <Compile Include="From EDD Project Manually copied\ItemSuits.cs" />
-    <Compile Include="From EDD Project Manually copied\ItemWeapons.cs" />
-    <Compile Include="From EDD Project Manually copied\MaterialRecipesData.cs" />
-    <Compile Include="From EDD Project Manually copied\MCMRList.cs" />
-    <Compile Include="From EDD Project Manually copied\MCMRType.cs" />
     <Compile Include="EDDI Data\EDDIModules.cs" />
     <Compile Include="EDDI Data\EDDIModuleCheck.cs" />
     <Compile Include="FDEVIDs\FDEVIDS.cs" />
@@ -139,7 +131,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Content Include="From EDD Project Manually copied\Readme.txt" />
     <None Include="packages.config" />
     <None Include="Resources\Market1.txt" />
     <Content Include="Resources\ModulesInfo.txt" />

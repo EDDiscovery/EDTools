@@ -14,6 +14,8 @@
  *
  */
 
+#if false
+
 using BaseUtils;
 using EliteDangerousCore;
 using System;
@@ -96,6 +98,8 @@ namespace EDDTest
 
         static public void Process(string rootpath)            // overall index of items
         {
+            EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
+                        
             string de = "", fr = "", es = "", ru = "", pr = "";
 
             ItemData.Initialise();
@@ -1177,3 +1181,4 @@ namespace EDDTest
     }
 }
 
+#endif

@@ -17,19 +17,17 @@
 using BaseUtils;
 using EliteDangerousCore;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using static EliteDangerousCore.Recipes;
 
 namespace EDDTest
 {
+    // fdevids c:\code\edcd\fdevids
     static public class FDevIDs
     {
         static public void Process(string rootpath)            // overall index of items
         {
+            EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
+            EliteDangerousCore.ItemData.Initialise();
 
             {
                 CSVFile filecommods = new CSVFile();
@@ -46,7 +44,7 @@ namespace EDDTest
                         string engname = rw[4].Trim();
                         System.Diagnostics.Debug.WriteLine($"{id} {fdname} {rarity} {type} {engname}");
 
-                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(fdname);
+                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(new MCFDName(fdname));
                         if (mcd == null)
                             Console.WriteLine($"{id} {fdname} {engname} Missing");
                     }
@@ -68,7 +66,7 @@ namespace EDDTest
                         string engname = rw[3].Trim();
                         System.Diagnostics.Debug.WriteLine($"{id} {fdname} {type} {engname}");
 
-                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(fdname);
+                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(new MCFDName(fdname));
                         if (mcd == null)
                             Console.WriteLine($"{id} {fdname} {engname} Missing");
                     }
@@ -91,7 +89,7 @@ namespace EDDTest
                         string engname = rw[4].Trim();
                         System.Diagnostics.Debug.WriteLine($"{id} {fdname} {marketid} {type} {engname}");
 
-                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(fdname);
+                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(new MCFDName(fdname));
                         if (mcd == null)
                             Console.WriteLine($"{id} {fdname} {engname} Missing");
                     }
@@ -114,7 +112,7 @@ namespace EDDTest
                         string engname = rw[3].Trim();
                         System.Diagnostics.Debug.WriteLine($"{id} {fdname} {type} {engname}");
 
-                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(fdname);
+                        var mcd = MaterialCommodityMicroResourceType.GetByFDName(new MCFDName(fdname));
                         if (mcd == null)
                             Console.WriteLine($"{id} {fdname} {engname} Missing");
                     }
@@ -143,7 +141,7 @@ namespace EDDTest
                         string entitlement = rw[9].Trim();
                         System.Diagnostics.Debug.WriteLine($"{id} {fdname} {type} {engname} {mount} {guidance} {ship} {classtype} {rating} {entitlement}");
 
-                        if (!ItemData.TryGetShipModule(fdname, out ItemData.ShipModule m, false))
+                        if (!ItemData.TryGetShipModule(new ModFDName(fdname), out ItemData.ShipModule m, false))
                         {
                             Console.WriteLine($"{{ \"{fdname.ToLower()}\", new ShipModule({id},0,0,\"\",\"{engname}\",ShipModule.ModuleTypes.{type}) }},");
                         }

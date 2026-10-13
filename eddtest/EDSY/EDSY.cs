@@ -78,479 +78,523 @@ namespace EDDTest
                 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // PROCESS MODULES AND UPDATE
 
-                itemmodules = File.ReadAllLines(itemmodulesfilepath);
+                string[] itemmodules = File.ReadAllLines(itemmodulesfilepath);
                 if (itemmodules == null)
                 {
                     Console.WriteLine($"Can't find file {itemmodulesfilepath}");
                     return;
                 }
 
-                string[] shipmodulescsfile = null;
-                if ( File.Exists(shipsmodulesfilepath??"klwkw"))
-                {
-                    shipmodulescsfile = File.ReadAllLines(shipsmodulesfilepath);
-                }
-
                 JObject modules = jo["module"].Object();
-                JObject shiplist = jo["ship"].Object();
-
-                int processed = 0;
+                System.Diagnostics.Debug.WriteLine($"Loaded from EDSY {modules.Count} modules");
 
                 string textout = "";
 
-                foreach (var item in modules)
+                ///////////////////////////////////////////////////////// MODULES
+
                 {
-                    JObject mod = item.Value.Object();
+                    int processed = 0;
 
-                    long fid = mod["fdid"].Long();
-                    if (fid == 0)
-                        continue;
-
-                    string fdname = mod["fdname"].Str();
-
-                    if ( !mod.Contains("jitter") && (fdname.StartsWithIIC("hpt_pulselaserburst_")       // EDSY does not include jitter in some modules but its engineerable. based on mtype, add jitter
-                                                || fdname.StartsWithIIC("hpt_beamlaser_")
-                                                || fdname.StartsWithIIC("hpt_cannon_")
-                                                || fdname.StartsWithIIC("hpt_guardian_shardcannon_")
-                                                || fdname.StartsWithIIC("hpt_slugshot_")
-                                                || fdname.StartsWithIIC("hpt_minelauncher_")
-
-                                                || fdname.StartsWithIIC("hpt_atdumbfiremissile_")
-                                                || fdname.StartsWithIIC("hpt_dumbfiremissilerack_")
-                                                || fdname.StartsWithIIC("hpt_atventdisruptorpylon_")
-                                                || fdname.StartsWithIIC("hpt_basicmissilerack_")
-                                                || fdname.StartsWithIIC("hpt_advancedtorppylon_")
-                                                || fdname.StartsWithIIC("hpt_drunkmissilerack_")
-                                                || fdname.StartsWithIIC("hpt_causticmissile_")
-
-                                                || fdname.StartsWithIIC("hpt_atmulticannon_")
-                                                || fdname.StartsWithIIC("hpt_multicannon_")
-                                                || fdname.StartsWithIIC("hpt_plasmaaccelerator_")
-                                                || fdname.StartsWithIIC("hpt_railgun_")
-                                                || fdname.StartsWithIIC("hpt_plasmapointdefence_")
-                                                || fdname.StartsWithIIC("hpt_plasmashockcannon_")
-                                                || fdname.StartsWithIIC("hpt_pulselaser_")
-                                ))
+                    foreach (var item in modules)
                     {
-                        mod["jitter"] = 0;
-                    }
+                        JObject mod = item.Value.Object();
 
-                    if (fdname.StartsWithIIC("int_hullreinforcement") && !mod.Contains("hullbst"))
-                    {
-                        mod["hullbst"] = 0;
-                    }
-
-                    if (fdname.StartsWithIIC("int_hyperdrive_") )
-                    {
-                        mod["neutronmult"] = fid == 129038968 ? 6 : 4;          // EDD Dodge - add in a neutron fake edsy field, this module has a 6
-                    }
-
-                    if (fdname.StartsWithIIC("hpt_slugshot") || fdname.StartsWithIIC("hpt_guardian_gausscannon"))
-                    {
-                        if (!mod.Contains("bstrof"))
-                        {
-                            mod["bstrof"] = 1;
-                        }
-
-                        if (!mod.Contains("bstsize"))
-                        {
-                            mod["bstsize"] = 1;
-                        }
-                    }
-
-                    if (fdname.EqualsIIC("hpt_guardian_gausscannon_fixed_small"))       // these in the file do not match the edsy view on screen...
-                    {
-                        mod["dps"] = 19.7;
-                        mod["rof"] = 0.4926;
-                    }
-
-                    if (fdname.EqualsIIC("hpt_guardian_gausscannon_fixed_medium"))      // these in the file do not match the edsy view on screen...
-                    {
-                        mod["dps"] = 34.46;
-                        mod["rof"] = 0.4926;
-                    }
-
-                    if ( fdname.EqualsIIC("int_detailedsurfacescanner_tiny"))       // older engineering changed its mass and powerdraw, so lets add it in so it does not crash it
-                    {
-                        mod["mass"] = 0;
-                        mod["pwrdraw"] = 0;
-                    }
-
-
-                    // note detailedsurface scanner is the only one without a power draw but we have seen a engineering recipe with it in
-                    //if ( !mod.Contains("pwrdraw") && !fdname.ContainsIIC("powerplant") && !fdname.ContainsIIC("fueltank") && !fdname.ContainsIIC("cargorack") && !fdname.ContainsIIC("reinforcement") && !fdname.ContainsIIC("passengercabin"))
-                    //{
-                    //    System.Diagnostics.Debug.WriteLine($"Module {fdname} no power draw");
-                    //}
-
-                    string properties = "";
-
-                    foreach( var kvp in mod)        // progamatically spit out the parameters
-                    {
-                        if (!mod[kvp.Key].IsNull)   // if we want it
-                        {
-                            string value = null;
-                            if (kvp.Key == "fuelmul" || kvp.Key == "maxrng")
-                                value = $"{mod[kvp.Key].Double(1000,-1):0.###}";
-                            else
-                                value = mod[kvp.Key].IsString ? mod[kvp.Key].Str().AlwaysQuoteString() : $"{mod[kvp.Key].Double():0.###}";
-
-                            if (PropertiesToEDD.ContainsKey(kvp.Key))
-                            {
-                                if (PropertiesToEDD[kvp.Key] != null)
-                                {
-                                    if ( fdname.StartsWith("Hpt_Railgun_Fixed"))
-                                    {
-                                        if (kvp.Key == "dps")
-                                        {
-                                            value = fdname.Contains("Small") ? 14.319.ToString() : fdname.Contains("Burst") ? 23.28.ToString() : 20.46.ToString();
-                                        }
-                                        else if (kvp.Key == "rof")
-                                        {
-                                            value = fdname.Contains("Small") ? 0.6135.ToString() : fdname.Contains("Burst") ? 0.4926.ToString() : 1.5517.ToString();
-                                        }
-                                        else if (kvp.Key == "bstint")
-                                        {
-                                            value = fdname.Contains("Small") ? 0.63.ToString() : fdname.Contains("Burst") ? 0.4.ToString() : 0.63.ToString();
-                                        }
-                                    }
-                                    properties = properties.AppendPrePad($"{PropertiesToEDD[kvp.Key]} = {value}", ", ");
-                                }
-                            }
-                            else
-                            {
-                                System.Diagnostics.Debug.Assert(false,$"*** ERROR unknown property {kvp.Key}");
-                            }
-                        }
-                    }
-
-                    //System.Diagnostics.Debug.WriteLine($"{fid}: {properties}");
-
-                    string edsyname = mod["name"].Str();
-
-                    bool found = ProcessData(fid, fdname, edsyname, properties, ref textout);
-                    if (found)
-                        processed++;
-
-                    // free versions
-                    if (fid == 128064258)
-                        ProcessData(128666641, fdname, edsyname, properties, ref textout, false);
-                    if (fid == 128064218)
-                        ProcessData(128666640, fdname, edsyname, properties, ref textout, false);
-                    if (fid == 128049381)
-                        ProcessData(128049673, fdname, edsyname, properties, ref textout, false);
-                    if (fid == 128064033)
-                        ProcessData(128666635, fdname, edsyname, properties, ref textout, false);
-                    if (fid == 128064178)
-                        ProcessData(128666639, fdname, edsyname, properties, ref textout, false);
-                    if (fid == 128662535)
-                        ProcessData(128666642, fdname, edsyname, properties, ref textout, false);
-                    if (fid == 128064068)
-                        ProcessData(128666636, fdname, edsyname, properties, ref textout, false);
-                    if (fid == 128064103)
-                        ProcessData(128666637, fdname, edsyname, properties, ref textout, false);
-                }
-
-                if (processed == 0)
-                    Console.WriteLine($"WARNING CANNOT FIND ANY MODULES IN GIVEN FILE");
-
-                //---------------------------------------------------------------------------
-                // other data
-
-                string shiptotaltext = "";
-
-                foreach (var item in shiplist)
-                {
-                    JObject ship = item.Value.Object();
-
-                    long shipfid = ship["fdid"].Long();
-                    string shipfdname = ship["fdname"].Str();
-                    string shipname = ship["name"].Str();
-                    //  System.Diagnostics.Debug.WriteLine($"fid {shipfid} {shipfdname} {shipname}");
-
-                    string pad = "        ";
-                    string stext = pad + $"private static ShipProperties {shipfdname.ToLowerInvariant().Replace(" ", "_")} = new ShipProperties()" + Environment.NewLine;
-
-                    stext += pad + "{" + Environment.NewLine;
-
-                    stext += pad + $"    FDID = \"{shipfdname}\"," + Environment.NewLine;
-                    stext += pad + $"    HullMass = {ship["mass"].Int()}F," + Environment.NewLine;
-                    stext += pad + $"    Name = \"{ship["name"].Str()}\"," + Environment.NewLine;
-                    stext += pad + $"    Speed = {ship["topspd"].Int()}," + Environment.NewLine;
-                    stext += pad + $"    Boost = {ship["bstspd"].Int()}," + Environment.NewLine;
-                    stext += pad + $"    HullCost = {ship["cost"].Int()}," + Environment.NewLine;
-                    stext += pad + $"    Class = {ship["class"].Int()}," + Environment.NewLine;
-                    stext += pad + $"    Shields = {ship["shields"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    Armour = {ship["armour"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    MinThrust = {ship["minthrust"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    BoostCost = {ship["boostcost"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    FuelReserve = {ship["fuelreserve"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    HeatCap = {ship["heatcap"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    HeatDispMin = {ship["heatdismin"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    HeatDispMax = {ship["heatdismax"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    FuelCost = {ship["fuelcost"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    Hardness = {ship["hardness"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    Crew = {ship["crew"].Int()}," + Environment.NewLine;
-                    stext += pad + $"    FwdAcc = {ship["fwdacc"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    RevAcc = {ship["revacc"].Double()}," + Environment.NewLine;
-                    stext += pad + $"    LatAcc = {ship["latacc"].Double()}," + Environment.NewLine;
-
-                    {
-                        JArray array = ship["slots"].I("hardpoint").Array();
-                        JArray slotnames = ship["slotnames"].I("hardpoint").Array();        // may be null
-
-                        string[] name = { "Small", "Medium", "Large", "Huge" };
-                        int[] count = { 1, 1, 1, 1 };
-                        int index = 1;
-
-                        stext += pad + "    Hardpoints = new ShipSlots.SlotAndSize[] {";
-                        foreach (var x in array)
-                        {
-                            var value = x.Int();
-                            if (slotnames != null)
-                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{slotnames[index - 1].Str()}, {value}), ";
-                            else
-                                stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot." + name[value - 1] + "Hardpoint" + (count[value - 1]++).ToString() + ", " + value.ToString() + "), ";
-                            index++;
-                        }
-
-                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
-                    }
-                    {
-                        int index = 1;
-                        JArray array = ship["slots"].I("utility").Array();
-                        stext += pad + "    Utility = new ShipSlots.SlotAndSize[] {";
-                        foreach (var x in array)
-                        {
-                            var value = x.Int();
-                            stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot.TinyHardpoint" + (index).ToString() + ", " + value.ToString() + "), ";
-                            index++;
-                        }
-
-                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
-                    }
-
-                    {
-                        string[] name = { "Armour", "PowerPlant", "MainEngines", "FrameShiftDrive", "LifeSupport", "PowerDistributor", "Radar", "FuelTank" };
-                        JArray array = ship["slots"].I("component").Array();
-                        stext += pad + "    Component = new ShipSlots.SlotAndSize[] {";
-                        int index = 0;
-                        foreach (var x in array)
-                        {
-                            var value = x.Int();
-                            stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot." + name[index] + ", " + value.ToString() + "), ";
-                            index++;
-                        }
-
-                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
-                    }
-
-                    {
-                        JArray array = ship["slots"].I("internal").Array();
-                        JArray slotnames = ship["slotnames"].I("internal").Array();        // may be null
-
-                        stext += pad + "    Internal = new ShipSlots.SlotAndSize[] {";
-                        int index = 1;
-
-                        foreach (var x in array)
-                        {
-                            var value = x.Int();
-                            if (slotnames != null)
-                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{slotnames[index - 1].Str()}, {value}), ";
-                            else
-                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.Slot{index:00}_Size{value}, {value}), ";
-                            index++;
-                        }
-
-                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
-                    }
-
-
-                    {
-                        JArray array = ship["slots"].I("military").Array();
-                        stext += pad + "    Military = new ShipSlots.SlotAndSize[] {";
-                        int count = 1;
-                        foreach (var x in array)
-                        {
-                            var value = x.Int();
-                            stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.Military{count:00}, {value}), ";
-                            count++;
-                        }
-
-                        if (stext.EndsWith(", "))
-                            stext = stext.Left(stext.Length - 2);
-                        stext += "}, " + Environment.NewLine;
-                    }
-
-                    {
-                        string[] items = { "CargoHatch", "PlanetaryApproachSuite", "ShipCockpit", };
-                        stext += pad + "    Other = new ShipSlots.SlotAndSize[] {";
-                        int count = 0;
-                        foreach (var x in items)
-                            stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{items[count++]},1), ";
-                        stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
-                    }
-
-                    stext += pad + "};" + Environment.NewLine + Environment.NewLine;
-
-                    shiptotaltext += stext;
-
-                    textout += stext;
-
-                    JObject minship = ship["module"].Object();
-
-                    foreach (var mitem in minship)
-                    {
-                        JObject mod = mitem.Value.Object();
                         long fid = mod["fdid"].Long();
-                        double mass = mod["mass"].Double();
-                        string armourfdname = mod["fdname"].Str();
-                        int hidden = mod["hidden"].Int(0);
-
-                        if (hidden == 0)
-                        {
-                            if (modules.Contains(mitem.Key))
-                            {
-                                JObject infoline = modules[mitem.Key].Object();
-                                string edsyname = shipname + " " + infoline["name"].Str();
-                                double kinres = infoline["kinres"].Double();
-                                double thmres = infoline["thmres"].Double();
-                                double expres = infoline["expres"].Double();
-                                double axres = infoline["axeres"].Double();
-                                double hullbst = infoline["hullbst"].Double();
-
-                                string report = $"Mass={mass}, ExplosiveResistance={expres}, KineticResistance={kinres}, ThermalResistance={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
-                                //  System.Diagnostics.Debug.WriteLine($".. {fid} {armourfdname} {mass} {kinres} {thmres} {expres} {axres} {hullbst} = {report}");
-
-                                ProcessData(fid, armourfdname, edsyname, report, ref textout);
-
-                            }
-                            else
-                                System.Diagnostics.Debug.WriteLine($".. ERROR!");
-                        }
-                    }
-
-                }
-
-                if (shipmodulescsfile != null)
-                {
-                    string[] shiplines = shiptotaltext.Split(Environment.NewLine);
-                    int countfront = Array.FindIndex(shipmodulescsfile, x => x.Contains("EDSY START")) + 1;
-                    int lineend = Array.FindIndex(shipmodulescsfile, x => x.Contains("EDSY END"));
-                    int endportion = shipmodulescsfile.Length - lineend;
-                    string[] newarray = new string[shiplines.Length + countfront + endportion];
-                    Array.Copy(shipmodulescsfile, 0, newarray, 0, countfront);
-                    Array.Copy(shiplines, 0, newarray, countfront, shiplines.Length);
-                    Array.Copy(shipmodulescsfile, lineend, newarray, countfront + shiplines.Length, shipmodulescsfile.Length - lineend);
-                    File.WriteAllLines(shipsmodulesfilepath, newarray);
-                }
-
-
-                textout += Environment.NewLine + "Special Effects:" + Environment.NewLine;
-                
-                // now process special effects and write out ship modules with delta values to debug
-                JObject speff = jo["expeffect"].Object();
-                foreach (KeyValuePair<string, JToken> sp in speff)
-                {
-                    string fdname = sp.Value["fdname"].Str();
-                    string name = sp.Value["special"].Str();
-                    string sline = $"[{fdname.AlwaysQuoteString()}] = new ItemData.ShipModule(0,ItemData.ShipModule.ModuleTypes.SpecialEffect,{name.AlwaysQuoteString()}) {{";
-                    bool prop = false;
-                    foreach (KeyValuePair<string, JToken> para in (JObject)sp.Value)
-                    {
-                        if (fdname == "special_thermalshock" && para.Key == "damage")       // does not seem to work
+                        if (fid == 0)
                             continue;
 
-                        if (PropertiesToEDD.ContainsKey(para.Key))
+                        string fdname = mod["fdname"].Str();
+
+                        if (!mod.Contains("jitter") && (fdname.StartsWithIIC("hpt_pulselaserburst_")       // EDSY does not include jitter in some modules but its engineerable. based on mtype, add jitter
+                                                    || fdname.StartsWithIIC("hpt_beamlaser_")
+                                                    || fdname.StartsWithIIC("hpt_cannon_")
+                                                    || fdname.StartsWithIIC("hpt_guardian_shardcannon_")
+                                                    || fdname.StartsWithIIC("hpt_slugshot_")
+                                                    || fdname.StartsWithIIC("hpt_minelauncher_")
+
+                                                    || fdname.StartsWithIIC("hpt_atdumbfiremissile_")
+                                                    || fdname.StartsWithIIC("hpt_dumbfiremissilerack_")
+                                                    || fdname.StartsWithIIC("hpt_atventdisruptorpylon_")
+                                                    || fdname.StartsWithIIC("hpt_basicmissilerack_")
+                                                    || fdname.StartsWithIIC("hpt_advancedtorppylon_")
+                                                    || fdname.StartsWithIIC("hpt_drunkmissilerack_")
+                                                    || fdname.StartsWithIIC("hpt_causticmissile_")
+
+                                                    || fdname.StartsWithIIC("hpt_atmulticannon_")
+                                                    || fdname.StartsWithIIC("hpt_multicannon_")
+                                                    || fdname.StartsWithIIC("hpt_plasmaaccelerator_")
+                                                    || fdname.StartsWithIIC("hpt_railgun_")
+                                                    || fdname.StartsWithIIC("hpt_plasmapointdefence_")
+                                                    || fdname.StartsWithIIC("hpt_plasmashockcannon_")
+                                                    || fdname.StartsWithIIC("hpt_pulselaser_")
+                                    ))
                         {
-                            if (PropertiesToEDD[para.Key] != null)
+                            mod["jitter"] = 0;
+                        }
+
+                        if (fdname.StartsWithIIC("int_hullreinforcement") && !mod.Contains("hullbst"))
+                        {
+                            mod["hullbst"] = 0;
+                        }
+
+                        if (fdname.StartsWithIIC("int_hyperdrive_"))
+                        {
+                            mod["neutronmult"] = fid == 129038968 ? 6 : 4;          // EDD Dodge - add in a neutron fake edsy field, this module has a 6
+                        }
+
+                        if (fdname.StartsWithIIC("hpt_slugshot") || fdname.StartsWithIIC("hpt_guardian_gausscannon"))
+                        {
+                            if (!mod.Contains("bstrof"))
                             {
-                                if (prop)
-                                    sline += ", ";
-                                sline += $"{PropertiesToEDD[para.Key]}={para.Value}";
-                                prop = true;
+                                mod["bstrof"] = 1;
+                            }
+
+                            if (!mod.Contains("bstsize"))
+                            {
+                                mod["bstsize"] = 1;
                             }
                         }
-                        else
-                            System.Diagnostics.Debug.Assert(false, $"*** ERROR unknown property {para.Key}");
-                    }
 
-                    sline += "},";
-                    textout += sline + Environment.NewLine;
-                }
-
-                textout += Environment.NewLine + "Modifiers:" + Environment.NewLine;
-
-                string modstring = $"Dictionary<string, double> modifiercontrolvalue = new Dictionary<string, double> {{\r\n";
-                string fdmapping = $"Dictionary<string, string> modifierfdmapping = new Dictionary<string, string> {{\r\n";
-
-                JArray attr = jo["attributes"].Array();
-
-                foreach (JObject at in attr)
-                {
-                    string name = at["attr"].Str();
-                    string fdattr = at["fdattr"].StrNull();
-
-                    if (name.HasChars() && PropertiesToEDD.ContainsKey(name))
-                    {
-                        var modset = at.Contains("modset");
-                        var modadd = at.Contains("modadd");
-                        double? modmod = at["modmod"].DoubleNull();
-
-                        name = PropertiesToEDD[name];
-
-                        if (name != null)
+                        if (fdname.EqualsIIC("hpt_guardian_gausscannon_fixed_small"))       // these in the file do not match the edsy view on screen...
                         {
-                            if (modset)
-                                modstring += $"    [{name.AlwaysQuoteString()}]=0,\r\n";
-                            else if (modadd)
-                                modstring += $"    [{name.AlwaysQuoteString()}]=1,\r\n";
-                            else if (modmod.HasValue)
-                                modstring += $"    [{name.AlwaysQuoteString()}]={modmod},\r\n";
+                            mod["dps"] = 19.7;
+                            mod["rof"] = 0.4926;
+                        }
 
-                            if (fdattr != null)
+                        if (fdname.EqualsIIC("hpt_guardian_gausscannon_fixed_medium"))      // these in the file do not match the edsy view on screen...
+                        {
+                            mod["dps"] = 34.46;
+                            mod["rof"] = 0.4926;
+                        }
+
+                        if (fdname.EqualsIIC("int_detailedsurfacescanner_tiny"))       // older engineering changed its mass and powerdraw, so lets add it in so it does not crash it
+                        {
+                            mod["mass"] = 0;
+                            mod["pwrdraw"] = 0;
+                        }
+
+
+                        // note detailedsurface scanner is the only one without a power draw but we have seen a engineering recipe with it in
+                        //if ( !mod.Contains("pwrdraw") && !fdname.ContainsIIC("powerplant") && !fdname.ContainsIIC("fueltank") && !fdname.ContainsIIC("cargorack") && !fdname.ContainsIIC("reinforcement") && !fdname.ContainsIIC("passengercabin"))
+                        //{
+                        //    System.Diagnostics.Debug.WriteLine($"Module {fdname} no power draw");
+                        //}
+
+                        string properties = "";
+
+                        foreach (var kvp in mod)        // progamatically spit out the parameters
+                        {
+                            if (!mod[kvp.Key].IsNull)   // if we want it
                             {
-                                // known complex variables we need to manually craft
+                                string value = null;
+                                if (kvp.Key == "fuelmul" || kvp.Key == "maxrng")
+                                    value = $"{mod[kvp.Key].Double(1000, -1):0.###}";
+                                else
+                                    value = mod[kvp.Key].IsString ? mod[kvp.Key].Str().AlwaysQuoteString() : $"{mod[kvp.Key].Double():0.###}";
 
-                                if (fdattr != "DamagePerSecond" && fdattr != "Damage" && fdattr != "RateOfFire" && fdattr != "ShieldGenStrength" && fdattr != ""
-                                                && fdattr != "ShieldGenOptimalMass" && fdattr != "EngineOptimalMass" && fdattr != "EngineOptPerformance" && fdattr != "Range")
+                                if (PropertiesToEDD.ContainsKey(kvp.Key))
                                 {
-                                    fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = new string[] {{ nameof(ItemData.ShipModule.{name}), }},\r\n";
+                                    if (PropertiesToEDD[kvp.Key] != null)
+                                    {
+                                        if (fdname.StartsWith("Hpt_Railgun_Fixed"))
+                                        {
+                                            if (kvp.Key == "dps")
+                                            {
+                                                value = fdname.Contains("Small") ? 14.319.ToString() : fdname.Contains("Burst") ? 23.28.ToString() : 20.46.ToString();
+                                            }
+                                            else if (kvp.Key == "rof")
+                                            {
+                                                value = fdname.Contains("Small") ? 0.6135.ToString() : fdname.Contains("Burst") ? 0.4926.ToString() : 1.5517.ToString();
+                                            }
+                                            else if (kvp.Key == "bstint")
+                                            {
+                                                value = fdname.Contains("Small") ? 0.63.ToString() : fdname.Contains("Burst") ? 0.4.ToString() : 0.63.ToString();
+                                            }
+                                        }
+                                        properties = properties.AppendPrePad($"{PropertiesToEDD[kvp.Key]} = {value}", ", ");
+                                    }
                                 }
                                 else
                                 {
-                                    //   fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = ??? complex,\r\n";
+                                    System.Diagnostics.Debug.Assert(false, $"*** ERROR unknown property {kvp.Key}");
                                 }
                             }
                         }
-                    }
-                    else if ( fdattr != null )
-                    {
-                        // many have fdattr but we don't have an attribute to match
 
-                        fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = new string[] {{}},\r\n";
+                        //System.Diagnostics.Debug.WriteLine($"{fid}: {properties}");
+
+                        string edsyname = mod["name"].Str();
+
+                        bool found = ProcessData(itemmodules, fid, fdname, edsyname, properties, ref textout);
+                        if (found)
+                            processed++;
+
+                        // free versions
+                        if (fid == 128064258)
+                            ProcessData(itemmodules, 128666641, fdname, edsyname, properties, ref textout, false);
+                        if (fid == 128064218)
+                            ProcessData(itemmodules, 128666640, fdname, edsyname, properties, ref textout, false);
+                        if (fid == 128049381)
+                            ProcessData(itemmodules, 128049673, fdname, edsyname, properties, ref textout, false);
+                        if (fid == 128064033)
+                            ProcessData(itemmodules, 128666635, fdname, edsyname, properties, ref textout, false);
+                        if (fid == 128064178)
+                            ProcessData(itemmodules, 128666639, fdname, edsyname, properties, ref textout, false);
+                        if (fid == 128662535)
+                            ProcessData(itemmodules, 128666642, fdname, edsyname, properties, ref textout, false);
+                        if (fid == 128064068)
+                            ProcessData(itemmodules, 128666636, fdname, edsyname, properties, ref textout, false);
+                        if (fid == 128064103)
+                            ProcessData(itemmodules, 128666637, fdname, edsyname, properties, ref textout, false);
                     }
 
+                    if (processed == 0)
+                        Console.WriteLine($"WARNING CANNOT FIND ANY MODULES IN GIVEN FILE");
                 }
 
-                fdmapping += Environment.NewLine + "Triage these:" + Environment.NewLine;
+                ////////////////////////////////////////////////////// SHIPS
 
-                JObject fattr = jo["fdfieldattr"].Object();
-
-                foreach( var fo in fattr)
                 {
-                    if ( !fo.Value.IsNull)
+                    string shiptotaltext = "";
+                    JObject shiplist = jo["ship"].Object();
+
+                    foreach (var item in shiplist)
                     {
-                        fdmapping += $"    [{fo.Key.AlwaysQuoteString()}] = new string[] {{ nameof(ItemData.ShipModule.{PropertiesToEDD[fo.Value.Str()]}) }},\r\n";
+                        JObject ship = item.Value.Object();
+
+                        long shipfid = ship["fdid"].Long();
+                        string shipfdname = ship["fdname"].Str();
+                        string shipname = ship["name"].Str();
+                        //  System.Diagnostics.Debug.WriteLine($"fid {shipfid} {shipfdname} {shipname}");
+
+                        string pad = "        ";
+                        string stext = pad + $"private static ShipProperties {shipfdname.ToLowerInvariant().Replace(" ", "_")} = new ShipProperties()" + Environment.NewLine;
+
+                        stext += pad + "{" + Environment.NewLine;
+
+                        stext += pad + $"    FDID = new VehicleFDName(\"{shipfdname}\",VehicleFDName.VehicleType.Ship)," + Environment.NewLine;
+                        stext += pad + $"    HullMass = {ship["mass"].Int()}F," + Environment.NewLine;
+                        stext += pad + $"    Name = \"{ship["name"].Str()}\"," + Environment.NewLine;
+                        stext += pad + $"    Speed = {ship["topspd"].Int()}," + Environment.NewLine;
+                        stext += pad + $"    Boost = {ship["bstspd"].Int()}," + Environment.NewLine;
+                        stext += pad + $"    HullCost = {ship["cost"].Int()}," + Environment.NewLine;
+                        stext += pad + $"    Class = {ship["class"].Int()}," + Environment.NewLine;
+                        stext += pad + $"    Shields = {ship["shields"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    Armour = {ship["armour"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    MinThrust = {ship["minthrust"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    BoostCost = {ship["boostcost"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    FuelReserve = {ship["fuelreserve"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    HeatCap = {ship["heatcap"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    HeatDispMin = {ship["heatdismin"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    HeatDispMax = {ship["heatdismax"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    FuelCost = {ship["fuelcost"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    Hardness = {ship["hardness"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    Crew = {ship["crew"].Int()}," + Environment.NewLine;
+                        stext += pad + $"    FwdAcc = {ship["fwdacc"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    RevAcc = {ship["revacc"].Double()}," + Environment.NewLine;
+                        stext += pad + $"    LatAcc = {ship["latacc"].Double()}," + Environment.NewLine;
+
+                        {
+                            JArray array = ship["slots"].I("hardpoint").Array();
+                            JArray slotnames = ship["slotnames"].I("hardpoint").Array();        // may be null
+
+                            string[] name = { "Small", "Medium", "Large", "Huge" };
+                            int[] count = { 1, 1, 1, 1 };
+                            int index = 1;
+
+                            stext += pad + "    Hardpoints = new ShipSlots.SlotAndSize[] {";
+                            foreach (var x in array)
+                            {
+                                var value = x.Int();
+                                if (slotnames != null)
+                                    stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{slotnames[index - 1].Str()}, {value}), ";
+                                else
+                                    stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot." + name[value - 1] + "Hardpoint" + (count[value - 1]++).ToString() + ", " + value.ToString() + "), ";
+                                index++;
+                            }
+
+                            stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                        }
+                        {
+                            int index = 1;
+                            JArray array = ship["slots"].I("utility").Array();
+                            stext += pad + "    Utility = new ShipSlots.SlotAndSize[] {";
+                            foreach (var x in array)
+                            {
+                                var value = x.Int();
+                                stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot.TinyHardpoint" + (index).ToString() + ", " + value.ToString() + "), ";
+                                index++;
+                            }
+
+                            stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                        }
+
+                        {
+                            string[] name = { "Armour", "PowerPlant", "MainEngines", "FrameShiftDrive", "LifeSupport", "PowerDistributor", "Radar", "FuelTank" };
+                            JArray array = ship["slots"].I("component").Array();
+                            stext += pad + "    Component = new ShipSlots.SlotAndSize[] {";
+                            int index = 0;
+                            foreach (var x in array)
+                            {
+                                var value = x.Int();
+                                stext += "new ShipSlots.SlotAndSize(ShipSlots.Slot." + name[index] + ", " + value.ToString() + "), ";
+                                index++;
+                            }
+
+                            stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                        }
+
+                        {
+                            JArray array = ship["slots"].I("internal").Array();
+                            JArray slotnames = ship["slotnames"].I("internal").Array();        // may be null
+
+                            stext += pad + "    Internal = new ShipSlots.SlotAndSize[] {";
+                            int index = 1;
+
+                            foreach (var x in array)
+                            {
+                                var value = x.Int();
+                                if (slotnames != null)
+                                    stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{slotnames[index - 1].Str()}, {value}), ";
+                                else
+                                    stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.Slot{index:00}_Size{value}, {value}), ";
+                                index++;
+                            }
+
+                            stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                        }
+
+
+                        {
+                            JArray array = ship["slots"].I("military").Array();
+                            stext += pad + "    Military = new ShipSlots.SlotAndSize[] {";
+                            int count = 1;
+                            foreach (var x in array)
+                            {
+                                var value = x.Int();
+                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.Military{count:00}, {value}), ";
+                                count++;
+                            }
+
+                            if (stext.EndsWith(", "))
+                                stext = stext.Left(stext.Length - 2);
+                            stext += "}, " + Environment.NewLine;
+                        }
+
+                        {
+                            string[] items = { "CargoHatch", "PlanetaryApproachSuite", "ShipCockpit", };
+                            stext += pad + "    Other = new ShipSlots.SlotAndSize[] {";
+                            int count = 0;
+                            foreach (var x in items)
+                                stext += $"new ShipSlots.SlotAndSize(ShipSlots.Slot.{items[count++]},1), ";
+                            stext = stext.Left(stext.Length - 2) + "}, " + Environment.NewLine;
+                        }
+
+                        stext += pad + "};" + Environment.NewLine + Environment.NewLine;
+
+                        shiptotaltext += stext;
+
+                        textout += stext;
+
+                        JObject minship = ship["module"].Object();
+
+                        foreach (var mitem in minship)
+                        {
+                            JObject mod = mitem.Value.Object();
+                            long fid = mod["fdid"].Long();
+                            double mass = mod["mass"].Double();
+                            string armourfdname = mod["fdname"].Str();
+                            int hidden = mod["hidden"].Int(0);
+
+                            if (hidden == 0)
+                            {
+                                if (modules.Contains(mitem.Key))
+                                {
+                                    JObject infoline = modules[mitem.Key].Object();
+                                    string edsyname = shipname + " " + infoline["name"].Str();
+                                    double kinres = infoline["kinres"].Double();
+                                    double thmres = infoline["thmres"].Double();
+                                    double expres = infoline["expres"].Double();
+                                    double axres = infoline["axeres"].Double();
+                                    double hullbst = infoline["hullbst"].Double();
+
+                                    string report = $"Mass={mass}, ExplosiveResistance={expres}, KineticResistance={kinres}, ThermalResistance={thmres}, AXResistance={axres}, HullStrengthBonus={hullbst}";
+                                    //  System.Diagnostics.Debug.WriteLine($".. {fid} {armourfdname} {mass} {kinres} {thmres} {expres} {axres} {hullbst} = {report}");
+
+                                    ProcessData(itemmodules, fid, armourfdname, edsyname, report, ref textout);
+                                }
+                                else
+                                    System.Diagnostics.Debug.WriteLine($".. ERROR!");
+                            }
+                        }
+
                     }
-                    else
-                        fdmapping += $"    [{fo.Key.AlwaysQuoteString()}] = new string[] {{}},\r\n";
+
+                    string[] shipmodulescsfile = null;
+                    if (File.Exists(shipsmodulesfilepath ?? "klwkw"))
+                    {
+                        shipmodulescsfile = File.ReadAllLines(shipsmodulesfilepath);
+                    }
+
+                    if (shipmodulescsfile != null)
+                    {
+                        string[] shiplines = shiptotaltext.Split(Environment.NewLine);
+                        int countfront = Array.FindIndex(shipmodulescsfile, x => x.Contains("EDSY START")) + 1;
+                        int lineend = Array.FindIndex(shipmodulescsfile, x => x.Contains("EDSY END"));
+                        int endportion = shipmodulescsfile.Length - lineend;
+                        string[] newarray = new string[shiplines.Length + countfront + endportion];
+                        Array.Copy(shipmodulescsfile, 0, newarray, 0, countfront);
+                        Array.Copy(shiplines, 0, newarray, countfront, shiplines.Length);
+                        Array.Copy(shipmodulescsfile, lineend, newarray, countfront + shiplines.Length, shipmodulescsfile.Length - lineend);
+                        File.WriteAllLines(shipsmodulesfilepath, newarray);
+                    }
                 }
 
-                modstring += $"}};\r\n";
-                fdmapping += $"}};\r\n";
 
-                textout += modstring + fdmapping;
+                ////////////////////////////////////////////////////// SPECIAL EFFECT
+
+                {
+                    textout += Environment.NewLine + "Special Effects:" + Environment.NewLine;
+
+                    // now process special effects and write out ship modules with delta values to debug
+                    JObject speff = jo["expeffect"].Object();
+                    foreach (KeyValuePair<string, JToken> sp in speff)
+                    {
+                        string fdname = sp.Value["fdname"].Str();
+                        string name = sp.Value["special"].Str();
+                        string sline = $"[{fdname.AlwaysQuoteString()}] = new ItemData.ShipModule(0,ItemData.ShipModule.ModuleTypes.SpecialEffect,{name.AlwaysQuoteString()}) {{";
+                        bool prop = false;
+                        foreach (KeyValuePair<string, JToken> para in (JObject)sp.Value)
+                        {
+                            if (fdname == "special_thermalshock" && para.Key == "damage")       // does not seem to work
+                                continue;
+
+                            if (PropertiesToEDD.ContainsKey(para.Key))
+                            {
+                                if (PropertiesToEDD[para.Key] != null)
+                                {
+                                    if (prop)
+                                        sline += ", ";
+                                    sline += $"{PropertiesToEDD[para.Key]}={para.Value}";
+                                    prop = true;
+                                }
+                            }
+                            else
+                                System.Diagnostics.Debug.Assert(false, $"*** ERROR unknown property {para.Key}");
+                        }
+
+                        sline += "},";
+                        textout += sline + Environment.NewLine;
+                    }
+                }
+
+                ////////////////////////////////////////////////////// MODIFIERS
+
+                {
+                    textout += Environment.NewLine + "Modifiers:" + Environment.NewLine;
+
+                    string modstring = $"Dictionary<string, double> modifiercontrolvalue = new Dictionary<string, double> {{\r\n";
+                    string fdmapping = $"Dictionary<string, string> modifierfdmapping = new Dictionary<string, string> {{\r\n";
+
+                    JArray attr = jo["attributes"].Array();
+
+                    foreach (JObject at in attr)
+                    {
+                        string name = at["attr"].Str();
+                        string fdattr = at["fdattr"].StrNull();
+
+                        if (name.HasChars() && PropertiesToEDD.ContainsKey(name))
+                        {
+                            var modset = at.Contains("modset");
+                            var modadd = at.Contains("modadd");
+                            double? modmod = at["modmod"].DoubleNull();
+
+                            name = PropertiesToEDD[name];
+
+                            if (name != null)
+                            {
+                                if (modset)
+                                    modstring += $"    [{name.AlwaysQuoteString()}]=0,\r\n";
+                                else if (modadd)
+                                    modstring += $"    [{name.AlwaysQuoteString()}]=1,\r\n";
+                                else if (modmod.HasValue)
+                                    modstring += $"    [{name.AlwaysQuoteString()}]={modmod},\r\n";
+
+                                if (fdattr != null)
+                                {
+                                    // known complex variables we need to manually craft
+
+                                    if (fdattr != "DamagePerSecond" && fdattr != "Damage" && fdattr != "RateOfFire" && fdattr != "ShieldGenStrength" && fdattr != ""
+                                                    && fdattr != "ShieldGenOptimalMass" && fdattr != "EngineOptimalMass" && fdattr != "EngineOptPerformance" && fdattr != "Range")
+                                    {
+                                        fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = new string[] {{ nameof(ItemData.ShipModule.{name}), }},\r\n";
+                                    }
+                                    else
+                                    {
+                                        //   fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = ??? complex,\r\n";
+                                    }
+                                }
+                            }
+                        }
+                        else if (fdattr != null)
+                        {
+                            // many have fdattr but we don't have an attribute to match
+
+                            fdmapping += $"    [{fdattr.AlwaysQuoteString()}] = new string[] {{}},\r\n";
+                        }
+
+                    }
+
+                    fdmapping += Environment.NewLine + "Triage these:" + Environment.NewLine;
+
+                    JObject fattr = jo["fdfieldattr"].Object();
+
+                    foreach (var fo in fattr)
+                    {
+                        if (!fo.Value.IsNull)
+                        {
+                            fdmapping += $"    [{fo.Key.AlwaysQuoteString()}] = new string[] {{ nameof(ItemData.ShipModule.{PropertiesToEDD[fo.Value.Str()]}) }},\r\n";
+                        }
+                        else
+                            fdmapping += $"    [{fo.Key.AlwaysQuoteString()}] = new string[] {{}},\r\n";
+                    }
+
+                    modstring += $"}};\r\n";
+                    fdmapping += $"}};\r\n";
+
+                    textout += modstring + fdmapping;
+                }
+
+                //////////////////////////////////////////////////////// Blueprint vs materials
+
+                {
+                    JObject attr = jo["blueprint"].Object();
+                    JObject mats = jo["material"].Object();
+
+                    foreach ( var kvp in attr)
+                    {
+                        string fdname = kvp.Value["fdname"].Str();
+                        System.Diagnostics.Debug.Write($"Blueprint {kvp.Key} : FD `{fdname}`\r\n");
+                        if (kvp.Value.Contains("mats"))
+                        {
+                            int lvl = 1;
+                            foreach (JObject mat in kvp.Value["mats"].Array())
+                            {
+                                System.Diagnostics.Debug.Write($"    Mat {lvl}: ");
+                                foreach ( var kvp2 in mat)
+                                {
+                                    JObject matinfo = mats[kvp2.Key].Object();
+
+                                    System.Diagnostics.Debug.Write($"{matinfo["name"].Str()} {kvp2.Value.Int()},");
+                                }
+                                System.Diagnostics.Debug.WriteLine("");
+                                lvl++;
+                            }
+                        }
+
+                    }
+
+                }
 
                 File.WriteAllLines(itemmodulesfilepath, itemmodules);
 

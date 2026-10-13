@@ -242,15 +242,15 @@ namespace EDDTest
             ["neutronmult"] = "FSDNeutronMultiplier",           // EDD dodge to add this extra field in
         };
 
-        bool ProcessData(long edsyfid, string esdyfdname, string edsyname, string parameters, ref string textout, bool checkname = true)
+        bool ProcessData(string[] itemmodules, long edsyfid, string esdyfdname, string edsyname, string parameters, ref string textout, bool checkname = true)
         {
-                int lineno = -1;
+            int lineno = -1;
 
             if (edsyfid > 0)       // find by fid if its there
             {
                 string fids = "(" + edsyfid.ToStringInvariant() + ",";
-            lineno = Array.FindIndex(itemmodules, x => x.Contains(fids));
-        };
+                lineno = Array.FindIndex(itemmodules, x => x.Contains(fids));
+            };
 
             if (lineno == -1)      // if can't find
             {
@@ -274,7 +274,12 @@ namespace EDDTest
                 StringParser sp = new StringParser(itemmodules[lineno]);
 
                 string modulefdname;
-                if (sp.IsCharMoveOn('{') && (modulefdname = sp.NextQuotedWord()) != null && sp.IsCharMoveOn(',') && sp.IsStringMoveOn("new ShipModule("))
+                if (sp.IsCharMoveOn('{') && 
+                        sp.NextWord() =="new" && 
+                        sp.NextWord(" (") == "ModFDName" && 
+                        sp.IsCharMoveOn('(') && (modulefdname = sp.NextQuotedWord()) != null &&
+                        sp.IsCharMoveOn(')') && sp.IsCharMoveOn(',') && 
+                        sp.IsStringMoveOn("new ShipModule("))
                 {
                     int replacepos = sp.Position;
 
@@ -364,8 +369,6 @@ namespace EDDTest
 
             return false;
         }
-
-        string[] itemmodules = null;
 
     }
 }

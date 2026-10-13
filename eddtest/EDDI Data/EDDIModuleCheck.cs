@@ -22,9 +22,11 @@ namespace EDDTest
     {
         static public void CheckModulesvsEDDI()
         {
+            EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
+
             foreach (var mod in EDDI.GetModules())
             {
-                if (ItemData.TryGetShipModule(mod.fdname, out ItemData.ShipModule edm, false))
+                if (ItemData.TryGetShipModule(new ModFDName(mod.fdname), out ItemData.ShipModule edm, false))
                 {
                     if (edm.ModuleID != mod.id)
                     {

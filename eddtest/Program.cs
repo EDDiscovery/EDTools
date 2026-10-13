@@ -60,13 +60,13 @@ namespace EDDTest
                                   "         CoriolisShip name - process coriolis-data\\ships\n" +
                                   "         CoriolisEng rootfolder - process coriolis-data\\modifications\n" +
 
-                                  "Frontier:FrontierData rootfolder - process cvs file exports of frontier data\n" +
-                                  "         FDEVIDs rootfolder - process cvs file exports of EDCD FDEV IDs\n" +
+                                  "Frontier:FrontierData ** rootfolder - process cvs file exports of frontier data\n" +
                                   "         Voicerecon <filename> -  Console read a elite bindings file and output action script lines\n" +
                                   "         outfitting file - Read outfitting.csv and compare vs item data\n" +
                                   "         DeviceMappings <filename> - read elite device pid/vid file for usb info\n" +
 
                                   "Websites:EDDIData - check vs EDDI data\n" +
+                                  "         FDEVIDs rootfolder - process cvs file exports of EDCD FDEV IDs\n" +
                                   "         ArtieData - check vs Artie data\n" +
                                   "         edsy filename itemsmodulefilepathtosyncto - read a dump of EDSY EDDB file and process into ItemsModules.cs\n"+
                                   "         Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
@@ -368,8 +368,7 @@ namespace EDDTest
                 {
                     if (args.Left >= 1)
                     {
-                        EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
-                        FrontierData.Process(args.Next());
+                        //FrontierData.Process(args.Next());
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
@@ -378,10 +377,10 @@ namespace EDDTest
                 {
                     if (args.Left >= 1)
                     {
-                        EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
                         FDevIDs.Process(args.Next());
                     }
                     else
+                    { Console.WriteLine($"Too few args for {cmd}"); break; }
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
                 }
 
@@ -399,7 +398,7 @@ namespace EDDTest
                     if (args.Left >= 1)
                     {
                         string filename = args.Next();
-                        EDCDOutfitting.Process(filename);
+                        //EDCDOutfitting.Process(filename);
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }
@@ -422,6 +421,8 @@ namespace EDDTest
                 else if (cmd.Equals("eddidata"))
                 {
                     EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
+                    EliteDangerousCore.ItemData.Initialise();
+
                     EDDIData.CheckModulesvsEDDI();
                     EDDIData.CheckSignalsvsEDDI();
                 }
@@ -429,8 +430,8 @@ namespace EDDTest
                 {
                     if (args.Left >= 1)
                     {
-                        EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
-                        ArtieData.Process(args.Next());
+                        //EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
+                        //ArtieData.Process(args.Next());
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

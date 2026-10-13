@@ -15,11 +15,10 @@
  */
 
 using BaseUtils;
-using EliteDangerousCore;
 using System;
 using System.IO;
 
-
+#if false
 
 namespace EDDTest
 {
@@ -29,6 +28,8 @@ namespace EDDTest
 
         static public void Process(string rootpath)            // overall index of items
         {
+            EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
+
             ItemData.Initialise();
 
             {
@@ -127,4 +128,4 @@ namespace EDDTest
 
     }
 }
-
+#endif

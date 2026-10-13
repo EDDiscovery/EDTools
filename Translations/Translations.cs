@@ -460,6 +460,7 @@ namespace Translations
                 }
                 else
                 {
+                    changedsomething = true;
                     row.Cells[ColEnglish.Index].Value = newenglish;
                     row.Cells[ColFound.Index].Value = "0";          // cancel the find, rerun it !
 
@@ -666,11 +667,17 @@ namespace Translations
             {
                 string value = dataGridView.Rows[rowno].Cells[i].Value.ToString();
 
-                bool badspaced = value.StartsWith(" ") || value.Trim().StartsWith("-") || value.Trim().StartsWith(",") || value.EndsWith(" ") || value.Trim().EndsWith(","); 
+                bool badspaced = value.StartsWith(" ") || value.Trim().StartsWith("-") || value.Trim().StartsWith(",") || value.EndsWith(" ") || 
+                    value.Trim().EndsWith(",") || value.Trim().EndsWith(".");
                 bool badfield = value.Trim().StartsWith("<") || value.Contains(";N0") || value.Contains(";N1") || value.Contains(";0.") || value.Contains(";;");
                 bool badformat = value.Contains("{") && value.Contains("}");
 
-                dataGridView.Rows[rowno].Cells[i].Style.BackColor = badfield ? FieldBuilderPunctuationColour : badformat ? FormatPunctuationColour : badspaced ? SpacesPunctuationColour: Color.Empty;
+                if ( value.Contains("Tab setup failure"))
+                {
+
+                }
+                dataGridView.Rows[rowno].Cells[i].Style.BackColor = badfield ? FieldBuilderPunctuationColour : badformat ? FormatPunctuationColour : badspaced ? SpacesPunctuationColour : Color.Empty;
+                dataGridView.Rows[rowno].Cells[i].ToolTipText = (badfield ? "Bad Field Builder " : "") + (badformat ? "Bad Format " : "") + (badspaced ? "Spaces commas fullstops" : "");
             }
         }
 

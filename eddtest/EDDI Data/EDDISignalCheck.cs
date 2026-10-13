@@ -24,6 +24,8 @@ namespace EDDTest
         {
             foreach (var sig in EDDI.GetSignalSources())
             {
+                EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
+
                 string translation = Identifiers.Get("$"+sig.Name,true);
 
                 if (translation == null)
@@ -48,4 +50,5 @@ namespace EDDTest
 
     }
 }
+
 

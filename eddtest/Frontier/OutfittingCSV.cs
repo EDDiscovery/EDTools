@@ -14,6 +14,8 @@
  *
  */
 
+#if false
+
 using BaseUtils;
 using EliteDangerousCore;
 using QuickJSON;
@@ -61,3 +63,5 @@ namespace EDDTest
         }
     }
 }
+
+#endif

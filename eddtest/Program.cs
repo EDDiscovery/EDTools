@@ -67,7 +67,7 @@ namespace EDDTest
 
                                   "Websites:EDDIData - check vs EDDI data\n" +
                                   "         FDEVIDs rootfolder - process cvs file exports of EDCD FDEV IDs\n" +
-                                  "         ArtieData - check vs Artie data\n" +
+                                  "         ArtieRecipes file - check vs Artie data\n" +
                                   "         edsy filename itemsmodulefilepathtosyncto - read a dump of EDSY EDDB file and process into ItemsModules.cs\n"+
                                   "         Phoneme <filename> <fileout> for EDDI phoneme tx\n" +
                                   "         githubrelease - read the releases list and stat it\n" +
@@ -426,12 +426,11 @@ namespace EDDTest
                     EDDIData.CheckModulesvsEDDI();
                     EDDIData.CheckSignalsvsEDDI();
                 }
-                else if (cmd.Equals("artiedata"))
+                else if (cmd.Equals("artierecipes"))
                 {
                     if (args.Left >= 1)
                     {
-                        //EliteDangerousCore.MaterialCommodityMicroResourceType.Initialise();
-                        //ArtieData.Process(args.Next());
+                        ArtieData.ProcessRecipes(args.Next());
                     }
                     else
                     { Console.WriteLine($"Too few args for {cmd}"); break; }

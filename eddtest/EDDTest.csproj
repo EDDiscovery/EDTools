@@ -70,7 +70,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EliteDangerous, Version=1.1.9782.23625, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="EliteDangerous, Version=1.1.9789.18285, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>EDC\EliteDangerous.dll</HintPath>
     </Reference>
@@ -87,7 +87,7 @@
     <Compile Include="EDDI Data\EDDISignalCheck.cs" />
     <Compile Include="EDDI Data\EDDISignalSources.cs" />
     <Compile Include="EDSY\EdsyProperties.cs" />
-    <Compile Include="Frontier\ArtieData.cs" />
+    <Compile Include="Inara\ArtieData.cs" />
     <Compile Include="Frontier\OutfittingCSV.cs" />
     <Compile Include="EDDI Data\EDDIModules.cs" />
     <Compile Include="EDDI Data\EDDIModuleCheck.cs" />
